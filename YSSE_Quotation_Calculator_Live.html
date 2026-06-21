@@ -1336,7 +1336,13 @@ renderAll();
     });
   };
   window.doLogout=function(){
-    firebase.auth().signOut().catch(function(err){});
+    // Force a full page reload after sign-out so no stale Firestore listeners from this session
+    // keep running and leaking the previous tenant's data into whoever signs in next.
+    firebase.auth().signOut().then(function(){
+      window.location.reload();
+    }).catch(function(err){
+      window.location.reload();
+    });
   };
   window.forgotPassword=function(){
     var emailEl=document.getElementById('login-email');

@@ -1471,9 +1471,9 @@ function saveCompanySettingsForm(){
     }
   };
   localStorage.setItem('ysse_company_settings',JSON.stringify(COMPANY_SETTINGS));
-  if(typeof settingsRef!=='undefined' && settingsRef){
-    settingsRef.set(COMPANY_SETTINGS).catch(function(err){
-      alert('Saved locally, but could not sync to other devices: '+(err&&err.message?err.message:'unknown error'));
+  if(typeof window.syncCompanySettings==='function'){
+    window.syncCompanySettings(COMPANY_SETTINGS,function(err){
+      if(err) alert('Saved locally, but could not sync to other devices: '+(err.message||'unknown error'));
     });
   }
   closeCompanySettings();
@@ -2497,7 +2497,14 @@ function delActualSubconRow(i){
     });
   };
   window.doLogout=function(){
-    firebase.auth().signOut().catch(function(err){});
+    // Force a full page reload after sign-out so no stale Firestore listeners (docRef, settingsRef,
+    // pendingCol, usersCol, backupsCol) from this session keep running and leaking the previous
+    // tenant's data into whoever signs in next on this same browser tab.
+    firebase.auth().signOut().then(function(){
+      window.location.reload();
+    }).catch(function(err){
+      window.location.reload();
+    });
   };
   window.forgotPassword=function(){
     var emailEl=document.getElementById('login-email');
@@ -2714,6 +2721,10 @@ function delActualSubconRow(i){
   window.dismissPendingQuote=function(id){
     if(!pendingCol) return;
     pendingCol.doc(id).update({status:'dismissed'}).catch(function(err){});
+  };
+  window.syncCompanySettings=function(settings,callback){
+    if(!settingsRef){ if(callback) callback(new Error('not ready')); return; }
+    settingsRef.set(settings).then(function(){ if(callback) callback(null); }).catch(function(err){ if(callback) callback(err); });
   };
   window.addUserToFirestore=function(email,role,name,position,customerId){
     if(!usersCol) return;
