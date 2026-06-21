@@ -255,6 +255,7 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
           <button onclick="openBackupHistory()">☁ Backup History</button>
           <button class="needs-settings-perm" onclick="openCompanySettings()">⚙ Company Settings</button>
           <button onclick="window.print()">🖨 Print</button>
+          <button class="owner-only" style="color:#991b1b" onclick="resetWorkspace()">🗑 Reset This Workspace</button>
         </div>
       </div>
       <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="doLogout()">Log Out</button>
@@ -801,19 +802,23 @@ const BLANK_COMPANY_SETTINGS={
   email:'',
   bank:{bankName:'',accountNo:'',accountHolder:''}
 };
-let COMPANY_SETTINGS=JSON.parse(localStorage.getItem('ysse_company_settings')||'null')||JSON.parse(JSON.stringify(DEFAULT_COMPANY_SETTINGS));
+// IMPORTANT: nothing here is seeded from localStorage at load time. Tenant identity (customerId)
+// isn't known yet at this point in the script, and a generic, non-namespaced key would let one
+// company's cached data leak into another's session on the same browser (this happened with real
+// YSSE data appearing under a Wawas Trading login). All of PROJECTS/TRASH/INVOICES/CLIENTS/
+// COMPANY_SETTINGS start empty and are only ever populated, per-tenant, inside applyCustomerScope()
+// once we know which company is signing in — see lsKey() below.
+let COMPANY_SETTINGS=JSON.parse(JSON.stringify(DEFAULT_COMPANY_SETTINGS));
 
 const COMPANY_LOGO_SVG='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="56" height="62"><rect width="200" height="220" fill="#0B5A82"/><polygon points="0,0 100,95 200,0 200,40 122,118 122,220 78,220 78,118 0,40" fill="#ffffff"/></svg>';
 
-let PROJECTS=JSON.parse(localStorage.getItem('ysse_projects')||'[]');
-(function migrateBranches(){
-  var changed=false;
-  PROJECTS.forEach(function(p){ if(!p.branch){ p.branch='kuching'; changed=true; } });
-  if(changed){ localStorage.setItem('ysse_projects',JSON.stringify(PROJECTS)); }
-})();
-let TRASH=JSON.parse(localStorage.getItem('ysse_trash')||'[]');
-let INVOICES=JSON.parse(localStorage.getItem('ysse_invoices')||'[]');
-let CLIENTS=JSON.parse(localStorage.getItem('ysse_clients')||'[]');
+function lsKey(base){ return base+'__'+(window.CURRENT_CUSTOMER_ID||'pending'); }
+function ensureBranchDefaults(){ PROJECTS.forEach(function(p){ if(!p.branch) p.branch='kuching'; }); }
+
+let PROJECTS=[];
+let TRASH=[];
+let INVOICES=[];
+let CLIENTS=[];
 let editInvoiceId=null;
 let editClientId=null;
 let editId=null;
@@ -862,10 +867,10 @@ const fmtRM=v=>'RM '+fmt(v);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 
 function save(){
-  localStorage.setItem('ysse_projects',JSON.stringify(PROJECTS));
-  localStorage.setItem('ysse_trash',JSON.stringify(TRASH));
-  localStorage.setItem('ysse_invoices',JSON.stringify(INVOICES));
-  localStorage.setItem('ysse_clients',JSON.stringify(CLIENTS));
+  localStorage.setItem(lsKey('ysse_projects'),JSON.stringify(PROJECTS));
+  localStorage.setItem(lsKey('ysse_trash'),JSON.stringify(TRASH));
+  localStorage.setItem(lsKey('ysse_invoices'),JSON.stringify(INVOICES));
+  localStorage.setItem(lsKey('ysse_clients'),JSON.stringify(CLIENTS));
   if(typeof pushToCloud==='function') pushToCloud();
   const t=new Date();
   const ts=t.toLocaleDateString('en-MY')+' '+t.toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -1139,7 +1144,7 @@ function purgeOldTrash(){
   const cutoff=Date.now()-30*24*60*60*1000;
   const before=TRASH.length;
   TRASH=TRASH.filter(p=>(p.deletedAt||0)>=cutoff);
-  if(TRASH.length!==before){ localStorage.setItem('ysse_trash',JSON.stringify(TRASH)); if(typeof pushToCloud==='function') pushToCloud(); }
+  if(TRASH.length!==before){ localStorage.setItem(lsKey('ysse_trash'),JSON.stringify(TRASH)); if(typeof pushToCloud==='function') pushToCloud(); }
 }
 
 function renderTrash(){
@@ -1517,7 +1522,7 @@ function saveCompanySettingsForm(){
       accountHolder:document.getElementById('cs-bank-holder').value.trim()
     }
   };
-  localStorage.setItem('ysse_company_settings',JSON.stringify(COMPANY_SETTINGS));
+  localStorage.setItem(lsKey('ysse_company_settings'),JSON.stringify(COMPANY_SETTINGS));
   if(typeof window.syncCompanySettings==='function'){
     window.syncCompanySettings(COMPANY_SETTINGS,function(err){
       if(err) alert('Saved locally, but could not sync to other devices: '+(err.message||'unknown error'));
@@ -2047,6 +2052,23 @@ function backupData(){
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fileSlug+'_Backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();
 }
 
+function resetWorkspace(){
+  if(!requireOwner('reset this workspace'))return;
+  const companyName=COMPANY_SETTINGS.companyName||'this company';
+  const projCount=PROJECTS.length, trashCount=TRASH.length, invCount=INVOICES.length, clCount=CLIENTS.length;
+  const warning='This permanently deletes ALL data for "'+companyName+'" only — '+projCount+' project(s), '+trashCount+' trashed item(s), '+invCount+' invoice(s), and '+clCount+' client(s). No other company on this system is touched. This cannot be undone.\n\nType the company name exactly to confirm: '+companyName;
+  const typed=prompt(warning);
+  if(typed!==companyName){ if(typed!==null) alert('Company name did not match — nothing was deleted.'); return; }
+  PROJECTS=[];TRASH=[];INVOICES=[];CLIENTS=[];
+  save();
+  renderDashboard();
+  if(document.getElementById('page-projects').classList.contains('active')) renderProjects();
+  if(document.getElementById('page-invoices').classList.contains('active')) renderInvoices();
+  if(document.getElementById('page-clients').classList.contains('active')) renderClients();
+  if(document.getElementById('page-trash').classList.contains('active')) renderTrash();
+  alert('Workspace reset. "'+companyName+'" now starts with a clean slate.');
+}
+
 function restoreData(e){
   const file=e.target.files[0];if(!file)return;
   if(!confirm('Restore from backup? This will REPLACE all current project data.'))return;
@@ -2442,7 +2464,8 @@ function delActualSubconRow(i){
   function applyRemoteProjects(list){
     isApplyingRemote=true;
     PROJECTS=list;
-    localStorage.setItem('ysse_projects',JSON.stringify(PROJECTS));
+    ensureBranchDefaults();
+    localStorage.setItem(lsKey('ysse_projects'),JSON.stringify(PROJECTS));
     try{
       renderDashboard();
       if(document.getElementById('page-projects').classList.contains('active')) renderProjects();
@@ -2467,7 +2490,7 @@ function delActualSubconRow(i){
   function applyRemoteTrash(list){
     isApplyingRemote=true;
     TRASH=list;
-    localStorage.setItem('ysse_trash',JSON.stringify(TRASH));
+    localStorage.setItem(lsKey('ysse_trash'),JSON.stringify(TRASH));
     try{
       if(document.getElementById('page-trash').classList.contains('active')) renderTrash();
       else updateTrashBadge();
@@ -2478,7 +2501,7 @@ function delActualSubconRow(i){
   function applyRemoteInvoices(list){
     isApplyingRemote=true;
     INVOICES=list;
-    localStorage.setItem('ysse_invoices',JSON.stringify(INVOICES));
+    localStorage.setItem(lsKey('ysse_invoices'),JSON.stringify(INVOICES));
     try{
       if(document.getElementById('page-invoices').classList.contains('active')) renderInvoices();
       else updateInvoiceBadge();
@@ -2489,7 +2512,7 @@ function delActualSubconRow(i){
   function applyRemoteClients(list){
     isApplyingRemote=true;
     CLIENTS=list;
-    localStorage.setItem('ysse_clients',JSON.stringify(CLIENTS));
+    localStorage.setItem(lsKey('ysse_clients'),JSON.stringify(CLIENTS));
     try{
       if(document.getElementById('page-clients').classList.contains('active')) renderClients();
     }catch(e){}
@@ -2649,7 +2672,7 @@ function delActualSubconRow(i){
         return;
       }
       COMPANY_SETTINGS=data;
-      localStorage.setItem('ysse_company_settings',JSON.stringify(COMPANY_SETTINGS));
+      localStorage.setItem(lsKey('ysse_company_settings'),JSON.stringify(COMPANY_SETTINGS));
       var hdr=document.getElementById('hdr-company-name');
       if(hdr && data.companyName) hdr.textContent=data.companyName.toUpperCase();
     },function(err){
@@ -2685,6 +2708,15 @@ function delActualSubconRow(i){
 
   function applyCustomerScope(customerId){
     window.CURRENT_CUSTOMER_ID=customerId;
+    // Reset every in-memory data array to THIS tenant's own cached copy (never whatever was left over
+    // from a previously logged-in company in this browser tab). This is what actually stops one
+    // company's data from bleeding into another's — the listeners below only refine this further.
+    PROJECTS=JSON.parse(localStorage.getItem(lsKey('ysse_projects'))||'[]');
+    ensureBranchDefaults();
+    TRASH=JSON.parse(localStorage.getItem(lsKey('ysse_trash'))||'[]');
+    INVOICES=JSON.parse(localStorage.getItem(lsKey('ysse_invoices'))||'[]');
+    CLIENTS=JSON.parse(localStorage.getItem(lsKey('ysse_clients'))||'[]');
+    COMPANY_SETTINGS=JSON.parse(localStorage.getItem(lsKey('ysse_company_settings'))||'null')||JSON.parse(JSON.stringify(DEFAULT_COMPANY_SETTINGS));
     docRef=db.collection('ysse_tracker').doc(customerId==='ysse'?'shared_projects':customerId);
     settingsRef=db.collection('ysse_settings').doc(customerId==='ysse'?'company':customerId);
   }
@@ -2861,8 +2893,8 @@ function delActualSubconRow(i){
       var v=snap.data();
       PROJECTS=v.projects||[];
       TRASH=v.trash||[];
-      localStorage.setItem('ysse_projects',JSON.stringify(PROJECTS));
-      localStorage.setItem('ysse_trash',JSON.stringify(TRASH));
+      localStorage.setItem(lsKey('ysse_projects'),JSON.stringify(PROJECTS));
+      localStorage.setItem(lsKey('ysse_trash'),JSON.stringify(TRASH));
       if(typeof window.pushToCloud==='function') window.pushToCloud();
       callback(true);
     }).catch(function(err){ callback(false,err&&err.message?err.message:'unknown error'); });

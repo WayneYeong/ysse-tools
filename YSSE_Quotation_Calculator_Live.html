@@ -568,6 +568,7 @@ function getNormMult(){return n(document.getElementById('ot-norm').value)||1.0;}
 
 // ─── MATERIALS DATABASE ───────────────────────────────────────────────────
 const MATDB_KEY='ysse_matdb';
+function matLsKey(){ return MATDB_KEY+'__'+(window.CURRENT_CUSTOMER_ID||'pending'); }
 const DEFAULT_MATERIALS=[
   {id:'d01',category:'MS Plate',name:'MS Plate',size:'3mm',kgm:23.55,price:0,priceby:'kg',supplier:''},
   {id:'d02',category:'MS Plate',name:'MS Plate',size:'4mm',kgm:31.40,price:0,priceby:'kg',supplier:''},
@@ -633,9 +634,12 @@ const DEFAULT_MATERIALS=[
   {id:'d62',category:'SHS/RHS',name:'RHS',size:'200x100x5',kgm:22.10,price:0,priceby:'m',supplier:''},
 ].map(m=>Object.assign(m,{branch:'kuching'}));
 
-// Existing/legacy materials (saved before the Branch field existed) are assumed to be Kuching's data.
-let MATDB=(JSON.parse(localStorage.getItem(MATDB_KEY)||'null')||DEFAULT_MATERIALS.map(m=>Object.assign({},m))).map(m=>Object.assign({branch:'kuching'},m));
-function saveMatDB(){localStorage.setItem(MATDB_KEY,JSON.stringify(MATDB));if(typeof pushToCloud==='function') pushToCloud();}
+// IMPORTANT: not seeded from localStorage here — customerId/tenant isn't known yet at this point in
+// the script, and a generic non-namespaced key would let one company's materials database leak into
+// another's session on the same browser. MATDB starts as defaults and is reloaded from the correct
+// tenant-scoped cache once login resolves which company this is (see matLsKey() usage below).
+let MATDB=DEFAULT_MATERIALS.map(m=>Object.assign({branch:'kuching'},m));
+function saveMatDB(){localStorage.setItem(matLsKey(),JSON.stringify(MATDB));if(typeof pushToCloud==='function') pushToCloud();}
 
 // ─── MATERIAL PICKER ──────────────────────────────────────────────────────
 let pickerRow=null;
@@ -1274,7 +1278,7 @@ renderAll();
   function applyRemoteMatDB(list){
     isApplyingRemote=true;
     MATDB=list.map(function(m){return Object.assign({branch:'kuching'},m);});
-    localStorage.setItem(MATDB_KEY,JSON.stringify(MATDB));
+    localStorage.setItem(matLsKey(),JSON.stringify(MATDB));
     try{
       var matdbOpen=document.getElementById('matdb-overlay')&&document.getElementById('matdb-overlay').classList.contains('open');
       var pickerOpen=document.getElementById('picker-overlay')&&document.getElementById('picker-overlay').classList.contains('open');
@@ -1435,6 +1439,9 @@ renderAll();
         window.CURRENT_CUSTOMER_ID=customerId;
         window.CURRENT_USER_NAME=v.name||'';
         window.CURRENT_USER_POSITION=v.position||'';
+        // Reload MATDB from THIS tenant's own cache now that we know who's signing in — never leave
+        // whatever a previously logged-in company on this browser left behind in memory.
+        MATDB=(JSON.parse(localStorage.getItem(matLsKey())||'null')||DEFAULT_MATERIALS.map(function(m){return Object.assign({},m);})).map(function(m){return Object.assign({branch:'kuching'},m);});
         docRef=db.collection('ysse_quotation').doc(customerId==='ysse'?'shared_matdb':customerId);
         settingsRef=db.collection('ysse_settings').doc(customerId==='ysse'?'company':customerId);
         settingsRef.onSnapshot(function(snap){
