@@ -67,6 +67,8 @@ table.projects tr:hover td{background:#f0f6ff}
 .btn-danger{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}.btn-danger:hover{background:#fca5a5}
 .btn-ghost{background:transparent;border:1px solid var(--mid);color:var(--mid)}.btn-ghost:hover{background:#eef1ff}
 body.role-qs .mgmt-only{display:none!important}
+body:not(.role-owner) .owner-only{display:none!important}
+body.no-settings-perm .needs-settings-perm{display:none!important}
 .more-dropdown{position:relative;display:inline-block}
 .more-dropdown-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:#fff;border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.22);min-width:200px;z-index:500;overflow:hidden}
 .more-dropdown-menu.open{display:block}
@@ -251,7 +253,7 @@ body.role-qs .mgmt-only{display:none!important}
           <button onclick="backupData()">💾 Backup JSON</button>
           <button onclick="document.getElementById('restore-input').click()">⤴ Restore Backup</button>
           <button onclick="openBackupHistory()">☁ Backup History</button>
-          <button class="mgmt-only" onclick="openCompanySettings()">⚙ Company Settings</button>
+          <button class="needs-settings-perm" onclick="openCompanySettings()">⚙ Company Settings</button>
           <button onclick="window.print()">🖨 Print</button>
         </div>
       </div>
@@ -272,7 +274,7 @@ body.role-qs .mgmt-only{display:none!important}
   <div class="nav-tab" onclick="showPage('invoices',this)">Invoices <span id="invoice-badge" style="display:none;background:#C0392B;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;font-weight:700">0</span></div>
   <div class="nav-tab" onclick="showPage('clients',this)">Clients</div>
   <div class="nav-tab mgmt-only" onclick="showPage('trash',this)">Trash <span id="trash-badge" style="display:none;background:#999;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;font-weight:700">0</span></div>
-  <div class="nav-tab mgmt-only" onclick="showPage('users',this)">Manage Users</div>
+  <div class="nav-tab owner-only" onclick="showPage('users',this)">Manage Users</div>
 </div>
 
 <div class="page active" id="page-dashboard">
@@ -461,14 +463,16 @@ body.role-qs .mgmt-only{display:none!important}
       <select id="nu-role">
         <option value="qs">QS / Engineer</option>
         <option value="management">Management</option>
+        <option value="owner">Owner</option>
       </select>
       <button class="btn btn-primary btn-sm" onclick="addUser()">+ Add User</button>
     </div>
+    <div style="padding:0 14px 14px;font-size:11px;color:var(--mid)">Management users start with no feature access ticked below — enable Financial Dashboard, Quotation Calculator, and/or Company Settings per person after adding them.</div>
   </div>
   <div class="tbl-card">
     <div class="tbl-card-hdr"><h3>Users &amp; Roles</h3></div>
     <table class="projects"><thead><tr>
-      <th>Name</th><th>Position</th><th>Email</th><th>Role</th><th>Added On</th><th>Actions</th>
+      <th>Name</th><th>Position</th><th>Email</th><th>Role</th><th>Dashboard</th><th>Quotation</th><th>Settings</th><th>Added On</th><th>Actions</th>
     </tr></thead><tbody id="body-users"></tbody></table>
     <div id="users-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No users added yet.</div>
   </div>
@@ -818,11 +822,36 @@ let importedQuoteDetail=null;
 let PENDING_QUOTES=[];
 let ALL_USERS=[];
 window.CURRENT_USER_ROLE='qs';
-const ROLE_LABELS={management:'Management',qs:'QS / Engineer'};
-function isManagement(){ return window.CURRENT_USER_ROLE==='management'; }
+window.CURRENT_USER_PERMISSIONS={};
+const ROLE_LABELS={owner:'Owner',management:'Management',qs:'QS / Engineer'};
+function isOwner(){ return window.CURRENT_USER_ROLE==='owner'; }
+function hasOwnerInTenant(){
+  const myCid=window.CURRENT_CUSTOMER_ID||'ysse';
+  return (typeof ALL_USERS!=='undefined'?ALL_USERS:[]).some(function(u){ return (u.customerId||'ysse')===myCid && u.role==='owner'; });
+}
+function isEffectiveOwner(){
+  if(isOwner()) return true;
+  // Backward compatibility: a tenant with no Owner yet (i.e. it predates this permission system)
+  // treats its existing Management user(s) as Owner-equivalent so nobody gets locked out.
+  if(window.CURRENT_USER_ROLE==='management' && !hasOwnerInTenant()) return true;
+  return false;
+}
+function isManagement(){ return window.CURRENT_USER_ROLE==='management' || isOwner(); }
+function hasPermission(key){
+  if(isEffectiveOwner()) return true;
+  if(window.CURRENT_USER_ROLE!=='management') return false;
+  const p=window.CURRENT_USER_PERMISSIONS;
+  // Legacy Management accounts with no permissions object yet default to full access.
+  return (p && p[key]!==undefined) ? !!p[key] : true;
+}
 function requireManagement(actionLabel){
   if(isManagement()) return true;
   alert('Only Management can '+(actionLabel||'do this')+'.');
+  return false;
+}
+function requireOwner(actionLabel){
+  if(isEffectiveOwner()) return true;
+  alert('Only the Owner can '+(actionLabel||'do this')+'.');
   return false;
 }
 document.body.classList.add('role-qs');
@@ -1137,10 +1166,12 @@ function updateTrashBadge(){
 
 function applyRoleToUI(){
   document.body.classList.toggle('role-qs',!isManagement());
+  document.body.classList.toggle('role-owner',isEffectiveOwner());
+  document.body.classList.toggle('no-settings-perm',!hasPermission('settings'));
 }
 
 function renderUsers(){
-  if(!requireManagement('view Manage Users'))return showPage('dashboard',document.querySelectorAll('.nav-tab')[0]);
+  if(!requireOwner('view Manage Users'))return showPage('dashboard',document.querySelectorAll('.nav-tab')[0]);
   const tbody=document.getElementById('body-users');
   const empty=document.getElementById('users-empty');
   if(!tbody) return;
@@ -1148,24 +1179,35 @@ function renderUsers(){
   const myUsers=ALL_USERS.filter(u=>(u.customerId||'ysse')===myCustomerId);
   if(!myUsers.length){ tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
   if(empty) empty.style.display='none';
-  const mgmtCount=myUsers.filter(u=>u.role==='management').length;
+  const ownerCount=myUsers.filter(u=>u.role==='owner').length;
   tbody.innerHTML=myUsers.map(u=>{
     const addedOn=u.addedAt?new Date(u.addedAt).toLocaleDateString('en-MY'):'-';
-    const isLastMgmt=u.role==='management'&&mgmtCount<=1;
+    const isLastOwner=u.role==='owner'&&ownerCount<=1;
+    const perms=u.permissions||{};
+    const permCell=function(key){
+      if(u.role==='owner') return '<span title="Owners always have full access" style="color:#1A6640;font-weight:700">✓</span>';
+      if(u.role==='qs') return key==='quotation'?'<span title="QS/Engineer always has Quotation access" style="color:#1A6640;font-weight:700">✓</span>':'<span style="color:#ccc">—</span>';
+      const checked=perms[key]!==undefined?!!perms[key]:true; // legacy management docs default to full access
+      return '<input type="checkbox" '+(checked?'checked':'')+' onchange="updateUserPermission(\''+u.email+'\',\''+key+'\',this.checked)">';
+    };
     return '<tr>'+
       '<td><input value="'+(u.name?u.name.replace(/"/g,'&quot;'):'')+'" placeholder="-" onchange="updateUserProfile(\''+u.email+'\',\'name\',this.value)" style="width:120px;border:1px solid #ddd;border-radius:3px;padding:3px 5px;font-size:12px"></td>'+
       '<td><input value="'+(u.position?u.position.replace(/"/g,'&quot;'):'')+'" placeholder="-" onchange="updateUserProfile(\''+u.email+'\',\'position\',this.value)" style="width:140px;border:1px solid #ddd;border-radius:3px;padding:3px 5px;font-size:12px"></td>'+
       '<td>'+u.email+(u.email===window.CURRENT_USER_EMAIL?' <span style="color:#888;font-size:10px">(you)</span>':'')+'</td>'+
-      '<td><select onchange="changeUserRole(\''+u.email+'\',this.value)" '+(isLastMgmt?'disabled title="Cannot change the last Management user"':'')+' style="font-size:12px;padding:3px">'+
+      '<td><select onchange="changeUserRole(\''+u.email+'\',this.value)" '+(isLastOwner?'disabled title="Cannot change the last Owner"':'')+' style="font-size:12px;padding:3px">'+
       '<option value="qs"'+(u.role==='qs'?' selected':'')+'>QS / Engineer</option>'+
-      '<option value="management"'+(u.role==='management'?' selected':'')+'>Management</option></select></td>'+
+      '<option value="management"'+(u.role==='management'?' selected':'')+'>Management</option>'+
+      '<option value="owner"'+(u.role==='owner'?' selected':'')+'>Owner</option></select></td>'+
+      '<td style="text-align:center">'+permCell('dashboard')+'</td>'+
+      '<td style="text-align:center">'+permCell('quotation')+'</td>'+
+      '<td style="text-align:center">'+permCell('settings')+'</td>'+
       '<td>'+addedOn+'</td>'+
-      '<td><button class="btn btn-danger btn-sm" '+(isLastMgmt?'disabled title="Cannot remove the last Management user"':'')+' onclick="removeUser(\''+u.email+'\')">Remove</button></td></tr>';
+      '<td><button class="btn btn-danger btn-sm" '+(isLastOwner?'disabled title="Cannot remove the last Owner"':'')+' onclick="removeUser(\''+u.email+'\')">Remove</button></td></tr>';
   }).join('');
 }
 
 function addUser(){
-  if(!requireManagement('add users'))return;
+  if(!requireOwner('add users'))return;
   const nameEl=document.getElementById('nu-name');
   const posEl=document.getElementById('nu-position');
   const emailEl=document.getElementById('nu-email');
@@ -1176,13 +1218,18 @@ function addUser(){
   const role=roleEl.value;
   if(!email||!email.includes('@')){alert('Please enter a valid email.');return;}
   if(ALL_USERS.some(u=>u.email===email)){alert('That user already exists. Edit their details from the list below instead.');return;}
-  if(typeof window.addUserToFirestore==='function') window.addUserToFirestore(email,role,name,position,window.CURRENT_CUSTOMER_ID||'ysse');
+  if(typeof window.addUserToFirestore==='function') window.addUserToFirestore(email,role,name,position,window.CURRENT_CUSTOMER_ID||'ysse',{dashboard:false,quotation:false,settings:false});
   nameEl.value='';posEl.value='';emailEl.value='';
 }
 
 function updateUserProfile(email,field,value){
-  if(!requireManagement('edit user details'))return;
+  if(!requireOwner('edit user details'))return;
   if(typeof window.updateUserField==='function') window.updateUserField(email,field,value.trim());
+}
+
+function updateUserPermission(email,key,checked){
+  if(!requireOwner('change user permissions'))return;
+  if(typeof window.updateUserPermissionInFirestore==='function') window.updateUserPermissionInFirestore(email,key,checked);
 }
 
 function userLabel(email){
@@ -1193,19 +1240,19 @@ function userLabel(email){
 }
 
 function changeUserRole(email,role){
-  if(!requireManagement('change user roles'))return;
+  if(!requireOwner('change user roles'))return;
   const u=ALL_USERS.find(x=>x.email===email);
-  if(u&&u.role==='management'&&role!=='management'){
-    const mgmtCount=ALL_USERS.filter(x=>x.role==='management').length;
-    if(mgmtCount<=1){alert('Cannot demote the last Management user — promote someone else first.');renderUsers();return;}
+  if(u&&u.role==='owner'&&role!=='owner'){
+    const ownerCount=ALL_USERS.filter(x=>x.role==='owner'&&(x.customerId||'ysse')===(window.CURRENT_CUSTOMER_ID||'ysse')).length;
+    if(ownerCount<=1){alert('Cannot demote the last Owner — promote someone else to Owner first.');renderUsers();return;}
   }
   if(typeof window.updateUserRole==='function') window.updateUserRole(email,role);
 }
 
 function removeUser(email){
   const u=ALL_USERS.find(x=>x.email===email);if(!u)return;
-  if(!requireManagement('remove users'))return;
-  if(u.role==='management'&&ALL_USERS.filter(x=>x.role==='management').length<=1){alert('Cannot remove the last Management user.');return;}
+  if(!requireOwner('remove users'))return;
+  if(u.role==='owner'&&ALL_USERS.filter(x=>x.role==='owner'&&(x.customerId||'ysse')===(window.CURRENT_CUSTOMER_ID||'ysse')).length<=1){alert('Cannot remove the last Owner.');return;}
   if(!confirm('Remove '+email+'? They will lose access to this system (their Firebase login still works elsewhere unless you also delete it in Firebase Console).'))return;
   if(typeof window.removeUserFromFirestore==='function') window.removeUserFromFirestore(email);
 }
@@ -1438,7 +1485,7 @@ function deleteInvoice(id){
 /* ===================== COMPANY SETTINGS ===================== */
 
 function openCompanySettings(){
-  if(!requireManagement('edit Company Settings'))return;
+  if(!hasPermission('settings')){ alert('You do not have permission to edit Company Settings. Ask your Owner to enable it for your account.'); return; }
   const s=COMPANY_SETTINGS;
   document.getElementById('cs-name').value=s.companyName||'';
   document.getElementById('cs-phone').value=s.phone||'';
@@ -2575,6 +2622,7 @@ function delActualSubconRow(i){
       var me2=(window.CURRENT_USER_EMAIL||'').toLowerCase();
       var mine=ALL_USERS.find(function(u){ return u.email===me2; });
       window.CURRENT_USER_ROLE = mine ? mine.role : 'qs';
+      window.CURRENT_USER_PERMISSIONS = mine ? (mine.permissions||{}) : {};
       try{
         applyRoleToUI();
         var who=document.getElementById('logged-in-as');
@@ -2645,9 +2693,11 @@ function delActualSubconRow(i){
     var me=(user.email||user.uid||'').toLowerCase();
     usersCol.get().then(function(snap){
       if(snap.empty){
-        // First-ever login across the whole system bootstraps as Management of YSSE (original behavior, preserved).
-        usersCol.doc(me).set({email:me,role:'management',customerId:'ysse',addedAt:Date.now(),addedBy:'bootstrap'}).then(function(){
-          window.CURRENT_USER_ROLE='management';
+        // First-ever login across the whole system bootstraps as Owner of YSSE.
+        usersCol.doc(me).set({email:me,role:'owner',customerId:'ysse',addedAt:Date.now(),addedBy:'bootstrap'}).then(function(){
+          window.CURRENT_USER_ROLE='owner';
+          window.CURRENT_USER_PERMISSIONS={};
+          ALL_USERS=[{email:me,role:'owner',customerId:'ysse'}];
           applyCustomerScope('ysse');
           grantAccess(user);
         }).catch(function(err){
@@ -2655,6 +2705,9 @@ function delActualSubconRow(i){
         });
         return;
       }
+      // Populate ALL_USERS immediately from this fetch so owner-detection (hasOwnerInTenant) is correct
+      // right away, without waiting for the live usersCol.onSnapshot listener to attach later.
+      ALL_USERS=snap.docs.map(function(d){ return d.data(); });
       var mine=snap.docs.find(function(d){ return d.id===me; });
       if(!mine){
         // Unrecognized email, but other companies already exist on this system \u2014 offer self-service company setup.
@@ -2664,9 +2717,11 @@ function delActualSubconRow(i){
       var role=mine.data().role;
       var customerId=mine.data().customerId||'ysse';
       window.CURRENT_USER_ROLE=role;
+      window.CURRENT_USER_PERMISSIONS=mine.data().permissions||{};
       applyCustomerScope(customerId);
-      if(role==='management'){ grantAccess(user); }
-      else { showAccessDenied(); }
+      var canEnter=role==='owner'||(role==='management'&&(isEffectiveOwner()||hasPermission('dashboard')));
+      if(canEnter){ grantAccess(user); }
+      else { showAccessDenied(role==='management'?'Your account does not have Financial Dashboard access enabled. Ask your Owner to grant it, or use the Quotation Calculator instead.':undefined); }
     }).catch(function(err){
       showAccessDenied('Could not verify your access level. Please check your connection and refresh, or contact Management.');
     });
@@ -2695,8 +2750,10 @@ function delActualSubconRow(i){
     var setup=document.getElementById('company-setup-overlay');
     var email=setup?setup.dataset.userEmail:'';
     if(!email){ if(errEl) errEl.textContent='Session expired \u2014 please refresh and sign in again.'; return; }
-    usersCol.doc(email).set({email:email,role:'management',customerId:customerId,companyName:name,addedAt:Date.now(),addedBy:'self-setup'}).then(function(){
-      window.CURRENT_USER_ROLE='management';
+    usersCol.doc(email).set({email:email,role:'owner',customerId:customerId,companyName:name,addedAt:Date.now(),addedBy:'self-setup'}).then(function(){
+      window.CURRENT_USER_ROLE='owner';
+      window.CURRENT_USER_PERMISSIONS={};
+      ALL_USERS=[{email:email,role:'owner',customerId:customerId}];
       window.CURRENT_COMPANY_NAME=name;
       applyCustomerScope(customerId);
       if(setup) setup.style.display='none';
@@ -2726,13 +2783,19 @@ function delActualSubconRow(i){
     if(!settingsRef){ if(callback) callback(new Error('not ready')); return; }
     settingsRef.set(settings).then(function(){ if(callback) callback(null); }).catch(function(err){ if(callback) callback(err); });
   };
-  window.addUserToFirestore=function(email,role,name,position,customerId){
+  window.addUserToFirestore=function(email,role,name,position,customerId,permissions){
     if(!usersCol) return;
-    usersCol.doc(email).set({email:email,role:role,name:name||'',position:position||'',customerId:customerId||'ysse',addedAt:Date.now(),addedBy:window.CURRENT_USER_EMAIL||''}).catch(function(err){ alert('Could not add user: '+(err&&err.message?err.message:'unknown error')); });
+    usersCol.doc(email).set({email:email,role:role,name:name||'',position:position||'',customerId:customerId||'ysse',permissions:permissions||{},addedAt:Date.now(),addedBy:window.CURRENT_USER_EMAIL||''}).catch(function(err){ alert('Could not add user: '+(err&&err.message?err.message:'unknown error')); });
   };
   window.updateUserRole=function(email,role){
     if(!usersCol) return;
     usersCol.doc(email).update({role:role}).catch(function(err){ alert('Could not update role: '+(err&&err.message?err.message:'unknown error')); });
+  };
+  window.updateUserPermissionInFirestore=function(email,key,checked){
+    if(!usersCol) return;
+    var patch={};
+    patch['permissions.'+key]=!!checked;
+    usersCol.doc(email).update(patch).catch(function(err){ alert('Could not update permission: '+(err&&err.message?err.message:'unknown error')); });
   };
   window.updateUserField=function(email,field,value){
     if(!usersCol) return;
