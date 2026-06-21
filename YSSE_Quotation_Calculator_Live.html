@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YSSE FABRICATOR – Project Quotation Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;background:#f0f4f8;color:#1a1a1a;font-size:13px}
+h1,h2,h3,h4,.brand{font-family:'Space Grotesk',Arial,sans-serif}
+td.num,.sum-val,.quotation-price .price,.mock-amt{font-family:'JetBrains Mono',monospace}
+.hdr{background:linear-gradient(110deg,#10173A,#1c2960);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:0 2px 18px rgba(16,23,58,.25)}
+.hdr-left{display:flex;align-items:center;gap:16px}
+.brand{font-size:20px;font-weight:700;letter-spacing:.5px;color:#fff}
+.sub{font-size:11px;color:#a0c4e8;margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+.info-bar{background:linear-gradient(100deg,#46618F,#5C5490);padding:10px 24px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.info-bar label{color:#c8dff0;font-size:10px;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:2px}
+.info-bar input,.info-bar textarea,.info-bar select{width:100%;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;padding:2px 0;outline:none}
+.info-bar select{cursor:pointer}
+.info-bar select option{color:#000}
+.info-bar input::placeholder,.info-bar textarea::placeholder{color:rgba(255,255,255,.4)}
+.ot-bar{background:#5C9C94;padding:7px 24px;display:flex;align-items:center;gap:24px;font-size:12px;font-weight:600;color:#10173A}
+.ot-bar label{display:flex;align-items:center;gap:6px}
+.ot-bar input[type=number]{width:56px;padding:2px 4px;border:1.5px solid #10173A;border-radius:3px;font-weight:700;font-size:12px;text-align:center}
+.main{padding:18px 24px;display:flex;flex-direction:column;gap:20px}
+.card{background:#fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.12);overflow:hidden}
+.card-hdr{background:linear-gradient(100deg,#10173A,#1c2960);color:#fff;padding:8px 14px;display:flex;align-items:center;justify-content:space-between}
+.card-hdr .title{font-size:13px;font-weight:700;letter-spacing:.3px}
+.card-hdr .btns{display:flex;gap:6px;align-items:center}
+.card-hdr button{background:rgba(255,255,255,.15);border:none;color:#fff;padding:3px 10px;border-radius:3px;cursor:pointer;font-size:11px}
+.card-hdr button:hover{background:rgba(255,255,255,.28)}
+.card-hdr .matdb-btn{background:rgba(92,156,148,.92);color:#10173A;font-weight:700;padding:3px 10px;border-radius:3px;cursor:pointer;font-size:11px;border:none}
+.card-hdr .matdb-btn:hover{background:#5C9C94}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#46618F;color:#fff;padding:6px 7px;text-align:center;white-space:nowrap;font-size:11px;font-weight:600}
+td{border-bottom:1px solid #e8eef5;padding:4px 5px;vertical-align:middle}
+tr:nth-child(even){background:#f7fafd}
+td input,td select{width:100%;border:none;background:transparent;font-size:12px;padding:2px 3px;outline:none;font-family:Arial,sans-serif}
+td input:focus,td select:focus{background:#fffbe6;border-radius:2px}
+td.num{text-align:right;font-weight:600;color:#10173A}
+td.num input{text-align:right}
+.subtotal-row td{background:#e8f0f8;font-weight:700;font-size:12px;color:#10173A}
+.mhr-summary{background:#1A6640;color:#fff;padding:8px 14px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:11px}
+.mhr-summary .sv{font-size:14px;font-weight:700;margin-top:1px}
+.summary-card{background:#fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.12);padding:16px 20px;max-width:520px;margin:0 auto;width:100%}
+.summary-card h3{background:linear-gradient(100deg,#10173A,#1c2960);color:#fff;margin:-16px -20px 12px;padding:8px 16px;font-size:13px;border-radius:6px 6px 0 0}
+.sum-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:12px}
+.sum-row.total{font-weight:700;font-size:14px;border-bottom:none;margin-top:4px;padding-top:8px;color:#10173A}
+.sum-row.markup{color:#888}
+.sum-label{color:#333}
+.sum-val{font-weight:600;color:#10173A}
+.markup-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee}
+.markup-row label{font-size:12px;flex:1}
+.markup-row input{width:60px;padding:3px 5px;border:1.5px solid #46618F;border-radius:3px;text-align:right;font-weight:700;font-size:12px}
+.quotation-price{background:linear-gradient(110deg,#10173A,#1c2960 60%,#2a1f5e);color:#fff;padding:12px 16px;border-radius:6px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 6px 20px rgba(16,23,58,.3)}
+.quotation-price .lbl{font-size:11px;letter-spacing:1px;text-transform:uppercase;opacity:.8}
+.quotation-price .price{font-size:22px;font-weight:700;color:#7FC2B8;text-shadow:0 0 12px rgba(92,156,148,.3)}
+.toolbar{display:flex;gap:10px;justify-content:flex-end;padding:0 0 4px}
+.toolbar button{padding:7px 18px;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;transition:.15s}
+.btn-save{background:linear-gradient(120deg,#10173A,#1c2960);color:#fff}.btn-save:hover{background:#46618F}
+.btn-load{background:linear-gradient(120deg,#46618F,#5C5490);color:#fff}.btn-load:hover{filter:brightness(1.1)}
+.btn-print{background:#5C9C94;color:#10173A}.btn-print:hover{background:#00b8a8}
+.btn-clear{background:#e9ecef;color:#555}.btn-clear:hover{background:#dee2e6}
+.btn-submit{background:#1A6640;color:#fff}.btn-submit:hover{background:#14502f}
+.notes{background:#fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.1);padding:14px 18px}
+.notes h4{color:#10173A;margin-bottom:8px;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+.notes ul{padding-left:18px;font-size:11px;color:#555;line-height:1.8}
+/* PICK BUTTON */
+.pick-btn{background:#46618F;color:#fff;border:none;border-radius:3px;cursor:pointer;padding:2px 7px;font-size:11px;white-space:nowrap;line-height:1.6;flex-shrink:0}
+.pick-btn:hover{background:#10173A}
+/* MODAL OVERLAY */
+.mat-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px 16px}
+.mat-overlay.open{display:flex}
+.mat-modal{background:#fff;border-radius:8px;width:900px;max-width:96vw;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2);overflow:hidden}
+.mat-hdr{background:linear-gradient(100deg,#10173A,#1c2960);color:#fff;padding:10px 16px;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.mat-body{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.mat-controls{flex-shrink:0;padding:12px 16px}
+.mat-scroll{flex:1;overflow:auto;padding:0 16px 12px}
+.mat-tbl thead th{position:sticky;top:0;background:#f0f4f8;z-index:2}
+.mat-hdr h3{font-size:13px;font-weight:700}
+.mat-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;padding:0 4px}
+.mat-body{padding:16px}
+.mat-form{background:#f0f6ff;border-radius:6px;padding:12px 14px;margin-bottom:14px;border:1.5px dashed #46618F}
+.mat-form h4{font-size:11px;font-weight:700;color:#10173A;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.mat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 12px;margin-bottom:10px}
+.mat-grid.three{grid-template-columns:repeat(3,1fr)}
+.mat-grid.four{grid-template-columns:repeat(4,1fr)}
+.mat-group{display:flex;flex-direction:column;gap:3px}
+.mat-group label{font-size:10px;font-weight:700;color:#10173A;text-transform:uppercase;letter-spacing:.3px}
+.mat-group input,.mat-group select{border:1.5px solid #d1d9e6;border-radius:4px;padding:4px 7px;font-size:12px;outline:none;font-family:Arial,sans-serif;width:100%}
+.mat-group input:focus,.mat-group select:focus{border-color:#46618F;background:#fffbe6}
+.mat-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.mat-tbl th{background:#46618F;color:#fff;padding:6px 8px;text-align:left;white-space:nowrap;font-weight:600}
+.mat-tbl td{padding:5px 8px;border-bottom:1px solid #e8eef5;vertical-align:middle}
+.mat-tbl tr:hover td{background:#f0f6ff}
+.filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.filter-row input,.filter-row select{border:1.5px solid #d1d9e6;border-radius:4px;padding:5px 9px;font-size:12px;outline:none;font-family:Arial,sans-serif}
+.filter-row input:focus,.filter-row select:focus{border-color:#46618F}
+@media print{.toolbar,.btns,.ot-bar button,.hdr button,.mat-overlay{display:none!important}body{background:#fff}.card{box-shadow:none;border:1px solid #ccc}}
+</style>
+</head>
+<body>
+<div id="login-overlay" style="position:fixed;inset:0;background:radial-gradient(ellipse 90% 70% at 50% -10%,#1c2a6e 0%,#101a42 45%,#070d24 100%);display:flex;align-items:center;justify-content:center;z-index:9999;font-family:Arial">
+  <div style="background:#fff;border-radius:14px;padding:36px 40px;width:340px;box-shadow:0 25px 70px rgba(0,0,0,.45)">
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:18px;font-weight:700;color:#10173A;font-family:'Space Grotesk',Arial,sans-serif">YSSE FABRICATOR SDN BHD</div>
+      <div style="font-size:11px;color:#888;letter-spacing:.5px;margin-top:2px">QUOTATION CALCULATOR</div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px">Email</div>
+    <input type="email" id="login-email" placeholder="you@ysse.com" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:12px;outline:none" onkeydown="if(event.key==='Enter')doLogin()">
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px">Password</div>
+    <input type="password" id="login-password" placeholder="********" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:6px;outline:none" onkeydown="if(event.key==='Enter')doLogin()">
+    <div id="login-error" style="color:#c00;font-size:11px;min-height:14px;margin-bottom:10px"></div>
+    <button onclick="doLogin()" style="width:100%;padding:10px;background:linear-gradient(120deg,#46618F,#6E6296);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(70,97,143,.35)">Sign In</button>
+    <div style="text-align:center;margin-top:12px">
+      <a href="javascript:void(0)" onclick="forgotPassword()" style="font-size:11px;color:#888;text-decoration:none">Forgot password?</a>
+    </div>
+    <div id="login-status" style="text-align:center;font-size:10px;color:#aaa;margin-top:10px">Connecting...</div>
+  </div>
+</div>
+<div id="app-content" style="display:none">
+<div class="hdr">
+  <div class="hdr-left">
+    <img src="data:image/png;base64,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EOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOhGAAAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AADgJ/8vwADdQ82eebNfAwAAAABJRU5ErkJggg==" style="height:54px;width:auto;object-fit:contain;" alt="YSSE Logo">
+    <div>
+      <div class="brand">YSSE FABRICATOR SDN BHD</div>
+      <div class="sub">Project Quotation Calculator</div>
+    </div>
+  </div>
+  <div style="text-align:right;font-size:11px;color:#a0c4e8">
+    <div id="date-display"></div>
+    <div id="cloud-sync-indicator" style="margin-top:2px">☁ Live Sync: connecting...</div>
+    <div id="logged-in-as" style="margin-top:2px"></div>
+    <div style="margin-top:4px"><button onclick="doLogout()" style="background:none;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:4px;font-size:10px;padding:3px 8px;cursor:pointer">Log Out</button></div>
+  </div>
+</div>
+<div class="info-bar">
+  <div><label>Project Name</label><input id="proj-name" placeholder="Enter project name…"></div>
+  <div><label>Client</label><input id="proj-client" placeholder="Client name…"></div>
+  <div><label>Project No.</label><input id="proj-no" placeholder="e.g. YSSE-2026-001"></div>
+  <div><label>Prepared By</label><input id="proj-by" placeholder="Your name…"></div>
+  <div><label>Branch</label><select id="proj-branch"><option value="jb">Johor Bahru</option><option value="kuching">Kuching</option></select></div>
+</div>
+
+<div class="ot-bar">
+  <span>⚙ Manhour Assumptions:</span>
+  <label>Normal Hours Multiplier: <input type="number" id="ot-norm" value="1.0" min="0" step="0.1"></label>
+  <label>OT Hours Multiplier (weekday after 8hrs): <input type="number" id="ot-mult" value="1.5" min="1" step="0.1"></label>
+  <label>Sun / Public Holiday OT Multiplier: <input type="number" id="ot-sun" value="2.0" min="1" step="0.1"></label>
+</div>
+
+<div class="main">
+  <div class="toolbar">
+    <button class="btn-submit" onclick="submitToManagement()">📤 Submit to Management</button>
+    <button class="btn-load" onclick="openQuotesLibrary()">📚 Quotes Library</button>
+    <button class="btn-save" onclick="saveProject()">💾 Save JSON</button>
+    <button class="btn-load" onclick="loadProject()">📂 Load JSON</button>
+    <button class="btn-print" onclick="window.print()">🖨 Print</button>
+    <button class="btn-clear" onclick="clearAll()">🗑 Clear All</button>
+    <input type="file" id="file-input" accept=".json" style="display:none" onchange="loadFile(event)">
+    <span id="quote-save-indicator" style="font-size:11px;color:#888;margin-left:4px"></span>
+  </div>
+
+  <div class="card" id="card-materials">
+    <div class="card-hdr" style="background:#46618F">
+      <span class="title">1. MATERIALS</span>
+      <div class="btns">
+        <button class="matdb-btn" onclick="openMatDB()">📦 Materials DB</button>
+        <button onclick="addRow('materials')">+ Add Row</button>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table id="tbl-materials">
+      <thead><tr>
+        <th style="width:30px">#</th>
+        <th style="min-width:160px">Description</th>
+        <th style="width:50px">Qty</th>
+        <th style="width:65px">Unit</th>
+        <th style="width:70px">Len/Pcs (m)</th>
+        <th style="width:70px">Actual M</th>
+        <th style="width:58px">Req.Pcs</th>
+        <th style="width:68px">Total M</th>
+        <th style="width:52px">KG/M</th>
+        <th style="width:65px">Total KG</th>
+        <th style="width:58px">Price By</th>
+        <th style="width:80px">Unit Rate (RM)</th>
+        <th style="width:85px">Amount (RM)</th>
+        <th style="width:28px"></th>
+      </tr></thead>
+      <tbody id="body-materials"></tbody>
+      <tfoot><tr class="subtotal-row">
+        <td colspan="10" style="text-align:right;padding-right:10px">SUBTOTAL – MATERIALS</td>
+        <td class="num" id="sub-materials">0.00</td><td></td>
+      </tr></tfoot>
+    </table></div>
+  </div>
+
+  <div class="card" id="card-consumables">
+    <div class="card-hdr" style="background:#6E6296"><span class="title">2. CONSUMABLES</span>
+      <div class="btns"><button onclick="addRow('consumables')">+ Add Row</button></div>
+    </div>
+    <div class="tbl-wrap"><table id="tbl-consumables">
+      <thead><tr>
+        <th style="width:30px">#</th><th>Description</th>
+        <th style="width:60px">Qty</th><th style="width:80px">Unit</th>
+        <th style="width:110px">Unit Rate (RM)</th>
+        <th style="width:110px">Amount (RM)</th><th style="width:28px"></th>
+      </tr></thead>
+      <tbody id="body-consumables"></tbody>
+      <tfoot><tr class="subtotal-row">
+        <td colspan="5" style="text-align:right;padding-right:10px">SUBTOTAL – CONSUMABLES</td>
+        <td class="num" id="sub-consumables">0.00</td><td></td>
+      </tr></tfoot>
+    </table></div>
+  </div>
+
+  <div class="card" id="card-transport">
+    <div class="card-hdr" style="background:#3E7E84"><span class="title">3. TRANSPORT</span>
+      <div class="btns"><button onclick="addRow('transport')">+ Add Row</button></div>
+    </div>
+    <div class="tbl-wrap"><table id="tbl-transport">
+      <thead><tr>
+        <th style="width:30px">#</th><th>Description</th>
+        <th style="width:60px">Qty</th><th style="width:80px">Unit</th>
+        <th style="width:110px">Unit Rate (RM)</th>
+        <th style="width:110px">Amount (RM)</th><th style="width:28px"></th>
+      </tr></thead>
+      <tbody id="body-transport"></tbody>
+      <tfoot><tr class="subtotal-row">
+        <td colspan="5" style="text-align:right;padding-right:10px">SUBTOTAL – TRANSPORT</td>
+        <td class="num" id="sub-transport">0.00</td><td></td>
+      </tr></tfoot>
+    </table></div>
+  </div>
+
+  <div class="card" id="card-crane">
+    <div class="card-hdr" style="background:#A85A78"><span class="title">4. CRANE</span>
+      <div class="btns"><button onclick="addRow('crane')">+ Add Row</button></div>
+    </div>
+    <div class="tbl-wrap"><table id="tbl-crane">
+      <thead><tr>
+        <th style="width:30px">#</th><th>Description</th>
+        <th style="width:60px">Qty</th><th style="width:80px">Unit</th>
+        <th style="width:110px">Unit Rate (RM)</th>
+        <th style="width:110px">Amount (RM)</th><th style="width:28px"></th>
+      </tr></thead>
+      <tbody id="body-crane"></tbody>
+      <tfoot><tr class="subtotal-row">
+        <td colspan="5" style="text-align:right;padding-right:10px">SUBTOTAL – CRANE</td>
+        <td class="num" id="sub-crane">0.00</td><td></td>
+      </tr></tfoot>
+    </table></div>
+  </div>
+
+  <div class="card" id="card-others">
+    <div class="card-hdr" style="background:#475569"><span class="title">5. OTHERS</span>
+      <div class="btns"><button onclick="addRow('others')">+ Add Row</button></div>
+    </div>
+    <div class="tbl-wrap"><table id="tbl-others">
+      <thead><tr>
+        <th style="width:30px">#</th><th>Description</th>
+        <th style="width:60px">Qty</th><th style="width:80px">Unit</th>
+        <th style="width:110px">Unit Rate (RM)</th>
+        <th style="width:110px">Amount (RM)</th><th style="width:28px"></th>
+      </tr></thead>
+      <tbody id="body-others"></tbody>
+      <tfoot><tr class="subtotal-row">
+        <td colspan="5" style="text-align:right;padding-right:10px">SUBTOTAL – OTHERS</td>
+        <td class="num" id="sub-others">0.00</td><td></td>
+      </tr></tfoot>
+    </table></div>
+  </div>
+
+  <div class="card" id="card-manhours">
+    <div class="card-hdr" style="background:#1A6640"><span class="title">6. MANHOURS</span>
+      <div class="btns"><button onclick="addMhrRow()">+ Add Row</button></div>
+    </div>
+    <div class="tbl-wrap"><table id="tbl-manhours">
+      <thead><tr>
+        <th style="width:30px">#</th><th style="width:165px">Position / Role</th>
+        <th style="width:44px">Pax</th><th style="width:76px">RM/hr (Normal)</th>
+        <th style="width:74px">Normal Hrs/Day (×1.0)</th><th style="width:74px">OT Hrs/Day (×1.5 wkday)</th>
+        <th style="width:74px">Sun/PH Hrs/Day (×2.0)</th>
+        <th style="width:48px">Days</th><th style="width:74px">Total Hours</th>
+        <th style="width:74px">RM/Day</th><th style="width:68px">OT Mult</th>
+        <th style="width:86px">Total RM</th><th style="width:28px"></th>
+      </tr></thead>
+      <tbody id="body-manhours"></tbody>
+    </table></div>
+    <div class="mhr-summary">
+      <div><div style="opacity:.75;font-size:10px;text-transform:uppercase;letter-spacing:.5px">Total Man-Hours</div><div class="sv" id="mhr-total-hrs">0</div></div>
+      <div><div style="opacity:.75;font-size:10px;text-transform:uppercase;letter-spacing:.5px">Total Man-Days</div><div class="sv" id="mhr-total-days">0</div></div>
+      <div><div style="opacity:.75;font-size:10px;text-transform:uppercase;letter-spacing:.5px">Total Headcount</div><div class="sv" id="mhr-total-pax">0</div></div>
+      <div><div style="opacity:.75;font-size:10px;text-transform:uppercase;letter-spacing:.5px">Total Manhour Cost (RM)</div><div class="sv" id="sub-manhours">0.00</div></div>
+    </div>
+  </div>
+
+  <div class="card" id="card-subcon">
+    <div class="card-hdr" style="background:#C76A1F"><span class="title">7. SUBCONTRACTOR</span>
+      <div class="btns"><button onclick="addSubconRow()">+ Add Row</button></div>
+    </div>
+    <div class="tbl-wrap"><table id="tbl-subcon">
+      <thead><tr>
+        <th style="width:30px">#</th><th>Subcontractor Name</th>
+        <th style="width:130px">Lumpsum Amount (RM)</th><th style="width:28px"></th>
+      </tr></thead>
+      <tbody id="body-subcon"></tbody>
+      <tfoot><tr class="subtotal-row">
+        <td colspan="2" style="text-align:right;padding-right:10px">SUBTOTAL – SUBCONTRACTOR</td>
+        <td class="num" id="sub-subcon">0.00</td><td></td>
+      </tr></tfoot>
+    </table></div>
+  </div>
+
+  <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+  <div class="summary-card" id="rate-check-card" style="margin:0;flex:1;min-width:300px">
+    <h3>EFFECTIVE RATE CHECK</h3>
+    <div style="font-size:11px;color:#888;margin-bottom:8px">Optional &mdash; enter dimensions once and see the Final Quotation Price as RM/ft² and RM/m² (and RM/ft³, RM/m³ if Height is filled) all at the same time. Doesn't change the quote itself.</div>
+    <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
+      <input type="number" id="rc-len" min="0" step="0.01" placeholder="L" oninput="updateRcDims()" style="width:54px;padding:5px;border:1px solid #ccc;border-radius:3px;font-size:12px">
+      <span style="color:#888">×</span>
+      <input type="number" id="rc-wid" min="0" step="0.01" placeholder="W" oninput="updateRcDims()" style="width:54px;padding:5px;border:1px solid #ccc;border-radius:3px;font-size:12px">
+      <span style="color:#888">×</span>
+      <input type="number" id="rc-hgt" min="0" step="0.01" placeholder="H (optional)" oninput="updateRcDims()" style="width:78px;padding:5px;border:1px solid #ccc;border-radius:3px;font-size:12px">
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:10px">
+      Dimensions entered in:
+      <label style="margin-left:6px;cursor:pointer"><input type="radio" name="rc-dim-unit" value="ft" checked onchange="updateRcDims()"> ft</label>
+      <label style="margin-left:10px;cursor:pointer"><input type="radio" name="rc-dim-unit" value="m" onchange="updateRcDims()"> m</label>
+    </div>
+    <div class="markup-row">
+      <label>Total Weight (Ton)</label>
+      <input type="number" id="rc-weight" min="0" step="0.01" placeholder="0" oninput="recalcSummary()" style="width:70px">
+    </div>
+    <div style="display:flex;gap:10px;padding:5px 0;border-bottom:1px solid #eee;font-size:12px">
+      <div style="flex:1;display:flex;justify-content:space-between"><span class="sum-label">RM / ft²</span><span class="sum-val" id="rc-rate-ft2">-</span></div>
+      <div style="flex:1;display:flex;justify-content:space-between"><span class="sum-label">RM / m²</span><span class="sum-val" id="rc-rate-m2">-</span></div>
+    </div>
+    <div style="display:flex;gap:10px;padding:5px 0;border-bottom:1px solid #eee;font-size:12px">
+      <div style="flex:1;display:flex;justify-content:space-between"><span class="sum-label">RM / ft³</span><span class="sum-val" id="rc-rate-ft3">-</span></div>
+      <div style="flex:1;display:flex;justify-content:space-between"><span class="sum-label">RM / m³</span><span class="sum-val" id="rc-rate-m3">-</span></div>
+    </div>
+    <div class="sum-row"><span class="sum-label">RM / ton</span><span class="sum-val" id="rc-rate-weight">-</span></div>
+  </div>
+
+  <div class="summary-card" style="margin:0;flex:1;min-width:300px">
+    <h3>COST SUMMARY</h3>
+    <div class="sum-row"><span class="sum-label">1. Materials</span><span class="sum-val" id="ss-materials">RM 0.00</span></div>
+    <div class="sum-row"><span class="sum-label">2. Consumables</span><span class="sum-val" id="ss-consumables">RM 0.00</span></div>
+    <div class="sum-row"><span class="sum-label">3. Transport</span><span class="sum-val" id="ss-transport">RM 0.00</span></div>
+    <div class="sum-row"><span class="sum-label">4. Crane</span><span class="sum-val" id="ss-crane">RM 0.00</span></div>
+    <div class="sum-row"><span class="sum-label">5. Manhours</span><span class="sum-val" id="ss-manhours">RM 0.00</span></div>
+    <div class="sum-row"><span class="sum-label">6. Others</span><span class="sum-val" id="ss-others">RM 0.00</span></div>
+    <div class="sum-row"><span class="sum-label">7. Subcontractor</span><span class="sum-val" id="ss-subcon">RM 0.00</span></div>
+    <div class="sum-row total"><span class="sum-label">TOTAL COST</span><span class="sum-val" id="ss-total">RM 0.00</span></div>
+    <div class="markup-row">
+      <label>Markup / Profit (%)</label>
+      <input type="number" id="markup-pct" value="45" min="0" step="0.5" oninput="recalcSummary()">
+    </div>
+    <div class="sum-row markup"><span class="sum-label">Markup Amount</span><span class="sum-val" id="ss-markup">RM 0.00</span></div>
+    <div class="quotation-price">
+      <div><div class="lbl">Final Quotation Price</div></div>
+      <div class="price" id="ss-quote">RM 0.00</div>
+    </div>
+  </div>
+  </div>
+
+  <div class="notes">
+    <h4>Legend &amp; Notes</h4>
+    <ul>
+      <li><b>Price By: pcs</b> → Amount = Qty × Unit Rate</li>
+      <li><b>Price By: m</b> → Amount = Total Length (m) × Unit Rate</li>
+      <li><b>Price By: kg</b> → Amount = Total KG × Unit Rate</li>
+      <li><b>Total Length</b> = Qty × Length/pcs; <b>Total KG</b> = Total Length × Kg/m</li>
+      <li><b>📦 Materials DB</b> – Click to manage your materials library. Use the 📦 pick button on each row to auto-fill from the database.</li>
+      <li><b>Branch tag</b> on each material (Both / JB Only / Kuching Only) controls which branch's picker shows it by default — set via the Branch field above. Switch the picker to "All Branches" to see everything.</li>
+      <li><b>Manhours:</b> RM/Day = Pax × (Normal Hrs × RM/hr × Norm Mult + OT Hrs × RM/hr × OT Mult); Total RM = RM/Day × Days</li>
+      <li>Use 💾 Save JSON to preserve your work; 📂 Load JSON to restore</li>
+    </ul>
+  </div>
+</div>
+
+<!-- MATERIAL PICKER MODAL -->
+<div class="mat-overlay" id="picker-overlay" onclick="closePicker()">
+  <div class="mat-modal" onclick="event.stopPropagation()">
+    <div class="mat-hdr">
+      <h3>📦 Select Material from Database</h3>
+      <button class="mat-close" onclick="closePicker()">×</button>
+    </div>
+    <div class="mat-body">
+      <div class="mat-controls">
+        <div class="filter-row">
+          <input id="picker-search" placeholder="Search by name or size…" oninput="renderPicker()" style="flex:1;min-width:160px">
+          <select id="picker-cat" onchange="renderPicker()"><option value="">All Categories</option></select>
+          <select id="picker-sup" onchange="renderPicker()"><option value="">All Suppliers</option></select>
+          <select id="picker-branch" onchange="renderPicker()"><option value="current">This Branch</option><option value="">All Branches</option></select>
+        </div>
+      </div>
+      <div class="mat-scroll">
+        <table class="mat-tbl">
+          <thead><tr>
+            <th>Category</th><th>Name</th><th>Size</th>
+            <th style="text-align:right">kg/m</th><th style="text-align:right">Unit Rate (RM)</th>
+            <th>Price By</th><th>Supplier</th><th>Branch</th><th></th>
+          </tr></thead>
+          <tbody id="picker-body"></tbody>
+        </table>
+        <div id="picker-empty" style="text-align:center;padding:30px;color:#888;display:none">No materials found. Add some in the Materials Database.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MATERIALS DB MANAGER MODAL -->
+<div class="mat-overlay" id="matdb-overlay" onclick="closeMatDB()">
+  <div class="mat-modal" onclick="event.stopPropagation()" style="width:940px">
+    <div class="mat-hdr">
+      <h3>📦 Materials Database Manager</h3>
+      <button class="mat-close" onclick="closeMatDB()">×</button>
+    </div>
+    <div class="mat-body">
+      <div class="mat-controls">
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+          <button class="btn-save" id="add-mat-btn" onclick="showMatForm()" style="padding:5px 14px;font-size:12px">+ Add Material</button>
+          <button class="btn-load" onclick="exportMatDB()" style="padding:5px 14px;font-size:12px">↓ Export JSON</button>
+          <label class="btn-load" style="cursor:pointer;padding:5px 14px;font-size:12px;border-radius:4px;font-weight:600">↑ Import JSON<input type="file" accept=".json" onchange="importMatDB(event)" style="display:none"></label>
+          <button class="btn-clear" onclick="resetMatDB()" style="padding:5px 14px;font-size:12px">Reset to Defaults</button>
+          <div style="flex:1"></div>
+          <input id="matdb-search" placeholder="Search…" oninput="renderMatTable()" style="border:1.5px solid #d1d9e6;border-radius:4px;padding:5px 9px;font-size:12px;outline:none;width:180px">
+          <select id="matdb-cat-filter" onchange="renderMatTable()" style="border:1.5px solid #d1d9e6;border-radius:4px;padding:5px 9px;font-size:12px;outline:none"><option value="">All Categories</option></select>
+          <select id="matdb-branch-filter" onchange="renderMatTable()" style="border:1.5px solid #d1d9e6;border-radius:4px;padding:5px 9px;font-size:12px;outline:none"><option value="">All Branches</option><option value="both">Both Branches</option><option value="jb">Johor Bahru Only</option><option value="kuching">Kuching Only</option></select>
+        </div>
+        <div id="mat-form-panel" style="display:none">
+        <div class="mat-form">
+          <h4 id="mat-form-title">Add New Material</h4>
+          <div class="mat-grid">
+            <div class="mat-group"><label>Category *</label><input id="mf-cat" list="cat-list" placeholder="e.g. MS Plate"></div>
+            <div class="mat-group"><label>Name *</label><input id="mf-name" placeholder="e.g. MS Plate"></div>
+            <div class="mat-group"><label>Size *</label><input id="mf-size" placeholder="e.g. 10mm"></div>
+            <div class="mat-group"><label>Supplier</label><input id="mf-sup" list="sup-list" placeholder="e.g. Hiap Teck"></div>
+          </div>
+          <div class="mat-grid four">
+            <div class="mat-group"><label>kg/m (linear weight)</label><input type="number" id="mf-kgm" min="0" step="0.001" value="0"></div>
+            <div class="mat-group"><label>Unit Rate (RM) *</label><input type="number" id="mf-price" min="0" step="0.01" value="0"></div>
+            <div class="mat-group"><label>Price By</label><select id="mf-priceby"><option value="kg">kg</option><option value="m">m</option><option value="pcs">pcs</option></select></div>
+            <div class="mat-group"><label>Branch</label><select id="mf-branch"><option value="both">Both Branches</option><option value="jb">Johor Bahru Only</option><option value="kuching">Kuching Only</option></select></div>
+          </div>
+          <datalist id="cat-list"></datalist>
+          <datalist id="sup-list"></datalist>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn-save" onclick="saveMat()" style="padding:5px 14px;font-size:12px">💾 Save Material</button>
+            <button class="btn-clear" onclick="cancelMatForm()" style="padding:5px 14px;font-size:12px">Cancel</button>
+          </div>
+        </div>
+        </div>
+      </div>
+      <div class="mat-scroll">
+        <table class="mat-tbl">
+          <thead><tr>
+            <th style="width:30px">#</th>
+            <th>Category</th><th>Name</th><th>Size</th>
+            <th style="text-align:right">kg/m</th><th style="text-align:right">Rate (RM)</th>
+            <th>Price By</th><th>Supplier</th><th>Branch</th>
+            <th colspan="2" style="text-align:center">Actions</th>
+          </tr></thead>
+          <tbody id="matdb-body"></tbody>
+        </table>
+        <div id="matdb-empty" style="text-align:center;padding:30px;color:#888;display:none">No materials in database. Click "+ Add Material" to get started.</div>
+        <div id="matdb-count" style="font-size:11px;color:#888;margin-top:8px;text-align:right"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUOTES LIBRARY MODAL -->
+<div class="mat-overlay" id="quotes-lib-overlay" onclick="closeQuotesLibrary()">
+  <div class="mat-modal" onclick="event.stopPropagation()" style="width:1000px">
+    <div class="mat-hdr">
+      <h3>📚 Quotes Library — All Saved Quotes</h3>
+      <button class="mat-close" onclick="closeQuotesLibrary()">×</button>
+    </div>
+    <div class="mat-body">
+      <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+        <input id="quotes-lib-search" placeholder="Search project / client / prepared by…" oninput="renderQuotesLibrary()" style="border:1.5px solid #d1d9e6;border-radius:4px;padding:5px 9px;font-size:12px;outline:none;width:240px">
+        <div style="flex:1"></div>
+        <div style="font-size:11px;color:#888">Quotes save automatically as you work — this is every saved quote, from everyone.</div>
+      </div>
+      <div class="mat-scroll">
+        <table class="mat-tbl">
+          <thead><tr>
+            <th>Project Name</th><th>Client</th><th>Branch</th><th>Prepared By</th>
+            <th style="text-align:right">Final Price (RM)</th><th>Last Updated</th><th></th>
+          </tr></thead>
+          <tbody id="quotes-lib-body"></tbody>
+        </table>
+        <div id="quotes-lib-empty" style="text-align:center;padding:30px;color:#888;display:none">No saved quotes yet. Start filling in a Project Name above and it'll appear here automatically.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────
+const STD_CATS=['materials'];
+const SIMPLE_CATS=['consumables','transport','crane','others'];
+const ALL_CATS=[...STD_CATS,...SIMPLE_CATS];
+const S={};
+ALL_CATS.forEach(c=>S[c]=[]);
+S.manhours=[];
+S.subcon=[];
+let ALL_QUOTES=[];
+let currentQuoteId=null;
+let quoteAutosaveTimer=null;
+function newStdRow(){return{desc:'',qty:'',unit:'',lenPcs:'',actualM:'',kgm:'',priceby:'pcs',rate:''};}
+function newSimpleRow(){return{desc:'',qty:'',unit:'',rate:''};}
+function newMhrRow(){return{pos:'',pax:'',rate:'',normHrs:'',otHrs:'',sunHrs:'',days:'',otMult:''};}
+function newSubconRow(){return{desc:'',qty:1,rate:''};}
+STD_CATS.forEach(c=>{S[c].push(newStdRow());S[c].push(newStdRow());S[c].push(newStdRow());});
+SIMPLE_CATS.forEach(c=>{S[c].push(newSimpleRow());S[c].push(newSimpleRow());S[c].push(newSimpleRow());});
+S.manhours.push(newMhrRow());S.manhours.push(newMhrRow());
+S.subcon.push(newSubconRow());S.subcon.push(newSubconRow());
+
+const n=v=>parseFloat(v)||0;
+const fmt=v=>v.toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtRM=v=>'RM '+fmt(v);
+function getOTMult(){return n(document.getElementById('ot-mult').value)||1.5;}
+function getNormMult(){return n(document.getElementById('ot-norm').value)||1.0;}
+
+// ─── MATERIALS DATABASE ───────────────────────────────────────────────────
+const MATDB_KEY='ysse_matdb';
+const DEFAULT_MATERIALS=[
+  {id:'d01',category:'MS Plate',name:'MS Plate',size:'3mm',kgm:23.55,price:0,priceby:'kg',supplier:''},
+  {id:'d02',category:'MS Plate',name:'MS Plate',size:'4mm',kgm:31.40,price:0,priceby:'kg',supplier:''},
+  {id:'d03',category:'MS Plate',name:'MS Plate',size:'5mm',kgm:39.25,price:0,priceby:'kg',supplier:''},
+  {id:'d04',category:'MS Plate',name:'MS Plate',size:'6mm',kgm:47.10,price:0,priceby:'kg',supplier:''},
+  {id:'d05',category:'MS Plate',name:'MS Plate',size:'8mm',kgm:62.80,price:0,priceby:'kg',supplier:''},
+  {id:'d06',category:'MS Plate',name:'MS Plate',size:'10mm',kgm:78.50,price:0,priceby:'kg',supplier:''},
+  {id:'d07',category:'MS Plate',name:'MS Plate',size:'12mm',kgm:94.20,price:0,priceby:'kg',supplier:''},
+  {id:'d08',category:'MS Plate',name:'MS Plate',size:'16mm',kgm:125.60,price:0,priceby:'kg',supplier:''},
+  {id:'d09',category:'MS Plate',name:'MS Plate',size:'20mm',kgm:157.00,price:0,priceby:'kg',supplier:''},
+  {id:'d10',category:'MS Plate',name:'MS Plate',size:'25mm',kgm:196.25,price:0,priceby:'kg',supplier:''},
+  {id:'d11',category:'Universal Beam (UB)',name:'UB',size:'203x133x25',kgm:25.10,price:0,priceby:'kg',supplier:''},
+  {id:'d12',category:'Universal Beam (UB)',name:'UB',size:'254x146x31',kgm:31.10,price:0,priceby:'kg',supplier:''},
+  {id:'d13',category:'Universal Beam (UB)',name:'UB',size:'305x165x40',kgm:40.30,price:0,priceby:'kg',supplier:''},
+  {id:'d14',category:'Universal Beam (UB)',name:'UB',size:'356x171x51',kgm:51.00,price:0,priceby:'kg',supplier:''},
+  {id:'d15',category:'Universal Beam (UB)',name:'UB',size:'406x178x60',kgm:60.10,price:0,priceby:'kg',supplier:''},
+  {id:'d16',category:'Universal Beam (UB)',name:'UB',size:'457x191x74',kgm:74.30,price:0,priceby:'kg',supplier:''},
+  {id:'d17',category:'Universal Beam (UB)',name:'UB',size:'533x210x92',kgm:92.10,price:0,priceby:'kg',supplier:''},
+  {id:'d18',category:'Universal Column (UC)',name:'UC',size:'152x152x23',kgm:23.00,price:0,priceby:'kg',supplier:''},
+  {id:'d19',category:'Universal Column (UC)',name:'UC',size:'203x203x46',kgm:46.10,price:0,priceby:'kg',supplier:''},
+  {id:'d20',category:'Universal Column (UC)',name:'UC',size:'254x254x73',kgm:73.10,price:0,priceby:'kg',supplier:''},
+  {id:'d21',category:'Universal Column (UC)',name:'UC',size:'305x305x97',kgm:97.10,price:0,priceby:'kg',supplier:''},
+  {id:'d22',category:'Universal Column (UC)',name:'UC',size:'356x368x129',kgm:129.00,price:0,priceby:'kg',supplier:''},
+  {id:'d23',category:'C-Channel',name:'Channel',size:'100x50x5',kgm:10.60,price:0,priceby:'kg',supplier:''},
+  {id:'d24',category:'C-Channel',name:'Channel',size:'150x65x7',kgm:16.00,price:0,priceby:'kg',supplier:''},
+  {id:'d25',category:'C-Channel',name:'Channel',size:'200x75x8',kgm:23.40,price:0,priceby:'kg',supplier:''},
+  {id:'d26',category:'C-Channel',name:'Channel',size:'230x90x9',kgm:32.20,price:0,priceby:'kg',supplier:''},
+  {id:'d27',category:'C-Channel',name:'Channel',size:'250x90x9',kgm:34.20,price:0,priceby:'kg',supplier:''},
+  {id:'d28',category:'C-Channel',name:'Channel',size:'300x90x10',kgm:40.50,price:0,priceby:'kg',supplier:''},
+  {id:'d29',category:'Angle Bar',name:'Angle Bar',size:'50x50x5',kgm:3.77,price:0,priceby:'kg',supplier:''},
+  {id:'d30',category:'Angle Bar',name:'Angle Bar',size:'65x65x6',kgm:5.91,price:0,priceby:'kg',supplier:''},
+  {id:'d31',category:'Angle Bar',name:'Angle Bar',size:'75x75x6',kgm:6.84,price:0,priceby:'kg',supplier:''},
+  {id:'d32',category:'Angle Bar',name:'Angle Bar',size:'75x75x8',kgm:9.00,price:0,priceby:'kg',supplier:''},
+  {id:'d33',category:'Angle Bar',name:'Angle Bar',size:'100x100x8',kgm:12.20,price:0,priceby:'kg',supplier:''},
+  {id:'d34',category:'Angle Bar',name:'Angle Bar',size:'100x100x10',kgm:15.10,price:0,priceby:'kg',supplier:''},
+  {id:'d35',category:'Angle Bar',name:'Angle Bar',size:'125x125x10',kgm:18.90,price:0,priceby:'kg',supplier:''},
+  {id:'d36',category:'Angle Bar',name:'Angle Bar',size:'150x150x12',kgm:27.30,price:0,priceby:'kg',supplier:''},
+  {id:'d37',category:'Flat Bar',name:'Flat Bar',size:'40x5',kgm:1.57,price:0,priceby:'kg',supplier:''},
+  {id:'d38',category:'Flat Bar',name:'Flat Bar',size:'50x6',kgm:2.36,price:0,priceby:'kg',supplier:''},
+  {id:'d39',category:'Flat Bar',name:'Flat Bar',size:'75x6',kgm:3.53,price:0,priceby:'kg',supplier:''},
+  {id:'d40',category:'Flat Bar',name:'Flat Bar',size:'100x8',kgm:6.28,price:0,priceby:'kg',supplier:''},
+  {id:'d41',category:'Flat Bar',name:'Flat Bar',size:'100x10',kgm:7.85,price:0,priceby:'kg',supplier:''},
+  {id:'d42',category:'Flat Bar',name:'Flat Bar',size:'150x10',kgm:11.78,price:0,priceby:'kg',supplier:''},
+  {id:'d43',category:'Round Bar',name:'Round Bar',size:'12mm',kgm:0.89,price:0,priceby:'kg',supplier:''},
+  {id:'d44',category:'Round Bar',name:'Round Bar',size:'16mm',kgm:1.58,price:0,priceby:'kg',supplier:''},
+  {id:'d45',category:'Round Bar',name:'Round Bar',size:'20mm',kgm:2.47,price:0,priceby:'kg',supplier:''},
+  {id:'d46',category:'Round Bar',name:'Round Bar',size:'25mm',kgm:3.85,price:0,priceby:'kg',supplier:''},
+  {id:'d47',category:'Round Bar',name:'Round Bar',size:'32mm',kgm:6.31,price:0,priceby:'kg',supplier:''},
+  {id:'d48',category:'ERW Round Pipe',name:'ERW Pipe',size:'1" SCH40',kgm:1.69,price:0,priceby:'m',supplier:''},
+  {id:'d49',category:'ERW Round Pipe',name:'ERW Pipe',size:'1.5" SCH40',kgm:2.17,price:0,priceby:'m',supplier:''},
+  {id:'d50',category:'ERW Round Pipe',name:'ERW Pipe',size:'2" SCH40',kgm:2.93,price:0,priceby:'m',supplier:''},
+  {id:'d51',category:'ERW Round Pipe',name:'ERW Pipe',size:'2.5" SCH40',kgm:3.63,price:0,priceby:'m',supplier:''},
+  {id:'d52',category:'ERW Round Pipe',name:'ERW Pipe',size:'3" SCH40',kgm:5.44,price:0,priceby:'m',supplier:''},
+  {id:'d53',category:'ERW Round Pipe',name:'ERW Pipe',size:'4" SCH40',kgm:8.56,price:0,priceby:'m',supplier:''},
+  {id:'d54',category:'ERW Round Pipe',name:'ERW Pipe',size:'6" SCH40',kgm:18.97,price:0,priceby:'m',supplier:''},
+  {id:'d55',category:'SHS/RHS',name:'SHS',size:'50x50x4',kgm:5.84,price:0,priceby:'m',supplier:''},
+  {id:'d56',category:'SHS/RHS',name:'SHS',size:'75x75x4',kgm:8.96,price:0,priceby:'m',supplier:''},
+  {id:'d57',category:'SHS/RHS',name:'SHS',size:'100x100x4',kgm:12.10,price:0,priceby:'m',supplier:''},
+  {id:'d58',category:'SHS/RHS',name:'SHS',size:'100x100x6',kgm:17.90,price:0,priceby:'m',supplier:''},
+  {id:'d59',category:'SHS/RHS',name:'RHS',size:'100x50x4',kgm:8.96,price:0,priceby:'m',supplier:''},
+  {id:'d60',category:'SHS/RHS',name:'RHS',size:'150x50x4',kgm:11.60,price:0,priceby:'m',supplier:''},
+  {id:'d61',category:'SHS/RHS',name:'RHS',size:'150x100x4',kgm:14.30,price:0,priceby:'m',supplier:''},
+  {id:'d62',category:'SHS/RHS',name:'RHS',size:'200x100x5',kgm:22.10,price:0,priceby:'m',supplier:''},
+].map(m=>Object.assign(m,{branch:'kuching'}));
+
+// Existing/legacy materials (saved before the Branch field existed) are assumed to be Kuching's data.
+let MATDB=(JSON.parse(localStorage.getItem(MATDB_KEY)||'null')||DEFAULT_MATERIALS.map(m=>Object.assign({},m))).map(m=>Object.assign({branch:'kuching'},m));
+function saveMatDB(){localStorage.setItem(MATDB_KEY,JSON.stringify(MATDB));if(typeof pushToCloud==='function') pushToCloud();}
+
+// ─── MATERIAL PICKER ──────────────────────────────────────────────────────
+let pickerRow=null;
+function openPicker(rowIdx){
+  pickerRow=rowIdx;
+  document.getElementById('picker-search').value='';
+  populatePickerFilters();
+  renderPicker();
+  document.getElementById('picker-overlay').classList.add('open');
+}
+function closePicker(){document.getElementById('picker-overlay').classList.remove('open');pickerRow=null;}
+
+function populatePickerFilters(){
+  const cats=[...new Set(MATDB.map(m=>m.category))].sort();
+  const sups=[...new Set(MATDB.map(m=>m.supplier).filter(Boolean))].sort();
+  const cs=document.getElementById('picker-cat');
+  const sv=cs.value;
+  cs.innerHTML='<option value="">All Categories</option>'+cats.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
+  cs.value=sv;
+  const ss=document.getElementById('picker-sup');
+  const sv2=ss.value;
+  ss.innerHTML='<option value="">All Suppliers</option>'+sups.map(s=>'<option value="'+s+'">'+s+'</option>').join('');
+  ss.value=sv2;
+}
+
+function renderPicker(){
+  const q=document.getElementById('picker-search').value.toLowerCase();
+  const cat=document.getElementById('picker-cat').value;
+  const sup=document.getElementById('picker-sup').value;
+  const bf=document.getElementById('picker-branch').value;
+  const curBranchEl=document.getElementById('proj-branch');
+  const curBranch=curBranchEl?curBranchEl.value:'';
+  const branchLabel={both:'Both',jb:'JB',kuching:'Kuching'};
+  const list=MATDB.filter(m=>{
+    const mb=m.branch||'kuching';
+    if(bf==='current'&&!(mb==='both'||mb===curBranch))return false;
+    if(cat&&m.category!==cat)return false;
+    if(sup&&m.supplier!==sup)return false;
+    if(q&&!m.name.toLowerCase().includes(q)&&!m.size.toLowerCase().includes(q)&&!(m.supplier||'').toLowerCase().includes(q)&&!m.category.toLowerCase().includes(q))return false;
+    return true;
+  });
+  const tbody=document.getElementById('picker-body');
+  const empty=document.getElementById('picker-empty');
+  if(!list.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=list.map(m=>`<tr><td>${m.category}</td><td><strong>${m.name}</strong></td><td>${m.size}</td><td style="text-align:right">${m.kgm>0?m.kgm.toFixed(3):'-'}</td><td style="text-align:right;font-weight:700;color:#10173A">${m.price>0?fmt(m.price):'-'}</td><td>${m.priceby}</td><td>${m.supplier||'-'}</td><td>${branchLabel[m.branch||'kuching']}</td><td><button class="pick-btn" onclick="selectMaterial('${m.id}')">Select</button></td></tr>`).join('');
+}
+
+function selectMaterial(id){
+  if(pickerRow===null)return;
+  const mat=MATDB.find(m=>m.id===id);if(!mat)return;
+  S.materials[pickerRow].desc=(mat.name+' '+mat.size).trim();
+  S.materials[pickerRow].kgm=mat.kgm;
+  S.materials[pickerRow].priceby=mat.priceby;
+  S.materials[pickerRow].rate=mat.price;
+  closePicker();
+  renderStd('materials');
+}
+
+// ─── MATDB MANAGER ────────────────────────────────────────────────────────
+let editMatId=null;
+function openMatDB(){
+  editMatId=null;
+  clearMatForm();
+  document.getElementById('mat-form-panel').style.display='none';
+  document.getElementById('add-mat-btn').textContent='+ Add Material';
+  document.getElementById('add-mat-btn').onclick=showMatForm;
+  populateMatDBFilters();
+  renderMatTable();
+  document.getElementById('matdb-overlay').classList.add('open');
+}
+function closeMatDB(){document.getElementById('matdb-overlay').classList.remove('open');editMatId=null;}
+
+function populateMatDBFilters(){
+  const cats=[...new Set(MATDB.map(m=>m.category))].sort();
+  const sups=[...new Set(MATDB.map(m=>m.supplier).filter(Boolean))].sort();
+  document.getElementById('matdb-cat-filter').innerHTML='<option value="">All Categories</option>'+cats.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
+  document.getElementById('cat-list').innerHTML=cats.map(c=>'<option value="'+c+'">').join('');
+  document.getElementById('sup-list').innerHTML=sups.map(s=>'<option value="'+s+'">').join('');
+}
+
+function renderMatTable(){
+  const q=document.getElementById('matdb-search').value.toLowerCase();
+  const cf=document.getElementById('matdb-cat-filter').value;
+  const bf=document.getElementById('matdb-branch-filter').value;
+  const branchLabel={both:'Both',jb:'JB',kuching:'Kuching'};
+  const list=MATDB.filter(m=>{
+    if(cf&&m.category!==cf)return false;
+    if(bf&&(m.branch||'kuching')!==bf)return false;
+    if(q&&!m.name.toLowerCase().includes(q)&&!m.size.toLowerCase().includes(q)&&!(m.supplier||'').toLowerCase().includes(q)&&!m.category.toLowerCase().includes(q))return false;
+    return true;
+  });
+  const tbody=document.getElementById('matdb-body');
+  const empty=document.getElementById('matdb-empty');
+  if(!list.length){tbody.innerHTML='';empty.style.display='block';}
+  else{
+    empty.style.display='none';
+    tbody.innerHTML=list.map((m,i)=>`<tr><td style="color:#888;font-size:10px">${i+1}</td><td>${m.category}</td><td><strong>${m.name}</strong></td><td>${m.size}</td><td style="text-align:right">${m.kgm>0?m.kgm.toFixed(3):'-'}</td><td style="text-align:right;font-weight:700;color:#10173A">${fmt(m.price)}</td><td>${m.priceby}</td><td>${m.supplier||'-'}</td><td>${branchLabel[m.branch||'kuching']}</td><td><button class="pick-btn" onclick="startEditMat('${m.id}')">Edit</button></td><td><button style="background:none;border:none;color:#c00;cursor:pointer;font-size:15px;line-height:1" onclick="deleteMat('${m.id}')">&#xd7;</button></td></tr>`).join('');
+  }
+  document.getElementById('matdb-count').textContent='Showing '+list.length+' of '+MATDB.length+' materials';
+}
+
+function showMatForm(){
+  document.getElementById('mat-form-panel').style.display='block';
+  document.getElementById('mat-form-title').textContent='Add New Material';
+  document.getElementById('add-mat-btn').textContent='↑ Hide Form';
+  document.getElementById('add-mat-btn').onclick=cancelMatForm;
+}
+function cancelMatForm(){
+  document.getElementById('mat-form-panel').style.display='none';
+  document.getElementById('add-mat-btn').textContent='+ Add Material';
+  document.getElementById('add-mat-btn').onclick=showMatForm;
+  editMatId=null;clearMatForm();
+}
+function clearMatForm(){
+  ['mf-cat','mf-name','mf-size','mf-sup'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mf-kgm').value=0;
+  document.getElementById('mf-price').value=0;
+  document.getElementById('mf-priceby').value='kg';
+  const branchEl=document.getElementById('proj-branch');
+  document.getElementById('mf-branch').value=branchEl?branchEl.value:'kuching';
+}
+function startEditMat(id){
+  const m=MATDB.find(x=>x.id===id);if(!m)return;
+  editMatId=id;
+  document.getElementById('mf-cat').value=m.category;
+  document.getElementById('mf-name').value=m.name;
+  document.getElementById('mf-size').value=m.size;
+  document.getElementById('mf-sup').value=m.supplier||'';
+  document.getElementById('mf-kgm').value=m.kgm;
+  document.getElementById('mf-price').value=m.price;
+  document.getElementById('mf-priceby').value=m.priceby;
+  document.getElementById('mf-branch').value=m.branch||'kuching';
+  document.getElementById('mat-form-panel').style.display='block';
+  document.getElementById('mat-form-title').textContent='Edit Material';
+  document.getElementById('add-mat-btn').textContent='↑ Hide Form';
+  document.getElementById('add-mat-btn').onclick=cancelMatForm;
+  document.getElementById('mat-form-panel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function saveMat(){
+  const cat=document.getElementById('mf-cat').value.trim();
+  const name=document.getElementById('mf-name').value.trim();
+  const size=document.getElementById('mf-size').value.trim();
+  if(!cat||!name){alert('Category and Name are required.');return;}
+  const mat={id:editMatId||Date.now().toString(36),category:cat,name,size,kgm:parseFloat(document.getElementById('mf-kgm').value)||0,price:parseFloat(document.getElementById('mf-price').value)||0,priceby:document.getElementById('mf-priceby').value,supplier:document.getElementById('mf-sup').value.trim(),branch:document.getElementById('mf-branch').value};
+  if(editMatId){const idx=MATDB.findIndex(m=>m.id===editMatId);if(idx>=0)MATDB[idx]=mat;}
+  else MATDB.push(mat);
+  saveMatDB();cancelMatForm();populateMatDBFilters();renderMatTable();
+}
+function deleteMat(id){
+  const m=MATDB.find(x=>x.id===id);if(!m)return;
+  if(!confirm('Delete "'+m.name+' '+m.size+'"?'))return;
+  MATDB=MATDB.filter(x=>x.id!==id);
+  saveMatDB();populateMatDBFilters();renderMatTable();
+}
+function exportMatDB(){
+  const blob=new Blob([JSON.stringify({version:'1.0',exported:new Date().toISOString(),materials:MATDB},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='YSSE_Materials_DB.json';a.click();
+}
+function importMatDB(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      const list=d.materials||d;
+      if(!Array.isArray(list)){alert('Invalid format: expected an array of materials.');return;}
+      const merge=confirm('MERGE or REPLACE? OK = MERGE (add new, keep existing). Cancel = REPLACE (overwrite all).');
+      if(merge){
+        const existingIds=new Set(MATDB.map(m=>m.id));
+        const newEntries=list.filter(m=>!existingIds.has(m.id)).map(m=>Object.assign({branch:'kuching'},m));
+        MATDB=[...MATDB,...newEntries];
+        saveMatDB();populateMatDBFilters();renderMatTable();
+        alert('Merged: '+newEntries.length+' new entries added. Total: '+MATDB.length);
+      } else {
+        if(!confirm('Replace ALL materials with '+list.length+' imported entries?'))return;
+        MATDB=list.map(m=>Object.assign({branch:'kuching'},m));saveMatDB();populateMatDBFilters();renderMatTable();
+        alert('Replaced. Total: '+MATDB.length+' materials.');
+      }
+    }catch(err){alert('Import failed: '+err.message);}
+  };
+  r.readAsText(file);e.target.value='';
+}
+function resetMatDB(){
+  if(!confirm('Reset to default materials list? All custom entries and prices will be lost.'))return;
+  MATDB=DEFAULT_MATERIALS.map(m=>Object.assign({},m));
+  saveMatDB();populateMatDBFilters();renderMatTable();
+}
+
+// ─── STD CATEGORY RENDERING ──────────────────────────────────────────────
+function renderStd(cat){
+  const tbody=document.getElementById('body-'+cat);
+  tbody.innerHTML='';
+  const UNITS=['','PCS','M','KG','SET','LOT','NOS','TRIP','L/SUM'];
+  S[cat].forEach((row,i)=>{
+    const tr=document.createElement('tr');
+    const totalLen=n(row.qty)*n(row.lenPcs);
+    const totalKg=totalLen*n(row.kgm);
+    const reqPcs=(n(row.actualM)>0&&n(row.lenPcs)>0)?Math.ceil(n(row.actualM)/n(row.lenPcs)):'';
+    let amt=0;
+    if(row.priceby==='kg') amt=totalKg*n(row.rate);
+    else if(row.priceby==='m') amt=totalLen*n(row.rate);
+    else amt=n(row.qty)*n(row.rate);
+    const pickBtn=`<button class="pick-btn" onclick="openPicker(${i})" title="Pick from Materials DB">&#x1F4E6;</button>`;
+    const unitOpts=UNITS.map(o=>`<option value="${o}"${row.unit===o?' selected':''}>${o||'-'}</option>`).join('');
+    tr.innerHTML=`
+      <td style="text-align:center;color:#888">${i+1}</td>
+      <td><div style="display:flex;gap:3px;align-items:center">${pickBtn}<input value="${row.desc}" placeholder="Description…" onchange="upd('${cat}',${i},'desc',this.value)" style="width:auto;flex:1;min-width:0;border:none;background:transparent;font-size:12px;padding:2px 3px;outline:none;font-family:Arial"></div></td>
+      <td class="num"><input type="number" value="${row.qty}" min="0" onchange="upd('${cat}',${i},'qty',this.value)"></td>
+      <td><select onchange="upd('${cat}',${i},'unit',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 0;outline:none;font-family:Arial;cursor:pointer">${unitOpts}</select></td>
+      <td class="num"><input type="number" value="${row.lenPcs}" min="0" step="0.01" onchange="upd('${cat}',${i},'lenPcs',this.value)"></td>
+      <td class="num"><input type="number" value="${row.actualM}" min="0" step="0.01" onchange="upd('${cat}',${i},'actualM',this.value)" placeholder="0"></td>
+      <td class="num" style="font-weight:600;color:#10173A">${reqPcs}</td>
+      <td class="num">${totalLen>0?fmt(totalLen):''}</td>
+      <td class="num"><input type="number" value="${row.kgm}" min="0" step="0.001" onchange="upd('${cat}',${i},'kgm',this.value)"></td>
+      <td class="num">${totalKg>0?fmt(totalKg):''}</td>
+      <td><select onchange="upd('${cat}',${i},'priceby',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 0;outline:none;font-family:Arial;cursor:pointer">
+        <option value="pcs"${row.priceby==='pcs'?' selected':''}>pcs</option>
+        <option value="m"${row.priceby==='m'?' selected':''}>m</option>
+        <option value="kg"${row.priceby==='kg'?' selected':''}>kg</option>
+      </select></td>
+      <td class="num"><input type="number" value="${row.rate}" min="0" step="0.01" onchange="upd('${cat}',${i},'rate',this.value)"></td>
+      <td class="num">${amt>0?fmt(amt):''}</td>
+      <td style="text-align:center"><button onclick="delRow('${cat}',${i})" style="background:none;border:none;color:#c00;cursor:pointer;font-size:14px">×</button></td>`;
+    tbody.appendChild(tr);
+  });
+  let sub=0;
+  S[cat].forEach(row=>{
+    const tl=n(row.qty)*n(row.lenPcs),tk=tl*n(row.kgm);
+    if(row.priceby==='kg') sub+=tk*n(row.rate);
+    else if(row.priceby==='m') sub+=tl*n(row.rate);
+    else sub+=n(row.qty)*n(row.rate);
+  });
+  document.getElementById('sub-'+cat).textContent=fmt(sub);
+  recalcSummary();
+}
+
+function renderSimple(cat){
+  const tbody=document.getElementById('body-'+cat);
+  tbody.innerHTML='';
+  const UNITS=['','PCS','M','KG','SET','LOT','NOS','TRIP','L/SUM','LUMP SUM'];
+  S[cat].forEach((row,i)=>{
+    const tr=document.createElement('tr');
+    const amt=n(row.qty)*n(row.rate);
+    const unitOpts=UNITS.map(o=>`<option value="${o}"${row.unit===o?' selected':''}>${o||'-'}</option>`).join('');
+    tr.innerHTML=`
+      <td style="text-align:center;color:#888">${i+1}</td>
+      <td><input value="${row.desc}" placeholder="Description…" onchange="updS('${cat}',${i},'desc',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 3px;outline:none;font-family:Arial"></td>
+      <td class="num"><input type="number" value="${row.qty}" min="0" onchange="updS('${cat}',${i},'qty',this.value)"></td>
+      <td><select onchange="updS('${cat}',${i},'unit',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 0;outline:none;font-family:Arial;cursor:pointer">${unitOpts}</select></td>
+      <td class="num"><input type="number" value="${row.rate}" min="0" step="0.01" onchange="updS('${cat}',${i},'rate',this.value)"></td>
+      <td class="num">${amt>0?fmt(amt):''}</td>
+      <td style="text-align:center"><button onclick="delRow('${cat}',${i})" style="background:none;border:none;color:#c00;cursor:pointer;font-size:14px">×</button></td>`;
+    tbody.appendChild(tr);
+  });
+  let sub=0;
+  S[cat].forEach(row=>{ sub+=n(row.qty)*n(row.rate); });
+  document.getElementById('sub-'+cat).textContent=fmt(sub);
+  recalcSummary();
+}
+
+function upd(cat,i,field,val){S[cat][i][field]=val;renderStd(cat);}
+function updS(cat,i,field,val){S[cat][i][field]=val;renderSimple(cat);}
+function addRow(cat){
+  if(SIMPLE_CATS.includes(cat))S[cat].push(newSimpleRow());
+  else S[cat].push(newStdRow());
+  if(SIMPLE_CATS.includes(cat))renderSimple(cat);else renderStd(cat);
+}
+function delRow(cat,i){
+  if(S[cat].length>1){S[cat].splice(i,1);}
+  if(SIMPLE_CATS.includes(cat))renderSimple(cat);else renderStd(cat);
+}
+
+// ─── MANHOURS ─────────────────────────────────────────────────────────────
+function getSunMult(){return n(document.getElementById('ot-sun').value)||2.0;}
+function renderMhr(){
+  const tbody=document.getElementById('body-manhours');
+  tbody.innerHTML='';
+  const OT=getOTMult(),NM=getNormMult(),SUN=getSunMult();
+  let totalHrs=0,totalDays=0,totalPax=0,totalRM=0;
+  S.manhours.forEach((row,i)=>{
+    const pax=n(row.pax),rate=n(row.rate),norm=n(row.normHrs),ot=n(row.otHrs),sun=n(row.sunHrs),days=n(row.days);
+    const rowOT=row.otMult!==''?n(row.otMult):OT;
+    const rmDay=pax*(norm*rate*NM+ot*rate*rowOT+sun*rate*SUN);
+    const tRM=rmDay*days,tHrs=pax*(norm+ot+sun)*days;
+    if(pax>0&&days>0){totalPax+=pax;totalDays+=pax*days;}
+    totalHrs+=tHrs;totalRM+=tRM;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="text-align:center;color:#888">${i+1}</td>
+      <td><input value="${row.pos}" placeholder="e.g. Welder, Fitter…" onchange="updM(${i},'pos',this.value)"></td>
+      <td class="num"><input type="number" value="${row.pax}" min="0" onchange="updM(${i},'pax',this.value)"></td>
+      <td class="num"><input type="number" value="${row.rate}" min="0" step="0.01" onchange="updM(${i},'rate',this.value)"></td>
+      <td class="num"><input type="number" value="${row.normHrs}" min="0" step="0.5" onchange="updM(${i},'normHrs',this.value)"></td>
+      <td class="num"><input type="number" value="${row.otHrs}" min="0" step="0.5" onchange="updM(${i},'otHrs',this.value)"></td>
+      <td class="num"><input type="number" value="${row.sunHrs}" min="0" step="0.5" onchange="updM(${i},'sunHrs',this.value)"></td>
+      <td class="num"><input type="number" value="${row.days}" min="0" onchange="updM(${i},'days',this.value)"></td>
+      <td class="num">${tHrs>0?fmt(tHrs):''}</td>
+      <td class="num">${rmDay>0?fmt(rmDay):''}</td>
+      <td class="num"><input type="number" value="${row.otMult}" placeholder="${OT}" min="1" step="0.1" style="width:52px" onchange="updM(${i},'otMult',this.value)"></td>
+      <td class="num" style="color:#1A6640;font-weight:700">${tRM>0?fmt(tRM):''}</td>
+      <td style="text-align:center"><button onclick="delMhrRow(${i})" style="background:none;border:none;color:#c00;cursor:pointer;font-size:14px">×</button></td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('mhr-total-hrs').textContent=fmt(totalHrs);
+  document.getElementById('mhr-total-days').textContent=fmt(totalDays);
+  document.getElementById('mhr-total-pax').textContent=totalPax;
+  document.getElementById('sub-manhours').textContent=fmt(totalRM);
+  recalcSummary();
+}
+function updM(i,field,val){S.manhours[i][field]=val;renderMhr();}
+function addMhrRow(){S.manhours.push(newMhrRow());renderMhr();}
+function delMhrRow(i){if(S.manhours.length>1){S.manhours.splice(i,1);renderMhr();}}
+
+// ─── SUBCONTRACTOR ────────────────────────────────────────────────────────
+function renderSubcon(){
+  const tbody=document.getElementById('body-subcon');
+  tbody.innerHTML='';
+  S.subcon.forEach((row,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="text-align:center;color:#888">${i+1}</td>
+      <td><input value="${row.desc}" placeholder="Subcontractor name…" onchange="updSubcon(${i},'desc',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 3px;outline:none;font-family:Arial"></td>
+      <td class="num"><input type="number" value="${row.rate}" min="0" step="0.01" onchange="updSubcon(${i},'rate',this.value)"></td>
+      <td style="text-align:center"><button onclick="delSubconRow(${i})" style="background:none;border:none;color:#c00;cursor:pointer;font-size:14px">×</button></td>`;
+    tbody.appendChild(tr);
+  });
+  let sub=0;
+  S.subcon.forEach(row=>{ sub+=n(row.rate); });
+  document.getElementById('sub-subcon').textContent=fmt(sub);
+  recalcSummary();
+}
+function updSubcon(i,field,val){S.subcon[i][field]=val;renderSubcon();}
+function addSubconRow(){S.subcon.push(newSubconRow());renderSubcon();}
+function delSubconRow(i){if(S.subcon.length>1){S.subcon.splice(i,1);renderSubcon();}}
+
+// ─── SUMMARY ──────────────────────────────────────────────────────────────
+function recalcSummary(){
+  let total=0;
+  ['materials','consumables','transport','crane','manhours','others','subcon'].forEach(c=>{
+    const el=document.getElementById('sub-'+c);
+    const v=el?n(el.textContent.replace(/,/g,'')):0;
+    total+=v;
+    const ss=document.getElementById('ss-'+c);
+    if(ss) ss.textContent=fmtRM(v);
+  });
+  document.getElementById('ss-total').textContent=fmtRM(total);
+  const mp=n(document.getElementById('markup-pct').value);
+  const markup=total*mp/100;
+  document.getElementById('ss-markup').textContent=fmtRM(markup);
+  const quote=total+markup;
+  document.getElementById('ss-quote').textContent=fmtRM(quote);
+  updateRateCheck(quote);
+  scheduleQuoteAutosave();
+}
+
+function scheduleQuoteAutosave(){
+  clearTimeout(quoteAutosaveTimer);
+  quoteAutosaveTimer=setTimeout(function(){
+    if(typeof window.autosaveQuote!=='function') return;
+    const data=buildQuoteData();
+    const pname=(data.project&&data.project.name)?data.project.name.trim():'';
+    if(!pname) return;
+    const payload=Object.assign({},data,{ownerEmail:window.CURRENT_USER_EMAIL||'',updatedAt:Date.now()});
+    if(!currentQuoteId) payload.createdAt=Date.now();
+    const ind=document.getElementById('quote-save-indicator');
+    window.autosaveQuote(payload,currentQuoteId,function(id,err){
+      if(err){ if(ind) ind.textContent='☁ Save failed — local backup still safe'; return; }
+      currentQuoteId=id;
+      if(ind){ ind.textContent='☁ Quote saved'; setTimeout(function(){ if(ind.textContent==='☁ Quote saved') ind.textContent=''; },2500); }
+    });
+  },900);
+}
+
+const FT2_TO_M2=0.09290304;
+const FT3_TO_M3=0.028316846592;
+
+function getRcDimUnit(){
+  const r=document.querySelector('input[name="rc-dim-unit"]:checked');
+  return r?r.value:'ft';
+}
+
+function updateRcDims(){
+  recalcSummary();
+}
+
+function updateRateCheck(quote){
+  const lenEl=document.getElementById('rc-len');
+  const widEl=document.getElementById('rc-wid');
+  const hgtEl=document.getElementById('rc-hgt');
+  const weightEl=document.getElementById('rc-weight');
+  if(!lenEl||!widEl||!hgtEl||!weightEl) return;
+  const L=n(lenEl.value),W=n(widEl.value),H=n(hgtEl.value);
+  const unit=getRcDimUnit();
+  let areaFt2=0,areaM2=0,volFt3=0,volM3=0;
+  if(L>0&&W>0){
+    if(unit==='ft'){
+      areaFt2=L*W; areaM2=areaFt2*FT2_TO_M2;
+      if(H>0){ volFt3=L*W*H; volM3=volFt3*FT3_TO_M3; }
+    } else {
+      areaM2=L*W; areaFt2=areaM2/FT2_TO_M2;
+      if(H>0){ volM3=L*W*H; volFt3=volM3/FT3_TO_M3; }
+    }
+  }
+  const rFt2=document.getElementById('rc-rate-ft2'); if(rFt2) rFt2.textContent=areaFt2>0?fmtRM(quote/areaFt2):'-';
+  const rM2=document.getElementById('rc-rate-m2'); if(rM2) rM2.textContent=areaM2>0?fmtRM(quote/areaM2):'-';
+  const rFt3=document.getElementById('rc-rate-ft3'); if(rFt3) rFt3.textContent=volFt3>0?fmtRM(quote/volFt3):'-';
+  const rM3=document.getElementById('rc-rate-m3'); if(rM3) rM3.textContent=volM3>0?fmtRM(quote/volM3):'-';
+  const weight=n(weightEl.value);
+  const rateWeight=document.getElementById('rc-rate-weight');
+  if(rateWeight) rateWeight.textContent = weight>0 ? fmtRM(quote/weight) : '-';
+}
+
+document.getElementById('ot-mult').addEventListener('input',renderMhr);
+document.getElementById('ot-norm').addEventListener('input',renderMhr);
+document.getElementById('ot-sun').addEventListener('input',renderMhr);
+
+// ─── SAVE / LOAD ──────────────────────────────────────────────────────────
+function buildQuoteData(){
+  return {project:{name:document.getElementById('proj-name').value,client:document.getElementById('proj-client').value,no:document.getElementById('proj-no').value,by:document.getElementById('proj-by').value,branch:document.getElementById('proj-branch').value},otMult:document.getElementById('ot-mult').value,normMult:document.getElementById('ot-norm').value,sunMult:document.getElementById('ot-sun').value,markup:document.getElementById('markup-pct').value,rcDimUnit:getRcDimUnit(),rcWeight:document.getElementById('rc-weight').value,rcLen:document.getElementById('rc-len').value,rcWid:document.getElementById('rc-wid').value,rcHgt:document.getElementById('rc-hgt').value,state:JSON.parse(JSON.stringify(S))};
+}
+function saveProject(){
+  const data=buildQuoteData();
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=(data.project.name||'quotation').replace(/[^a-zA-Z0-9]/g,'_')+'_YSSE.json';a.click();
+}
+function submitToManagement(){
+  const name=document.getElementById('proj-name').value.trim();
+  if(!name){alert('Please enter a Project Name before submitting.');return;}
+  const data=buildQuoteData();
+  if(typeof window.pushPendingQuote==='function'){
+    window.pushPendingQuote(data,function(ok,err){
+      if(ok){
+        alert('Quote submitted to Management. It will appear in the Project Management System under "Pending Quotes".');
+      }else{
+        alert('Could not submit online (no connection to cloud). Please use "Save JSON" instead and send the file to Management manually, or use "Import Quotation JSON" in the Project Management System.');
+      }
+    });
+  }else{
+    alert('Live Sync is not ready yet. Please use "Save JSON" instead and send the file to Management manually, or try again in a moment.');
+  }
+}
+function loadProject(){document.getElementById('file-input').click();}
+function applyLoadedData(data){
+  if(data.project){
+    document.getElementById('proj-name').value=data.project.name||'';
+    document.getElementById('proj-client').value=data.project.client||'';
+    document.getElementById('proj-no').value=data.project.no||'';
+    document.getElementById('proj-by').value=data.project.by||'';
+    document.getElementById('proj-branch').value=data.project.branch||'jb';
+  }
+  if(data.otMult)document.getElementById('ot-mult').value=data.otMult;
+  if(data.normMult)document.getElementById('ot-norm').value=data.normMult;
+  if(data.sunMult)document.getElementById('ot-sun').value=data.sunMult;
+  if(data.markup)document.getElementById('markup-pct').value=data.markup;
+  if(data.rcDimUnit){
+    const r=document.querySelector('input[name="rc-dim-unit"][value="'+data.rcDimUnit+'"]');
+    if(r) r.checked=true;
+  }
+  if(data.rcLen)document.getElementById('rc-len').value=data.rcLen;
+  if(data.rcWid)document.getElementById('rc-wid').value=data.rcWid;
+  if(data.rcHgt)document.getElementById('rc-hgt').value=data.rcHgt;
+  if(data.rcWeight)document.getElementById('rc-weight').value=data.rcWeight;
+  if(data.state){
+    ALL_CATS.forEach(c=>{if(data.state[c])S[c]=data.state[c];});
+    if(data.state.manhours)S.manhours=data.state.manhours;
+    if(data.state.subcon)S.subcon=data.state.subcon;
+  }
+  renderAll();
+}
+function loadFile(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      currentQuoteId=null;
+      applyLoadedData(data);
+    }catch(err){alert('Invalid JSON file: '+err.message);}
+  };
+  reader.readAsText(file);e.target.value='';
+}
+
+function openQuotesLibrary(){
+  document.getElementById('quotes-lib-overlay').classList.add('open');
+  renderQuotesLibrary();
+}
+window.maybeOpenLibraryFromURL=function(){
+  try{
+    var params=new URLSearchParams(window.location.search);
+    if(params.get('view')==='library') openQuotesLibrary();
+  }catch(e){}
+};
+function closeQuotesLibrary(){
+  document.getElementById('quotes-lib-overlay').classList.remove('open');
+}
+function renderQuotesLibrary(){
+  const tbody=document.getElementById('quotes-lib-body');
+  const empty=document.getElementById('quotes-lib-empty');
+  if(!tbody) return;
+  const qLibBranchLabel={both:'Both',jb:'JB',kuching:'Kuching'};
+  const q=(document.getElementById('quotes-lib-search').value||'').toLowerCase();
+  let list=ALL_QUOTES.slice().sort(function(a,b){return (b.updatedAt||0)-(a.updatedAt||0);});
+  if(q){
+    list=list.filter(function(x){
+      const proj=x.project||{};
+      return (proj.name||'').toLowerCase().includes(q)||(proj.client||'').toLowerCase().includes(q)||(proj.by||'').toLowerCase().includes(q)||(x.ownerEmail||'').toLowerCase().includes(q);
+    });
+  }
+  if(!list.length){ tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+  if(empty) empty.style.display='none';
+  tbody.innerHTML=list.map(function(x){
+    const proj=x.project||{};
+    const finalPrice=computeQuoteFinalPrice(x);
+    const updated=x.updatedAt?new Date(x.updatedAt).toLocaleString('en-MY'):'-';
+    return '<tr><td><strong>'+(proj.name||'Untitled')+'</strong></td><td>'+(proj.client||'-')+'</td><td>'+(qLibBranchLabel[proj.branch||'jb']||proj.branch||'-')+'</td><td>'+(proj.by||x.ownerEmail||'-')+'</td><td style="text-align:right">'+fmt(finalPrice)+'</td><td>'+updated+'</td>'+
+      '<td style="white-space:nowrap"><button class="pick-btn" onclick="openQuoteFromLibrary(\''+x.id+'\')">Open</button> <button onclick="deleteQuoteFromLibrary(\''+x.id+'\')" style="background:none;border:none;color:#c00;cursor:pointer;font-size:12px;padding:0 6px">Delete</button></td></tr>';
+  }).join('');
+}
+function computeQuoteFinalPrice(x){
+  if(!x.state) return 0;
+  let total=0;
+  const otm=n(x.otMult)||1.5,nm=n(x.normMult)||1.0,sm=n(x.sunMult)||2.0;
+  ALL_CATS.concat(['manhours','subcon']).forEach(function(c){
+    const rows=x.state[c]||[];
+    rows.forEach(function(row){
+      if(c==='manhours'){
+        const pax=n(row.pax),rate=n(row.rate),norm=n(row.normHrs),ot=n(row.otHrs),sun=n(row.sunHrs),days=n(row.days);
+        const rowOT=(row.otMult!==''&&row.otMult!=null)?n(row.otMult):otm;
+        total+=pax*(norm*rate*nm+ot*rate*rowOT+sun*rate*sm)*days;
+      } else if(c==='subcon'){
+        total+=n(row.rate);
+      } else if(c==='materials'){
+        const qty=n(row.qty),lenPcs=n(row.lenPcs),kgm=n(row.kgm),rate=n(row.rate);
+        const tl=qty*lenPcs,tk=tl*kgm;
+        if(row.priceby==='kg') total+=tk*rate;
+        else if(row.priceby==='m') total+=tl*rate;
+        else total+=qty*rate;
+      } else {
+        total+=n(row.qty)*n(row.rate);
+      }
+    });
+  });
+  return total*(1+(n(x.markup)/100));
+}
+function openQuoteFromLibrary(id){
+  const x=ALL_QUOTES.find(function(v){return v.id===id;});
+  if(!x) return;
+  if(!confirm('Open "'+((x.project&&x.project.name)||'this quote')+'"? Any unsaved changes in your current working quote will be replaced.'))return;
+  currentQuoteId=id;
+  applyLoadedData(x);
+  closeQuotesLibrary();
+}
+function deleteQuoteFromLibrary(id){
+  const x=ALL_QUOTES.find(function(v){return v.id===id;});
+  if(!x) return;
+  if(!confirm('Permanently delete "'+((x.project&&x.project.name)||'this quote')+'" from the Quotes Library? This cannot be undone.'))return;
+  if(typeof window.deleteQuoteDoc==='function'){
+    window.deleteQuoteDoc(id,function(ok,err){
+      if(!ok){ alert('Could not delete: '+(err&&err.message?err.message:'unknown error')); return; }
+      if(currentQuoteId===id) currentQuoteId=null;
+      renderQuotesLibrary();
+    });
+  }
+}
+function clearAll(){
+  if(!confirm('Clear all quotation data? This cannot be undone.'))return;
+  currentQuoteId=null;
+  STD_CATS.forEach(c=>{S[c]=[newStdRow(),newStdRow(),newStdRow()];});
+  SIMPLE_CATS.forEach(c=>{S[c]=[newSimpleRow(),newSimpleRow(),newSimpleRow()];});
+  S.manhours=[newMhrRow(),newMhrRow()];
+  S.subcon=[newSubconRow(),newSubconRow()];
+  ['proj-name','proj-client','proj-no','proj-by'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('proj-branch').value='jb';
+  document.getElementById('ot-mult').value='1.5';
+  document.getElementById('ot-norm').value='1.0';
+  document.getElementById('ot-sun').value='2.0';
+  document.getElementById('markup-pct').value='45';
+  renderAll();
+}
+function renderAll(){STD_CATS.forEach(renderStd);SIMPLE_CATS.forEach(renderSimple);renderMhr();renderSubcon();}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+document.getElementById('date-display').textContent='Date: '+new Date().toLocaleDateString('en-MY',{year:'numeric',month:'long',day:'numeric'});
+renderAll();
+
+// =====================================================================
+// FIRESTORE LIVE SYNC LAYER (additive — does not replace localStorage)
+// Syncs the shared MATERIALS DATABASE (MATDB) only — the catalog of
+// material rates both branches reference. Individual quotations are
+// still saved/loaded as JSON files via the existing Save/Load JSON
+// buttons (unchanged) — this layer never touches that flow.
+// localStorage remains the source of truth and offline fallback.
+// =====================================================================
+(function(){
+  var firebaseConfig = {
+    apiKey: "AIzaSyB0aNyPpTdHIpL_MO-h0AwtWkHmWUKeaVI",
+    authDomain: "ysse-branch-sync.firebaseapp.com",
+    projectId: "ysse-branch-sync",
+    storageBucket: "ysse-branch-sync.firebasestorage.app",
+    messagingSenderId: "953712522144",
+    appId: "1:953712522144:web:bc117e6cc16ad9301c2ac5"
+  };
+  var db=null, docRef=null, isApplyingRemote=false, cloudReady=false, pushTimer=null;
+  var pendingCol=null;
+  var quotesCol=null;
+  var usersCol=null;
+
+  function setIndicator(text,color){
+    var el=document.getElementById('cloud-sync-indicator');
+    if(el){ el.textContent=text; if(color) el.style.color=color; }
+  }
+
+  window.pushPendingQuote=function(data,callback){
+    if(!cloudReady||!pendingCol){ if(callback)callback(false,'not ready'); return; }
+    var payload=Object.assign({},data,{status:'pending',submittedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    pendingCol.add(payload).then(function(){ if(callback)callback(true); }).catch(function(err){ if(callback)callback(false,err); });
+  };
+
+  function applyRemoteMatDB(list){
+    isApplyingRemote=true;
+    MATDB=list.map(function(m){return Object.assign({branch:'kuching'},m);});
+    localStorage.setItem(MATDB_KEY,JSON.stringify(MATDB));
+    try{
+      var matdbOpen=document.getElementById('matdb-overlay')&&document.getElementById('matdb-overlay').classList.contains('open');
+      var pickerOpen=document.getElementById('picker-overlay')&&document.getElementById('picker-overlay').classList.contains('open');
+      if(matdbOpen){ populateMatDBFilters(); renderMatTable(); }
+      if(pickerOpen){ populatePickerFilters(); renderPicker(); }
+    }catch(e){}
+    setIndicator('\u2601 Live Sync: materials updated from other branch','#6ee7b7');
+    setTimeout(function(){ setIndicator('\u2601 Live Sync: connected','#6ee7b7'); },3000);
+    isApplyingRemote=false;
+  }
+
+  window.pushToCloud=function(){
+    if(!cloudReady||!docRef||isApplyingRemote) return;
+    clearTimeout(pushTimer);
+    pushTimer=setTimeout(function(){
+      docRef.set({materials:MATDB,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(function(err){
+        setIndicator('\u2601 Live Sync: push failed \u2014 local backup still safe','#fca5a5');
+      });
+    },400);
+  };
+
+  function showApp(){
+    var ov=document.getElementById('login-overlay');
+    var app=document.getElementById('app-content');
+    if(ov) ov.style.display='none';
+    if(app) app.style.display='';
+  }
+  function showLogin(msg){
+    var ov=document.getElementById('login-overlay');
+    var app=document.getElementById('app-content');
+    if(app) app.style.display='none';
+    if(ov) ov.style.display='flex';
+    var st=document.getElementById('login-status');
+    if(st) st.textContent=msg||'Please sign in.';
+  }
+
+  window.doLogin=function(){
+    var emailEl=document.getElementById('login-email');
+    var passEl=document.getElementById('login-password');
+    var errEl=document.getElementById('login-error');
+    var email=emailEl?emailEl.value.trim():'';
+    var pass=passEl?passEl.value:'';
+    if(errEl){ errEl.style.color='#c00'; errEl.textContent=''; }
+    if(!email||!pass){ if(errEl) errEl.textContent='Please enter email and password.'; return; }
+    firebase.auth().signInWithEmailAndPassword(email,pass).catch(function(err){
+      if(errEl) errEl.textContent=err&&err.message?err.message:'Sign in failed.';
+    });
+  };
+  window.doLogout=function(){
+    firebase.auth().signOut().catch(function(err){});
+  };
+  window.forgotPassword=function(){
+    var emailEl=document.getElementById('login-email');
+    var errEl=document.getElementById('login-error');
+    var email=emailEl?emailEl.value.trim():'';
+    if(!email){ if(errEl){ errEl.style.color='#c00'; errEl.textContent='Enter your email above first, then click Forgot password.'; } return; }
+    firebase.auth().sendPasswordResetEmail(email).then(function(){
+      if(errEl){ errEl.style.color='#2a7'; errEl.textContent='Password reset email sent.'; }
+    }).catch(function(err){
+      if(errEl){ errEl.style.color='#c00'; errEl.textContent=err&&err.message?err.message:'Could not send reset email.'; }
+    });
+  };
+
+  var syncStarted=false;
+  function startSync(){
+    if(syncStarted) return;
+    syncStarted=true;
+    cloudReady=true;
+    setIndicator('\u2601 Live Sync: connected','#6ee7b7');
+    docRef.onSnapshot(function(snap){
+      if(isApplyingRemote) return;
+      var data=snap.data();
+      if(!data||!Array.isArray(data.materials)){
+        if(MATDB.length) window.pushToCloud();
+        return;
+      }
+      var incoming=JSON.stringify(data.materials);
+      var current=JSON.stringify(MATDB);
+      if(incoming===current) return;
+      applyRemoteMatDB(data.materials);
+    },function(err){
+      setIndicator('\u2601 Live Sync: error \u2014 using local data only','#fca5a5');
+    });
+    quotesCol.onSnapshot(function(snap){
+      ALL_QUOTES=snap.docs.map(function(doc){ return Object.assign({},doc.data(),{id:doc.id}); });
+      try{
+        if(document.getElementById('quotes-lib-overlay').classList.contains('open')) renderQuotesLibrary();
+      }catch(e5){}
+    },function(err){
+      // Quotes library is additive; failure here never blocks local work or MATDB sync.
+    });
+  }
+
+  try{
+    firebase.initializeApp(firebaseConfig);
+    db=firebase.firestore();
+    docRef=db.collection('ysse_quotation').doc('shared_matdb');
+    pendingCol=db.collection('ysse_pending_quotes');
+    quotesCol=db.collection('ysse_quotes');
+    usersCol=db.collection('ysse_users');
+    firebase.auth().onAuthStateChanged(function(user){
+      if(user){
+        showApp();
+        var who=document.getElementById('logged-in-as');
+        if(who) who.textContent='Logged in as '+(user.email||user.uid);
+        window.CURRENT_USER_EMAIL=user.email||user.uid;
+        startSync();
+        if(typeof window.maybeOpenLibraryFromURL==='function') window.maybeOpenLibraryFromURL();
+        var myEmail=(user.email||'').toLowerCase();
+        if(myEmail&&usersCol){
+          usersCol.doc(myEmail).get().then(function(snap){
+            if(!snap.exists) return;
+            var v=snap.data();
+            window.CURRENT_USER_NAME=v.name||'';
+            window.CURRENT_USER_POSITION=v.position||'';
+            if(v.name){
+              if(who) who.textContent='Logged in as '+v.name+(v.position?' ('+v.position+')':'');
+              var byEl=document.getElementById('proj-by');
+              if(byEl&&!byEl.value.trim()) byEl.value=v.name;
+            }
+          }).catch(function(err){});
+        }
+      } else {
+        showLogin('Please sign in.');
+      }
+    },function(err){
+      showLogin('Auth error \u2014 please refresh and try again.');
+    });
+  }catch(e){
+    showLogin('Live Sync unavailable \u2014 cannot verify login right now.');
+  }
+
+  window.autosaveQuote=function(payload,existingId,callback){
+    if(!quotesCol){ if(callback) callback(null,new Error('not ready')); return; }
+    if(existingId){
+      quotesCol.doc(existingId).set(payload,{merge:true}).then(function(){ if(callback) callback(existingId); }).catch(function(err){ if(callback) callback(null,err); });
+    } else {
+      quotesCol.add(payload).then(function(ref){ if(callback) callback(ref.id); }).catch(function(err){ if(callback) callback(null,err); });
+    }
+  };
+  window.deleteQuoteDoc=function(id,callback){
+    if(!quotesCol){ if(callback) callback(false,new Error('not ready')); return; }
+    quotesCol.doc(id).delete().then(function(){ if(callback) callback(true); }).catch(function(err){ if(callback) callback(false,err); });
+  };
+})();
+</script>
+</div>
+</body>
+</html>

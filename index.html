@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YSSE Tools</title>
+<style>
+  :root{--dark:#10173A;--mid:#3D5BFF;--accent:#00D2C0;--accent3:#9B5CFF;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:Arial,Helvetica,sans-serif;
+    min-height:100vh;
+    background:radial-gradient(ellipse 90% 70% at 50% -10%,#1c2a6e 0%,#101a42 45%,#070d24 100%);
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+  }
+  .wrap{max-width:760px;width:100%;text-align:center;}
+  h1{color:#fff;font-size:26px;font-weight:700;margin-bottom:6px;letter-spacing:.3px;}
+  p.sub{color:#aab4e0;font-size:14px;margin-bottom:36px;}
+  .cards{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;}
+  .card{
+    flex:1;min-width:240px;max-width:320px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;
+    padding:28px 22px;
+    text-decoration:none;
+    display:block;
+    transition:transform .15s,box-shadow .15s,border-color .15s;
+  }
+  .card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 10px 30px rgba(0,210,192,.15);}
+  .card .icon{font-size:30px;margin-bottom:14px;display:block;}
+  .card h2{color:#fff;font-size:17px;font-weight:700;margin-bottom:6px;}
+  .card p{color:#9aa3cc;font-size:12.5px;line-height:1.5;}
+  footer{margin-top:40px;color:#5b6694;font-size:11px;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>YSSE Tools</h1>
+    <p class="sub">Sign in with your YSSE account to continue.</p>
+    <div class="cards">
+      <a class="card" href="YSSE_Project_Management_Live.html">
+        <span class="icon">📋</span>
+        <h2>Project Management</h2>
+        <p>Track projects, manage users, view backups and the trash bin.</p>
+      </a>
+      <a class="card" href="YSSE_Quotation_Calculator_Live.html">
+        <span class="icon">🧮</span>
+        <h2>Quotation Calculator</h2>
+        <p>Build, save and share project cost quotations.</p>
+      </a>
+    </div>
+    <footer>YSSE &middot; internal tools</footer>
+  </div>
+</body>
+</html>

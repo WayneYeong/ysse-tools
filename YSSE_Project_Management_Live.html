@@ -1,0 +1,2155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YSSE FABRICATOR - Project Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --dark:#10173A;--mid:#3D5BFF;--accent:#00D2C0;--accent3:#9B5CFF;--green:#1A6640;
+  --red:#C0392B;--bg:#f0f4f8;--card:#fff;--text:#1a1a1a;--sub:#555;--border:#e0e8f0;
+}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+h1,h2,h3,h4,.brand,.kpi-val{font-family:'Space Grotesk',Arial,sans-serif}
+table.projects td[style*="text-align:right"],.kpi-val,.margin-pill,.badge,.mock-amt{font-family:'JetBrains Mono',monospace}
+.hdr{background:linear-gradient(115deg,var(--dark) 0%,#162050 55%,#1c2960 100%);color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:relative;box-shadow:0 2px 18px rgba(16,23,58,.25)}
+.hdr-left{display:flex;align-items:center;gap:14px}
+.brand{font-size:18px;font-weight:700;color:#fff}
+.sub-brand{font-size:10px;color:#a0c4e8;letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.nav{background:linear-gradient(100deg,#142055,#1a2870);display:flex;gap:2px;padding:0 24px}
+.nav-tab{padding:9px 20px;color:rgba(255,255,255,.65);cursor:pointer;font-size:12px;font-weight:600;border-bottom:3px solid transparent;transition:.15s}
+.nav-tab.active{color:#fff;border-bottom-color:var(--accent)}
+.nav-tab:hover{color:#fff}
+.page{display:none;padding:20px 24px}
+.page.active{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+.kpi{background:var(--card);border-radius:7px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.1);border-left:4px solid var(--mid)}
+.kpi.green{border-left-color:var(--green)}
+.kpi.accent{border-left-color:var(--accent)}
+.kpi.red{border-left-color:var(--red)}
+.kpi-label{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kpi-val{font-size:20px;font-weight:700;color:var(--dark)}
+.kpi-sub{font-size:10px;color:var(--sub);margin-top:2px}
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:20px}
+.chart-card{background:var(--card);border-radius:7px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.chart-card h4{font-size:12px;font-weight:700;color:var(--dark);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px}
+.badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.badge-quoted{background:#dbeafe;color:#1d4ed8}
+.badge-progress{background:#fef3c7;color:#92400e}
+.badge-completed{background:#d1fae5;color:#065f46}
+.badge-cancelled{background:#f3f4f6;color:#6b7280}
+.tbl-card{background:var(--card);border-radius:7px;box-shadow:0 1px 4px rgba(0,0,0,.1);overflow:hidden}
+.tbl-card-hdr{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.tbl-card-hdr h3{font-size:13px;font-weight:700;color:var(--dark)}
+table.projects{width:100%;border-collapse:collapse}
+table.projects th{background:linear-gradient(100deg,var(--dark),#1c2960);color:#fff;padding:8px 10px;font-size:11px;text-align:left;white-space:nowrap}
+table.projects td{padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle}
+table.projects tr:hover td{background:#f0f6ff}
+.margin-pill{display:inline-block;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700}
+.margin-pos{background:#d1fae5;color:#065f46}
+.margin-neg{background:#fee2e2;color:#991b1b}
+.margin-zero{background:#f3f4f6;color:#6b7280}
+.btn{padding:6px 14px;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;transition:.15s}
+.btn-primary{background:linear-gradient(120deg,var(--mid),var(--accent3));color:#fff;box-shadow:0 3px 10px rgba(61,91,255,.3)}.btn-primary:hover{box-shadow:0 4px 14px rgba(61,91,255,.5);transform:translateY(-1px)}
+.btn-accent{background:var(--accent);color:#063b37}.btn-accent:hover{background:#00b8a8}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#145232}
+.btn-sm{padding:3px 10px;font-size:11px}
+.btn-danger{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}.btn-danger:hover{background:#fca5a5}
+.btn-ghost{background:transparent;border:1px solid var(--mid);color:var(--mid)}.btn-ghost:hover{background:#eef1ff}
+body.role-qs .mgmt-only{display:none!important}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:8px;width:780px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.modal-hdr{background:linear-gradient(100deg,var(--dark),#1c2960);color:#fff;padding:12px 18px;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center}
+.modal-hdr h3{font-size:14px;font-weight:700}
+.modal-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1}
+.modal-body{padding:20px 24px}
+.modal-footer{padding:12px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;margin-bottom:16px}
+.form-grid.three{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.span2{grid-column:span 2}
+.form-group label{font-size:11px;font-weight:700;color:var(--dark);text-transform:uppercase;letter-spacing:.3px}
+.form-group input,.form-group select,.form-group textarea{border:1.5px solid #d1d9e6;border-radius:4px;padding:6px 8px;font-size:12px;font-family:Arial,sans-serif;outline:none}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--mid);background:#f0f6ff}
+.section-hdr{background:var(--mid);color:#fff;padding:6px 10px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin:14px 0 10px}
+.section-hdr.green{background:var(--green)}
+.section-hdr.accent{background:var(--accent);color:var(--dark)}
+.import-banner{background:#e8f0f8;border:1.5px dashed var(--mid);border-radius:5px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:12px}
+.import-banner input[type=file]{display:none}
+.detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:900}
+.detail-overlay.open{display:block}
+.detail-panel{position:fixed;top:0;right:0;width:680px;max-width:95vw;height:100vh;background:#fff;box-shadow:-4px 0 24px rgba(0,0,0,.15);overflow-y:auto;z-index:901;transform:translateX(100%);transition:transform .25s ease}
+.detail-panel.open{transform:translateX(0)}
+.detail-hdr{background:linear-gradient(100deg,var(--dark),#1c2960);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1}
+.detail-body{padding:18px}
+.stat-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px}
+.stat-row.bold{font-weight:700;color:var(--dark)}
+.stat-row.profit{color:var(--green);font-weight:700}
+.stat-row.loss{color:var(--red);font-weight:700}
+.info-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chip{background:#f0f4f8;border-radius:12px;padding:3px 10px;font-size:11px;color:var(--sub)}
+.chip strong{color:var(--dark)}
+.filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter-row input,.filter-row select{border:1.5px solid var(--border);border-radius:4px;padding:5px 9px;font-size:12px;outline:none}
+.filter-row input:focus,.filter-row select:focus{border-color:var(--mid)}
+.empty{text-align:center;padding:60px 20px;color:var(--sub)}
+.empty h3{font-size:18px;color:var(--dark);margin-bottom:8px}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.charts-row{grid-template-columns:1fr}}
+@media print{.nav,.btn,.filter-row,.modal-overlay,.detail-overlay,.detail-panel{display:none!important}body{background:#fff}}
+
+/* Inline Calculator Popup */
+.calc-popup{position:fixed;background:#1B3A5C;border-radius:10px;padding:8px;
+  box-shadow:0 8px 32px rgba(0,0,0,.45);z-index:99999;width:224px;
+  display:none;flex-direction:column;gap:4px;font-family:Arial,Helvetica,sans-serif}
+.calc-popup.visible{display:flex}
+.calc-display{background:#0f2540;padding:8px 10px;border-radius:6px;
+  min-height:46px;display:flex;flex-direction:column;justify-content:flex-end}
+.calc-expr{font-size:11px;color:#7aa3cc;min-height:14px;word-break:break-all;
+  text-align:right;font-family:monospace;margin-bottom:2px}
+.calc-val{font-size:19px;color:#fff;text-align:right;font-family:monospace;
+  word-break:break-all;min-height:22px}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:2px}
+.calc-btn{border:none;border-radius:6px;padding:10px 4px;font-size:14px;font-weight:700;
+  cursor:pointer;transition:filter .1s;line-height:1}
+.calc-btn:hover{filter:brightness(1.25)}
+.calc-btn:active{filter:brightness(.85)}
+.calc-btn.num{background:var(--mid);color:#fff}
+.calc-btn.op{background:var(--accent);color:#10173A}
+.calc-btn.fn{background:#3a5a80;color:#e8f0f8}
+.calc-btn.eq{background:#1A6640;color:#fff}
+.calc-btn.clr{background:#C0392B;color:#fff}
+.calc-btn.span2{grid-column:span 2}
+.calc-hint{font-size:10px;color:#7aa3cc;text-align:center;margin-top:2px;
+  padding-top:3px;border-top:1px solid rgba(255,255,255,.12)}
+
+/* Actual Manhours Breakdown Table */
+.amhr-section{margin:8px 0 4px;border:1px solid #c6dfa8;border-radius:6px;overflow:hidden}
+.amhr-hdr{display:flex;justify-content:space-between;align-items:center;
+  background:#edf7ee;padding:8px 12px;border-bottom:1px solid #c6dfa8}
+.amhr-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.amhr-tbl th{background:#d4edda;color:#1A6640;font-weight:700;padding:6px 5px;
+  text-align:center;white-space:nowrap;border-bottom:1px solid #c6dfa8;position:sticky;top:0}
+.amhr-tbl td{padding:4px 3px;border-bottom:1px solid #e8f5e9;text-align:center}
+.amhr-tbl tr:last-child td{border-bottom:none}
+.amhr-tbl tr:hover td{background:#f5fff7}
+.amhr-tbl input{width:100%;border:1px solid #c6dfa8;border-radius:3px;padding:3px 4px;
+  font-size:12px;text-align:center;background:#fff}
+.amhr-tbl input:focus{outline:none;border-color:#1A6640;background:#f0fff4}
+.amhr-tbl .pos-input{text-align:left;min-width:110px}
+.amhr-total-row{display:flex;justify-content:space-between;align-items:center;
+  background:#d4edda;padding:7px 12px;font-size:13px;font-weight:700;color:#1A6640;
+  border-top:1px solid #c6dfa8}
+
+/* Actual Category Breakdown Tables (Materials / Consumables) */
+.acat-section{margin:8px 0 4px;border-radius:6px;overflow:hidden}
+.acat-section.mat{border:1px solid #b6d0ee}
+.acat-section.con{border:1px solid #c5b8e8}
+.acat-section.sub{border:1px solid #f0c896}
+.acat-hdr{display:flex;justify-content:space-between;align-items:center;padding:8px 12px}
+.acat-section.mat .acat-hdr{background:#e8f2fc;border-bottom:1px solid #b6d0ee}
+.acat-section.con .acat-hdr{background:#f0ebfc;border-bottom:1px solid #c5b8e8}
+.acat-section.sub .acat-hdr{background:#fdecd8;border-bottom:1px solid #f0c896}
+.acat-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.acat-section.mat .acat-tbl th{background:#cfe2f3;color:#1B3A5C}
+.acat-section.con .acat-tbl th{background:#e0d4f5;color:#3d1a78}
+.acat-section.sub .acat-tbl th{background:#fad9ab;color:#8a4a13}
+.acat-tbl th{font-weight:700;padding:6px 5px;text-align:center;
+  white-space:nowrap;border-bottom:1px solid #ddd;position:sticky;top:0}
+.acat-tbl td{padding:4px 3px;border-bottom:1px solid #f0f0f0;text-align:center}
+.acat-tbl tr:last-child td{border-bottom:none}
+.acat-tbl tr:hover td{background:#fafbff}
+.acat-tbl input[type=number],.acat-tbl input[type=text]{width:100%;border:1px solid #d0d8e8;
+  border-radius:3px;padding:3px 4px;font-size:12px;text-align:center;background:#fff}
+.acat-tbl input:focus{outline:none;background:#f5fbff}
+.acat-tbl select{width:100%;border:1px solid #d0d8e8;border-radius:3px;
+  padding:3px 2px;font-size:11px;background:#fff}
+.acat-tbl .desc-input{text-align:left;min-width:120px}
+.acat-total-row{display:flex;justify-content:space-between;align-items:center;
+  padding:7px 12px;font-size:13px;font-weight:700}
+.acat-section.mat .acat-total-row{background:#cfe2f3;color:#1B3A5C;border-top:1px solid #b6d0ee}
+.acat-section.con .acat-total-row{background:#e0d4f5;color:#3d1a78;border-top:1px solid #c5b8e8}
+.acat-section.sub .acat-total-row{background:#fad9ab;color:#8a4a13;border-top:1px solid #f0c896}
+</style>
+</head>
+<body>
+<div id="login-overlay" style="position:fixed;inset:0;background:radial-gradient(ellipse 90% 70% at 50% -10%,#1c2a6e 0%,#101a42 45%,#070d24 100%);display:flex;align-items:center;justify-content:center;z-index:9999;font-family:Arial">
+  <div style="background:#fff;border-radius:14px;padding:36px 40px;width:340px;box-shadow:0 25px 70px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.06)">
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:18px;font-weight:700;color:var(--dark);font-family:'Space Grotesk',Arial,sans-serif">YSSE FABRICATOR SDN BHD</div>
+      <div style="font-size:11px;color:#888;letter-spacing:.5px;margin-top:2px">PROJECT MANAGEMENT SYSTEM</div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px">Email</div>
+    <input type="email" id="login-email" placeholder="you@ysse.com" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:12px;outline:none" onkeydown="if(event.key==='Enter')doLogin()">
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px">Password</div>
+    <input type="password" id="login-password" placeholder="********" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:6px;outline:none" onkeydown="if(event.key==='Enter')doLogin()">
+    <div id="login-error" style="color:#c00;font-size:11px;min-height:14px;margin-bottom:10px"></div>
+    <button onclick="doLogin()" style="width:100%;padding:10px;background:linear-gradient(120deg,var(--mid),var(--accent3));color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(61,91,255,.35)">Sign In</button>
+    <div style="text-align:center;margin-top:12px">
+      <a href="javascript:void(0)" onclick="forgotPassword()" style="font-size:11px;color:#888;text-decoration:none">Forgot password?</a>
+    </div>
+    <div id="login-status" style="text-align:center;font-size:10px;color:#aaa;margin-top:10px">Connecting...</div>
+  </div>
+</div>
+<div id="access-denied-overlay" style="display:none;position:fixed;inset:0;background:radial-gradient(ellipse 90% 70% at 50% -10%,#1c2a6e 0%,#101a42 45%,#070d24 100%);align-items:center;justify-content:center;z-index:9999;font-family:Arial">
+  <div style="background:#fff;border-radius:14px;padding:36px 40px;width:380px;box-shadow:0 25px 70px rgba(0,0,0,.45);text-align:center">
+    <div style="font-size:18px;font-weight:700;color:var(--dark);font-family:'Space Grotesk',Arial,sans-serif">YSSE FABRICATOR SDN BHD</div>
+    <div style="font-size:11px;color:#888;letter-spacing:.5px;margin-top:2px;margin-bottom:18px">PROJECT MANAGEMENT SYSTEM</div>
+    <div style="font-size:32px;margin-bottom:10px">&#128274;</div>
+    <div style="font-size:14px;font-weight:700;color:#991b1b;margin-bottom:8px">Access Restricted</div>
+    <div id="access-denied-msg" style="font-size:12px;color:#555;line-height:1.6;margin-bottom:18px">This system is for Management accounts only. Please use the Quotation Calculator instead.</div>
+    <button onclick="window.open('YSSE_Quotation_Calculator_Live.html','_blank')" style="width:100%;padding:10px;background:#1A6640;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">Open Quotation Calculator</button>
+    <button onclick="doLogout()" style="width:100%;padding:9px;background:none;border:1px solid #ccc;color:#555;border-radius:6px;font-size:12px;cursor:pointer">Log Out</button>
+  </div>
+</div>
+<div id="app-content" style="display:none">
+<div class="hdr">
+  <div class="hdr-left">
+    <img src="data:image/png;base64,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EOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOhGAAAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AADgJ/8vwADdQ82eebNfAwAAAABJRU5ErkJggg==" style="height:48px;width:auto;object-fit:contain" alt="YSSE Logo">
+    <div>
+      <div class="brand">YSSE FABRICATOR SDN BHD</div>
+      <div class="sub-brand">Project Management System</div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-accent" onclick="openAddModal()">+ New Project</button>
+      <button class="btn btn-green" onclick="window.open('YSSE_Quotation_Calculator_Live.html','_blank')">Open Quotation Calculator</button>
+      <button class="btn btn-green" onclick="window.open('YSSE_Quotation_Calculator_Live.html?view=library','_blank')">📚 Quotes Library</button>
+      <button class="btn btn-green" onclick="exportToExcel()">Export to Excel</button>
+      <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="backupData()">Backup JSON</button>
+      <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="document.getElementById('restore-input').click()">Restore Backup</button>
+      <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="openBackupHistory()">☁ Backup History</button>
+      <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="window.print()">Print</button>
+      <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="doLogout()">Log Out</button>
+      <input type="file" id="restore-input" accept=".json" style="display:none" onchange="restoreData(event)">
+    </div>
+    <div id="save-indicator" style="font-size:10px;color:#a0c4e8;letter-spacing:.3px">&#x2714; All data saved to browser</div>
+    <div id="cloud-sync-indicator" style="font-size:10px;color:#a0c4e8;letter-spacing:.3px">&#9729; Live Sync: connecting...</div>
+    <div id="logged-in-as" style="font-size:10px;color:#a0c4e8;letter-spacing:.3px"></div>
+  </div>
+</div>
+<div class="nav">
+  <div class="nav-tab active" onclick="showPage('dashboard',this)">Dashboard</div>
+  <div class="nav-tab" onclick="showPage('projects',this)">All Projects</div>
+  <div class="nav-tab" onclick="showPage('analysis',this)">Category Analysis</div>
+  <div class="nav-tab" onclick="showPage('compare',this)">Compare Branches</div>
+  <div class="nav-tab" onclick="showPage('pending',this)">Pending Quotes <span id="pending-badge" style="display:none;background:var(--accent);color:#10173A;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;font-weight:700">0</span></div>
+  <div class="nav-tab mgmt-only" onclick="showPage('trash',this)">Trash <span id="trash-badge" style="display:none;background:#999;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;font-weight:700">0</span></div>
+  <div class="nav-tab mgmt-only" onclick="showPage('users',this)">Manage Users</div>
+</div>
+
+<div class="page active" id="page-dashboard">
+  <div class="filter-row" style="margin-bottom:14px">
+    <label style="font-size:11px;font-weight:700;color:var(--dark);text-transform:uppercase">Branch:</label>
+    <select id="dash-branch-filter" onchange="renderDashboard()">
+      <option value="">All Branches</option>
+      <option value="jb">Johor Bahru</option>
+      <option value="kuching">Kuching</option>
+    </select>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Total Projects</div><div class="kpi-val" id="kpi-total">0</div><div class="kpi-sub">All time</div></div>
+    <div class="kpi accent"><div class="kpi-label">In Progress</div><div class="kpi-val" id="kpi-active">0</div><div class="kpi-sub">Currently active</div></div>
+    <div class="kpi green"><div class="kpi-label">Total Revenue</div><div class="kpi-val" id="kpi-revenue">RM 0</div><div class="kpi-sub">Completed projects</div></div>
+    <div class="kpi green"><div class="kpi-label">Total Profit</div><div class="kpi-val" id="kpi-profit">RM 0</div><div class="kpi-sub">Revenue - actual cost</div></div>
+    <div class="kpi" id="kpi-margin-card"><div class="kpi-label">Avg Margin</div><div class="kpi-val" id="kpi-margin">0%</div><div class="kpi-sub">Completed projects</div></div>
+  </div>
+  <div class="charts-row">
+    <div class="chart-card"><h4>Revenue vs Actual Cost (by Project)</h4><canvas id="chart-rev" height="180"></canvas></div>
+    <div class="chart-card"><h4>Actual Spend by Category</h4><canvas id="chart-cat" height="180"></canvas></div>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-card-hdr">
+      <h3>Recent Projects</h3>
+      <button class="btn btn-ghost btn-sm" onclick="showPage('projects',document.querySelectorAll('.nav-tab')[1])">View All</button>
+    </div>
+    <table class="projects"><thead><tr>
+      <th>Project</th><th>Client</th><th>Status</th><th>Duration</th><th>Quoted (RM)</th><th>Actual Cost (RM)</th><th>Revenue (RM)</th><th>Profit (RM)</th><th>Margin</th>
+    </tr></thead><tbody id="body-recent"></tbody></table>
+  </div>
+</div>
+
+<div class="page" id="page-projects">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div class="filter-row">
+      <input id="search" placeholder="Search project / client..." oninput="renderProjects()" style="width:220px">
+      <select id="filter-branch" onchange="renderProjects()">
+        <option value="">All Branches</option>
+        <option value="jb">Johor Bahru</option>
+        <option value="kuching">Kuching</option>
+      </select>
+      <select id="filter-status" onchange="renderProjects()">
+        <option value="">All Status</option>
+        <option value="quoted">Quoted</option>
+        <option value="in_progress">In Progress</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <select id="sort-by" onchange="renderProjects()">
+        <option value="date_desc">Newest First</option>
+        <option value="date_asc">Oldest First</option>
+        <option value="margin_desc">Highest Margin</option>
+        <option value="revenue_desc">Highest Revenue</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="openAddModal()">+ New Project</button>
+  </div>
+  <div class="tbl-card">
+    <table class="projects"><thead><tr>
+      <th>No.</th><th>Project Name</th><th>Client</th><th>Branch</th><th>Status</th><th>Start</th><th>End</th><th>Days</th>
+      <th>Quoted (RM)</th><th>Actual Cost (RM)</th><th>Revenue (RM)</th><th>Profit (RM)</th><th>Margin</th><th>Actions</th>
+    </tr></thead><tbody id="body-all"></tbody></table>
+    <div id="empty-projects" class="empty" style="display:none">
+      <h3>No projects yet</h3><p>Click + New Project to add your first project.</p>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-analysis">
+  <div class="filter-row" style="margin-bottom:14px">
+    <label style="font-size:11px;font-weight:700;color:var(--dark);text-transform:uppercase">Branch:</label>
+    <select id="analysis-branch-filter" onchange="renderAnalysis()">
+      <option value="">All Branches</option>
+      <option value="jb">Johor Bahru</option>
+      <option value="kuching">Kuching</option>
+    </select>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="chart-card"><h4>Budget vs Actual Cost by Category</h4><canvas id="chart-budget-actual" height="220"></canvas></div>
+    <div class="chart-card"><h4>Category Spend Distribution (Actual)</h4><canvas id="chart-cat2" height="220"></canvas></div>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-card-hdr"><h3>Category Breakdown - All Projects</h3></div>
+    <table class="projects"><thead><tr>
+      <th>Category</th><th>Total Budget (RM)</th><th>Total Actual (RM)</th><th>Variance (RM)</th><th>Variance %</th><th>% of Total Actual Spend</th>
+    </tr></thead><tbody id="body-analysis"></tbody></table>
+  </div>
+</div>
+
+<div class="page" id="page-compare">
+  <div class="tbl-card" style="margin-bottom:16px">
+    <div class="tbl-card-hdr"><h3>Branch Comparison &mdash; Financial &amp; P&amp;L</h3></div>
+    <table class="projects"><thead><tr>
+      <th>Metric</th><th>Johor Bahru (Main)</th><th>Kuching</th><th>Difference (JB - Kuching)</th>
+    </tr></thead><tbody id="body-compare"></tbody></table>
+  </div>
+  <div class="charts-row">
+    <div class="chart-card"><h4>Revenue, Cost &amp; Profit by Branch</h4><canvas id="chart-compare-fin" height="200"></canvas></div>
+    <div class="chart-card"><h4>Project Count by Branch</h4><canvas id="chart-compare-count" height="200"></canvas></div>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-card-hdr"><h3>Category Spend &mdash; Branch Comparison</h3></div>
+    <table class="projects"><thead><tr>
+      <th>Category</th><th>Johor Bahru Actual (RM)</th><th>Kuching Actual (RM)</th>
+    </tr></thead><tbody id="body-compare-cat"></tbody></table>
+  </div>
+</div>
+
+<div class="page" id="page-pending">
+  <div class="tbl-card">
+    <div class="tbl-card-hdr">
+      <h3>Pending Quotes &mdash; Submitted by QS / Engineers</h3>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-green btn-sm" onclick="window.open('YSSE_Quotation_Calculator_Live.html','_blank')">Open Quotation Calculator</button>
+        <button class="btn btn-green btn-sm" onclick="window.open('YSSE_Quotation_Calculator_Live.html?view=library','_blank')">📚 Quotes Library</button>
+      </div>
+    </div>
+    <table class="projects"><thead><tr>
+      <th>Submitted</th><th>Project Name</th><th>Client</th><th>Project No.</th><th>Branch</th><th>Prepared By</th><th>Quote Total (RM)</th><th>Status</th><th>Actions</th>
+    </tr></thead><tbody id="body-pending"></tbody></table>
+    <div id="pending-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No pending quotes right now. New submissions from the Quotation Calculator will appear here automatically.</div>
+  </div>
+</div>
+
+<div class="page" id="page-trash">
+  <div class="tbl-card">
+    <div class="tbl-card-hdr">
+      <h3>Trash &mdash; Deleted Projects</h3>
+      <button class="btn btn-danger btn-sm mgmt-only" onclick="emptyTrash()">Empty Trash</button>
+    </div>
+    <table class="projects"><thead><tr>
+      <th>Deleted On</th><th>Project Name</th><th>Client</th><th>Branch</th><th>Deleted By</th><th>Auto-Purge In</th><th>Actions</th>
+    </tr></thead><tbody id="body-trash"></tbody></table>
+    <div id="trash-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">Trash is empty. Deleted projects stay here for 30 days and can be restored, or you can empty it anytime.</div>
+  </div>
+</div>
+
+<div class="page" id="page-users">
+  <div class="tbl-card" style="margin-bottom:16px">
+    <div class="tbl-card-hdr"><h3>Add a User</h3></div>
+    <div class="filter-row" style="padding:14px">
+      <input id="nu-name" placeholder="Full name" style="width:160px">
+      <input id="nu-position" placeholder="Position (e.g. QS Engineer)" style="width:180px">
+      <input id="nu-email" placeholder="staff@email.com" style="width:200px">
+      <select id="nu-role">
+        <option value="qs">QS / Engineer</option>
+        <option value="management">Management</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="addUser()">+ Add User</button>
+    </div>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-card-hdr"><h3>Users &amp; Roles</h3></div>
+    <table class="projects"><thead><tr>
+      <th>Name</th><th>Position</th><th>Email</th><th>Role</th><th>Added On</th><th>Actions</th>
+    </tr></thead><tbody id="body-users"></tbody></table>
+    <div id="users-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No users added yet.</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+<div class="modal" onclick="event.stopPropagation()">
+  <div class="modal-hdr">
+    <h3 id="modal-title">Add New Project</h3>
+    <button class="modal-close" onclick="closeModal()">x</button>
+  </div>
+  <div class="modal-body">
+    <div class="import-banner">
+      <span>Import from Quotation Calculator JSON to pre-fill quoted amounts:</span>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('import-file').click()">Import Quotation JSON</button>
+      <input type="file" id="import-file" accept=".json" onchange="importQuotation(event)">
+    </div>
+    <div class="import-banner" id="convert-banner" style="display:none;background:#fff3cd;border-color:#F0A500">
+      <span>&#9888; You are converting a Pending Quote into this project. Quoted amounts below were pre-filled automatically.</span>
+    </div>
+    <div class="section-hdr">Project Information</div>
+    <div class="form-grid three">
+      <div class="form-group"><label>Project Name *</label><input id="f-name" placeholder="e.g. KLCC Tower Fabrication"></div>
+      <div class="form-group"><label>Project No.</label><input id="f-no" placeholder="e.g. YSSE-2026-001"></div>
+      <div class="form-group"><label>Client *</label><input id="f-client" placeholder="Client company name"></div>
+      <div class="form-group"><label>Branch *</label>
+        <select id="f-branch">
+          <option value="jb">Johor Bahru (Main)</option>
+          <option value="kuching">Kuching</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Status</label>
+        <select id="f-status">
+          <option value="quoted">Quoted</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Start Date</label><input type="date" id="f-start"></div>
+      <div class="form-group"><label>End Date</label><input type="date" id="f-end"></div>
+      <div class="form-group span2"><label>Notes / Description</label><textarea id="f-notes" rows="2" placeholder="Scope, location, remarks..." style="resize:vertical"></textarea></div>
+    </div>
+    <div class="section-hdr">Quoted / Budgeted Cost (RM)</div>
+    <div class="form-grid three">
+      <div class="form-group"><label>Materials</label><input type="number" id="q-materials" min="0" step="0.01" value="0"></div>
+      <div class="form-group"><label>Consumables</label><input type="number" id="q-consumables" min="0" step="0.01" value="0"></div>
+      <div class="form-group"><label>Transport</label><input type="number" id="q-transport" min="0" step="0.01" value="0"></div>
+      <div class="form-group"><label>Crane</label><input type="number" id="q-crane" min="0" step="0.01" value="0"></div>
+      <div class="form-group"><label>Manhours</label><input type="number" id="q-manhours" min="0" step="0.01" value="0"></div>
+      <div class="form-group"><label>Others</label><input type="number" id="q-others" min="0" step="0.01" value="0"></div>
+      <div class="form-group"><label>Subcontractor (Lumpsum)</label><input type="number" id="q-subcon" min="0" step="0.01" value="0"></div>
+      <div class="form-group"><label>Markup %</label><input type="number" id="q-markup" min="0" step="0.5" value="45" oninput="updateQuotedTotal()"></div>
+      <div class="form-group"><label>Final Quotation Price (RM)</label><input type="number" id="q-final" min="0" step="0.01" value="0" style="background:#fffbe6;font-weight:700"></div>
+    </div>
+    <div class="section-hdr green">Actual Cost Incurred (RM)</div>
+    <div class="form-grid three">
+      <div class="form-group"><label>Transport</label><input type="number" id="a-transport" min="0" step="0.01" value="0"></div>
+      <div class="form-group"><label>Crane</label><input type="number" id="a-crane" min="0" step="0.01" value="0"></div>
+      <div class="form-group"><label>Others</label><input type="number" id="a-others" min="0" step="0.01" value="0"></div>
+    </div>
+    <input type="hidden" id="a-materials" value="0">
+    <div class="acat-section mat">
+      <div class="acat-hdr">
+        <span style="font-weight:700">&#x1F9F1; Actual Materials Breakdown</span>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="addActualCatRow('materials')">+ Add Row</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="acat-tbl">
+          <thead><tr>
+            <th>#</th>
+            <th style="text-align:left;min-width:120px">Description</th>
+            <th>Qty</th>
+            <th>Unit</th>
+            <th>Unit Rate (RM)</th>
+            <th>Amount (RM)</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="amat-tbody"></tbody>
+        </table>
+      </div>
+      <div class="acat-total-row">
+        <span>Total Actual Materials Cost</span>
+        <span>RM <strong id="amat-total">0.00</strong></span>
+      </div>
+    </div>
+    <input type="hidden" id="a-consumables" value="0">
+    <div class="acat-section con">
+      <div class="acat-hdr">
+        <span style="font-weight:700">&#x1F4E6; Actual Consumables Breakdown</span>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="addActualCatRow('consumables')">+ Add Row</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="acat-tbl">
+          <thead><tr>
+            <th>#</th>
+            <th style="text-align:left;min-width:120px">Description</th>
+            <th>Qty</th>
+            <th>Unit</th>
+            <th>Unit Rate (RM)</th>
+            <th>Amount (RM)</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="acon-tbody"></tbody>
+        </table>
+      </div>
+      <div class="acat-total-row">
+        <span>Total Actual Consumables Cost</span>
+        <span>RM <strong id="acon-total">0.00</strong></span>
+      </div>
+    </div>
+    <input type="hidden" id="a-manhours" value="0">
+    <div class="amhr-section">
+      <div class="amhr-hdr">
+        <span style="font-weight:700;color:#1A6640">&#x1F477; Actual Manhours Breakdown</span>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="addActualMhrRow()">+ Add Row</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="amhr-tbl">
+          <thead><tr>
+            <th>#</th><th style="text-align:left;min-width:110px">Position / Role</th>
+            <th>Pax</th><th>RM/hr</th>
+            <th>Normal Hrs<br>(×1.0)</th>
+            <th>OT Hrs/Day<br>(×1.5 wkday)</th>
+            <th>Sun/PH Hrs<br>(×2.0)</th>
+            <th>Days</th><th>Total RM</th><th></th>
+          </tr></thead>
+          <tbody id="amhr-tbody"></tbody>
+        </table>
+      </div>
+      <div class="amhr-total-row">
+        <span>Total Actual Manhours Cost</span>
+        <span>RM <strong id="amhr-total">0.00</strong></span>
+      </div>
+    </div>
+    <input type="hidden" id="a-subcon" value="0">
+    <div class="acat-section sub">
+      <div class="acat-hdr">
+        <span style="font-weight:700">&#x1F477;&#x200D;&#x2642;&#xFE0F; Actual Subcontractor Breakdown (Lumpsum)</span>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="addActualSubconRow()">+ Add Row</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="acat-tbl">
+          <thead><tr>
+            <th>#</th>
+            <th style="text-align:left;min-width:140px">Subcon Name</th>
+            <th>Lumpsum Amount (RM)</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="asub-tbody"></tbody>
+        </table>
+      </div>
+      <div class="acat-total-row">
+        <span>Total Actual Subcontractor Cost</span>
+        <span>RM <strong id="asub-total">0.00</strong></span>
+      </div>
+    </div>
+    <div class="section-hdr accent">Revenue / Invoice</div>
+    <div class="form-grid three">
+      <div class="form-group"><label>Invoice Amount (RM)</label><input type="number" id="a-revenue" min="0" step="0.01" value="0"></div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveProject()">Save Project</button>
+  </div>
+</div>
+</div>
+
+<div class="modal-overlay" id="quote-detail-overlay">
+<div class="modal" style="width:880px">
+  <div class="modal-hdr">
+    <h3 id="qd-title">Quote Details</h3>
+    <button class="modal-close" onclick="closeQuoteDetail()">x</button>
+  </div>
+  <div class="modal-body" id="quote-detail-body"></div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeQuoteDetail()">Close</button>
+  </div>
+</div>
+</div>
+
+<div class="modal-overlay" id="backup-history-overlay">
+<div class="modal" style="width:680px">
+  <div class="modal-hdr">
+    <h3>☁ Backup History</h3>
+    <button class="modal-close" onclick="closeBackupHistory()">x</button>
+  </div>
+  <div class="modal-body">
+    <div style="font-size:11.5px;color:var(--sub);margin-bottom:14px">A snapshot of all projects is saved automatically once per day, kept for the last 30 days. Restoring will replace the current live data for everyone — use carefully.</div>
+    <table class="projects"><thead><tr>
+      <th>Date</th><th>Saved At</th><th style="text-align:right">Projects</th><th></th>
+    </tr></thead><tbody id="backup-history-body"></tbody></table>
+    <div id="backup-history-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No backups yet — one will be created automatically next time you log in.</div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeBackupHistory()">Close</button>
+  </div>
+</div>
+</div>
+
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-hdr">
+    <div>
+      <div style="font-size:15px;font-weight:700" id="dp-name">-</div>
+      <div style="font-size:11px;color:#a0c4e8;margin-top:2px" id="dp-no">-</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span id="dp-badge"></span>
+      <button class="btn btn-ghost btn-sm" id="dp-quote-detail-btn" style="display:none;color:#fff;border-color:rgba(255,255,255,.4)">View Quote Details</button>
+      <button class="btn btn-accent btn-sm" id="dp-edit-btn">Edit</button>
+      <button onclick="closeDetail()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">x</button>
+    </div>
+  </div>
+  <div class="detail-body" id="dp-body"></div>
+</div>
+<script>
+const CATS=['materials','consumables','transport','crane','manhours','others','subcon'];
+const CAT_LABELS={materials:'Materials',consumables:'Consumables',transport:'Transport',crane:'Crane',manhours:'Manhours',others:'Others',subcon:'Subcontractor'};
+const CAT_COLORS=['#2E6DA4','#F0A500','#1A6640','#8B4513','#C0392B','#7B68EE','#E67E22'];
+const BRANCHES=['jb','kuching'];
+const BRANCH_LABELS={jb:'Johor Bahru',kuching:'Kuching'};
+
+let PROJECTS=JSON.parse(localStorage.getItem('ysse_projects')||'[]');
+(function migrateBranches(){
+  var changed=false;
+  PROJECTS.forEach(function(p){ if(!p.branch){ p.branch='kuching'; changed=true; } });
+  if(changed){ localStorage.setItem('ysse_projects',JSON.stringify(PROJECTS)); }
+})();
+let TRASH=JSON.parse(localStorage.getItem('ysse_trash')||'[]');
+let editId=null;
+let convertingPendingId=null;
+let importedQuoteDetail=null;
+let PENDING_QUOTES=[];
+let ALL_USERS=[];
+window.CURRENT_USER_ROLE='qs';
+const ROLE_LABELS={management:'Management',qs:'QS / Engineer'};
+function isManagement(){ return window.CURRENT_USER_ROLE==='management'; }
+function requireManagement(actionLabel){
+  if(isManagement()) return true;
+  alert('Only Management can '+(actionLabel||'do this')+'.');
+  return false;
+}
+document.body.classList.add('role-qs');
+
+const n=v=>parseFloat(v)||0;
+const fmt=v=>v.toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtRM=v=>'RM '+fmt(v);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+function save(){
+  localStorage.setItem('ysse_projects',JSON.stringify(PROJECTS));
+  localStorage.setItem('ysse_trash',JSON.stringify(TRASH));
+  if(typeof pushToCloud==='function') pushToCloud();
+  const t=new Date();
+  const ts=t.toLocaleDateString('en-MY')+' '+t.toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const el=document.getElementById('save-indicator');
+  if(el){el.textContent='✔ Saved: '+ts;el.style.color='#6ee7b7';setTimeout(()=>{el.style.color='#a0c4e8';},2500);}
+}
+
+function calcProject(p){
+  const aTotal=CATS.reduce((s,c)=>s+n(p.actual[c]),0);
+  const revenue=n(p.actual.revenue);
+  const profit=revenue-aTotal;
+  const margin=revenue>0?(profit/revenue*100):0;
+  const duration=p.startDate&&p.endDate?Math.max(0,Math.round((new Date(p.endDate)-new Date(p.startDate))/86400000)+1):null;
+  return{aTotal,revenue,profit,margin,duration};
+}
+
+function showPage(id,tab){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  tab.classList.add('active');
+  if(id==='dashboard') renderDashboard();
+  if(id==='projects')  renderProjects();
+  if(id==='analysis')  renderAnalysis();
+  if(id==='compare')   renderCompare();
+  if(id==='pending')   renderPending();
+  if(id==='trash')     renderTrash();
+  if(id==='users')     renderUsers();
+}
+
+let chartRev=null,chartCat=null;
+function renderDashboard(){
+  const dbf=document.getElementById('dash-branch-filter')?document.getElementById('dash-branch-filter').value:'';
+  const PLIST=filterByBranch(PROJECTS,dbf);
+  const total=PLIST.length;
+  const active=PLIST.filter(p=>p.status==='in_progress').length;
+  const completed=PLIST.filter(p=>p.status==='completed');
+  const totalRev=completed.reduce((s,p)=>s+calcProject(p).revenue,0);
+  const totalProfit=completed.reduce((s,p)=>s+calcProject(p).profit,0);
+  const margins=completed.map(p=>calcProject(p).margin).filter(m=>isFinite(m));
+  const avgMargin=margins.length?margins.reduce((a,b)=>a+b,0)/margins.length:0;
+  document.getElementById('kpi-total').textContent=total;
+  document.getElementById('kpi-active').textContent=active;
+  document.getElementById('kpi-revenue').textContent=fmtRM(totalRev);
+  document.getElementById('kpi-profit').textContent=fmtRM(totalProfit);
+  document.getElementById('kpi-margin').textContent=avgMargin.toFixed(1)+'%';
+  document.getElementById('kpi-margin-card').className='kpi '+(avgMargin>=0?'green':'red');
+  const recent=[...PLIST].sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);
+  document.getElementById('body-recent').innerHTML=recent.length?recent.map(p=>{const c=calcProject(p);return'<tr onclick="openDetail(\''+p.id+'\')" style="cursor:pointer"><td><strong>'+p.name+'</strong></td><td>'+(p.client||'-')+'</td><td>'+badgeHtml(p.status)+'</td><td>'+(c.duration!=null?c.duration+' days':'-')+'</td><td style="text-align:right">'+fmt(n(p.quoted.finalPrice))+'</td><td style="text-align:right">'+fmt(c.aTotal)+'</td><td style="text-align:right">'+fmt(c.revenue)+'</td><td style="text-align:right;'+(c.profit>=0?'color:#065f46':'color:#991b1b')+'">'+(c.profit>=0?'':'(')+fmt(Math.abs(c.profit))+(c.profit>=0?'':')')+'</td><td>'+marginPill(c.margin)+'</td></tr>';}).join(''):'<tr><td colspan="9" style="text-align:center;padding:30px;color:#888">No projects yet. Click + New Project to start.</td></tr>';
+  const sorted=[...PLIST].sort((a,b)=>b.createdAt-a.createdAt).slice(0,10).reverse();
+  const labels=sorted.map(p=>p.name.length>15?p.name.slice(0,15)+'...':p.name);
+  if(chartRev){chartRev.destroy();chartRev=null;}
+  if(document.getElementById('chart-rev')){chartRev=new Chart(document.getElementById('chart-rev'),{type:'bar',data:{labels,datasets:[{label:'Revenue (RM)',data:sorted.map(p=>calcProject(p).revenue),backgroundColor:'rgba(26,102,64,.8)',borderRadius:3},{label:'Actual Cost (RM)',data:sorted.map(p=>calcProject(p).aTotal),backgroundColor:'rgba(240,165,0,.8)',borderRadius:3}]},options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:v=>'RM '+v.toLocaleString()}}}}});}
+  const catTotals=CATS.map(c=>PLIST.reduce((s,p)=>s+n(p.actual[c]),0));
+  if(chartCat){chartCat.destroy();chartCat=null;}
+  if(document.getElementById('chart-cat')){chartCat=new Chart(document.getElementById('chart-cat'),{type:'doughnut',data:{labels:CATS.map(c=>CAT_LABELS[c]),datasets:[{data:catTotals,backgroundColor:CAT_COLORS,hoverOffset:6}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}});}
+}
+
+function renderProjects(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const fs=document.getElementById('filter-status').value;
+  const fb=document.getElementById('filter-branch')?document.getElementById('filter-branch').value:'';
+  const so=document.getElementById('sort-by').value;
+  let list=PROJECTS.filter(p=>{if(fs&&p.status!==fs)return false;if(fb&&p.branch!==fb)return false;if(q&&!p.name.toLowerCase().includes(q)&&!p.client.toLowerCase().includes(q)&&!(p.projectNo||'').toLowerCase().includes(q))return false;return true;});
+  list.sort((a,b)=>{const ca=calcProject(a),cb=calcProject(b);if(so==='date_asc')return a.createdAt-b.createdAt;if(so==='margin_desc')return cb.margin-ca.margin;if(so==='revenue_desc')return cb.revenue-ca.revenue;return b.createdAt-a.createdAt;});
+  const tbody=document.getElementById('body-all');
+  const empty=document.getElementById('empty-projects');
+  if(!list.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=list.map((p,i)=>{const c=calcProject(p);return'<tr><td style="color:#888;font-size:11px">'+(p.projectNo||i+1)+'</td><td><a href="#" onclick="openDetail(\''+p.id+'\');return false" style="color:var(--dark);font-weight:600;text-decoration:none">'+p.name+'</a></td><td>'+(p.client||'-')+'</td><td>'+branchBadge(p.branch)+'</td><td>'+badgeHtml(p.status)+'</td><td>'+(p.startDate||'-')+'</td><td>'+(p.endDate||'-')+'</td><td style="text-align:center">'+(c.duration!=null?c.duration:'-')+'</td><td style="text-align:right">'+fmt(n(p.quoted.finalPrice))+'</td><td style="text-align:right">'+fmt(c.aTotal)+'</td><td style="text-align:right">'+fmt(c.revenue)+'</td><td style="text-align:right;'+(c.profit>=0?'color:#065f46':'color:#991b1b')+';font-weight:700">'+(c.profit>=0?'':'(')+fmt(Math.abs(c.profit))+(c.profit>=0?'':')')+'</td><td>'+marginPill(c.margin)+'</td><td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="openDetail(\''+p.id+'\')">View</button> <button class="btn btn-ghost btn-sm" onclick="openEditModal(\''+p.id+'\')">Edit</button> <button class="btn btn-danger btn-sm mgmt-only" onclick="deleteProject(\''+p.id+'\')">Del</button></td></tr>';}).join('');
+}
+
+let chartBA=null,chartCat2=null;
+function renderAnalysis(){
+  const abf=document.getElementById('analysis-branch-filter')?document.getElementById('analysis-branch-filter').value:'';
+  const PLIST=filterByBranch(PROJECTS,abf);
+  const qTotals=CATS.map(c=>PLIST.reduce((s,p)=>s+n(p.quoted[c]),0));
+  const aTotals=CATS.map(c=>PLIST.reduce((s,p)=>s+n(p.actual[c]),0));
+  const totalActual=aTotals.reduce((a,b)=>a+b,0);
+  if(chartBA){chartBA.destroy();chartBA=null;}
+  chartBA=new Chart(document.getElementById('chart-budget-actual'),{type:'bar',data:{labels:CATS.map(c=>CAT_LABELS[c]),datasets:[{label:'Budget (RM)',data:qTotals,backgroundColor:'rgba(46,109,164,.8)',borderRadius:3},{label:'Actual (RM)',data:aTotals,backgroundColor:'rgba(240,165,0,.8)',borderRadius:3}]},options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:v=>'RM '+v.toLocaleString()}}}}});
+  if(chartCat2){chartCat2.destroy();chartCat2=null;}
+  chartCat2=new Chart(document.getElementById('chart-cat2'),{type:'doughnut',data:{labels:CATS.map(c=>CAT_LABELS[c]),datasets:[{data:aTotals,backgroundColor:CAT_COLORS,hoverOffset:6}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
+  document.getElementById('body-analysis').innerHTML=CATS.map((c,i)=>{const q=qTotals[i],a=aTotals[i],v=a-q,vp=q>0?(v/q*100):0,pct=totalActual>0?(a/totalActual*100):0;const vc=v>0?'color:#991b1b':v<0?'color:#065f46':'';return'<tr><td style="font-weight:700"><span style="display:inline-block;width:12px;height:12px;background:'+CAT_COLORS[i]+';border-radius:2px;margin-right:6px"></span>'+CAT_LABELS[c]+'</td><td style="text-align:right">'+fmt(q)+'</td><td style="text-align:right">'+fmt(a)+'</td><td style="text-align:right;'+vc+';font-weight:700">'+(v>=0?'+':'')+fmt(v)+'</td><td style="text-align:right;'+vc+';font-weight:700">'+(v>=0?'+':'')+vp.toFixed(1)+'%</td><td style="text-align:right">'+pct.toFixed(1)+'%</td></tr>';}).join('');
+}
+
+function openDetail(id){
+  const p=PROJECTS.find(x=>x.id===id);if(!p)return;
+  const c=calcProject(p);
+  document.getElementById('dp-name').textContent=p.name;
+  document.getElementById('dp-no').textContent=p.projectNo||'';
+  document.getElementById('dp-badge').innerHTML=badgeHtml(p.status);
+  document.getElementById('dp-edit-btn').onclick=()=>{closeDetail();openEditModal(id);};
+  const qdBtn=document.getElementById('dp-quote-detail-btn');
+  if(qdBtn){
+    if(p.quoteDetail){ qdBtn.style.display=''; qdBtn.onclick=()=>viewProjectQuoteDetails(id); }
+    else { qdBtn.style.display='none'; }
+  }
+  const chips=[p.branch?'<span class="chip">Branch: <strong>'+(BRANCH_LABELS[p.branch]||p.branch)+'</strong></span>':'',p.client?'<span class="chip">Client: <strong>'+p.client+'</strong></span>':'',p.startDate?'<span class="chip">Start: <strong>'+p.startDate+'</strong></span>':'',p.endDate?'<span class="chip">End: <strong>'+p.endDate+'</strong></span>':'',c.duration!=null?'<span class="chip">Duration: <strong>'+c.duration+' days</strong></span>':''].filter(Boolean).join('');
+  const profClass=c.profit>=0?'profit':'loss';
+  let catRows='';
+  CATS.forEach((cat,i)=>{const q=n(p.quoted[cat]),a=n(p.actual[cat]),max=Math.max(q,a,1);catRows+='<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:3px"><span style="font-weight:700">'+CAT_LABELS[cat]+'</span><span>Budget: <strong>RM '+fmt(q)+'</strong> | Actual: <strong>RM '+fmt(a)+'</strong></span></div><div style="position:relative;height:16px;background:#e5e7eb;border-radius:4px;overflow:hidden"><div style="position:absolute;left:0;top:0;height:100%;width:'+(q/max*100).toFixed(1)+'%;background:rgba(46,109,164,.5);border-radius:4px"></div><div style="position:absolute;left:0;top:0;height:100%;width:'+(a/max*100).toFixed(1)+'%;background:'+(a>q?'rgba(192,57,43,.7)':'rgba(26,102,64,.7)')+';border-radius:4px"></div></div>'+(a>q?'<div style="font-size:10px;color:#991b1b;margin-top:1px">Over budget by RM '+fmt(a-q)+'</div>':(a>0&&a<q?'<div style="font-size:10px;color:#065f46;margin-top:1px">Under budget by RM '+fmt(q-a)+'</div>':''))+'</div>';});
+  document.getElementById('dp-body').innerHTML='<div class="info-chips">'+chips+'</div>'+(p.notes?'<div style="background:#f8fafc;border-radius:5px;padding:8px 12px;font-size:12px;color:#555;margin-bottom:14px">'+p.notes+'</div>':'')+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><div style="background:#f0f6ff;border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#2E6DA4;font-weight:700;margin-bottom:6px">Quotation / Budget</div>'+CATS.map(cat=>'<div class="stat-row"><span>'+CAT_LABELS[cat]+'</span><span>RM '+fmt(n(p.quoted[cat]))+'</span></div>').join('')+'<div class="stat-row bold"><span>Total Cost</span><span>RM '+fmt(CATS.reduce((s,c)=>s+n(p.quoted[c]),0))+'</span></div><div class="stat-row"><span>Markup ('+n(p.quoted.markup)+'%)</span><span>RM '+fmt(CATS.reduce((s,c)=>s+n(p.quoted[c]),0)*n(p.quoted.markup)/100)+'</span></div><div class="stat-row bold" style="color:#2E6DA4"><span>Final Quote Price</span><span>RM '+fmt(n(p.quoted.finalPrice))+'</span></div></div><div style="background:#f0faf4;border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#1A6640;font-weight:700;margin-bottom:6px">Actual / P&L</div>'+CATS.map(cat=>'<div class="stat-row"><span>'+CAT_LABELS[cat]+'</span><span>RM '+fmt(n(p.actual[cat]))+'</span></div>').join('')+'<div class="stat-row bold"><span>Total Actual Cost</span><span>RM '+fmt(c.aTotal)+'</span></div><div class="stat-row bold"><span>Revenue (Invoiced)</span><span>RM '+fmt(c.revenue)+'</span></div><div class="stat-row '+profClass+'"><span>'+(c.profit>=0?'Gross Profit':'Gross Loss')+'</span><span>RM '+fmt(Math.abs(c.profit))+'</span></div><div class="stat-row '+profClass+'"><span>Margin</span><span>'+c.margin.toFixed(1)+'%</span></div></div></div><div style="background:#fafafa;border-radius:6px;padding:12px;border:1px solid #e5e7eb"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#555;font-weight:700;margin-bottom:10px">Budget vs Actual by Category</div>'+catRows+'</div>';
+  document.getElementById('detail-overlay').classList.add('open');
+  document.getElementById('detail-panel').classList.add('open');
+}
+function closeDetail(){document.getElementById('detail-overlay').classList.remove('open');document.getElementById('detail-panel').classList.remove('open');}
+
+function openAddModal(){
+  editId=null;
+  convertingPendingId=null;
+  document.getElementById('convert-banner').style.display='none';
+  document.getElementById('modal-title').textContent='Add New Project';
+  clearForm();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function openEditModal(id){
+  const p=PROJECTS.find(x=>x.id===id);if(!p)return;
+  editId=id;
+  document.getElementById('modal-title').textContent='Edit Project - '+p.name;
+  clearForm();
+  importedQuoteDetail=p.quoteDetail?JSON.parse(JSON.stringify(p.quoteDetail)):null;
+  document.getElementById('f-name').value=p.name;
+  document.getElementById('f-no').value=p.projectNo||'';
+  document.getElementById('f-client').value=p.client||'';
+  document.getElementById('f-branch').value=p.branch||'kuching';
+  document.getElementById('f-status').value=p.status;
+  document.getElementById('f-start').value=p.startDate||'';
+  document.getElementById('f-end').value=p.endDate||'';
+  document.getElementById('f-notes').value=p.notes||'';
+  CATS.forEach(c=>{document.getElementById('q-'+c).value=p.quoted[c]||0;document.getElementById('a-'+c).value=p.actual[c]||0;});
+  document.getElementById('q-markup').value=p.quoted.markup||45;
+  document.getElementById('q-final').value=p.quoted.finalPrice||0;
+  document.getElementById('a-revenue').value=p.actual.revenue||0;
+  actualMhrRows=(p.actual.manhourRows||[]).map(function(r){return Object.assign({},r);});
+  renderActualMhr();
+  actualMatRows=(p.actual.materialRows||[]).map(function(r){return Object.assign({},r);});
+  renderActualCat('materials');
+  actualConRows=(p.actual.consumableRows||[]).map(function(r){return Object.assign({},r);});
+  renderActualCat('consumables');
+  actualSubconRows=(p.actual.subconRows||[]).map(function(r){return Object.assign({},r);});
+  renderActualSubcon();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  editId=null;
+  convertingPendingId=null;
+  importedQuoteDetail=null;
+  document.getElementById('convert-banner').style.display='none';
+  localStorage.removeItem('ysse_form_draft');
+}
+function clearForm(){
+  importedQuoteDetail=null;
+  ['f-name','f-no','f-client','f-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-branch').value='jb';
+  document.getElementById('f-status').value='quoted';
+  document.getElementById('f-start').value='';document.getElementById('f-end').value='';
+  CATS.forEach(c=>{document.getElementById('q-'+c).value=0;document.getElementById('a-'+c).value=0;});
+  document.getElementById('q-markup').value=45;document.getElementById('q-final').value=0;document.getElementById('a-revenue').value=0;
+  actualMhrRows=[];renderActualMhr();
+  actualMatRows=[];renderActualCat('materials');
+  actualConRows=[];renderActualCat('consumables');
+  actualSubconRows=[];renderActualSubcon();
+}
+function updateQuotedTotal(){
+  const total=CATS.reduce((s,c)=>s+n(document.getElementById('q-'+c).value),0);
+  const markup=n(document.getElementById('q-markup').value);
+  document.getElementById('q-final').value=(total*(1+markup/100)).toFixed(2);
+}
+CATS.forEach(c=>document.getElementById('q-'+c).addEventListener('input',updateQuotedTotal));
+
+function saveProject(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){alert('Project Name is required.');return;}
+  const proj={
+    id:editId||uid(),
+    createdAt:editId?(PROJECTS.find(x=>x.id===editId)||{}).createdAt||Date.now():Date.now(),
+    name,client:document.getElementById('f-client').value.trim(),
+    branch:document.getElementById('f-branch').value||'jb',
+    projectNo:document.getElementById('f-no').value.trim(),
+    status:document.getElementById('f-status').value,
+    startDate:document.getElementById('f-start').value,
+    endDate:document.getElementById('f-end').value,
+    notes:document.getElementById('f-notes').value.trim(),
+    quoted:{materials:n(document.getElementById('q-materials').value),consumables:n(document.getElementById('q-consumables').value),transport:n(document.getElementById('q-transport').value),crane:n(document.getElementById('q-crane').value),manhours:n(document.getElementById('q-manhours').value),others:n(document.getElementById('q-others').value),subcon:n(document.getElementById('q-subcon').value),markup:n(document.getElementById('q-markup').value),finalPrice:n(document.getElementById('q-final').value)},
+    actual:{materials:calcActualCat('materials'),materialRows:actualMatRows.map(function(r){return Object.assign({},r);}),consumables:calcActualCat('consumables'),consumableRows:actualConRows.map(function(r){return Object.assign({},r);}),transport:n(document.getElementById('a-transport').value),crane:n(document.getElementById('a-crane').value),manhours:calcActualMhrTotal(),manhourRows:actualMhrRows.map(function(r){return Object.assign({},r);}),others:n(document.getElementById('a-others').value),subcon:calcActualSubconTotal(),subconRows:actualSubconRows.map(function(r){return Object.assign({},r);}),revenue:n(document.getElementById('a-revenue').value)},
+    quoteDetail:importedQuoteDetail?JSON.parse(JSON.stringify(importedQuoteDetail)):(editId?((PROJECTS.find(x=>x.id===editId)||{}).quoteDetail||null):null)
+  };
+  if(editId){const idx=PROJECTS.findIndex(x=>x.id===editId);if(idx>=0)PROJECTS[idx]=proj;}
+  else PROJECTS.push(proj);
+  if(convertingPendingId && typeof window.markPendingConverted==='function'){
+    window.markPendingConverted(convertingPendingId);
+  }
+  save();closeModal();
+  renderDashboard();
+  if(document.getElementById('page-projects').classList.contains('active')) renderProjects();
+  if(document.getElementById('page-analysis').classList.contains('active')) renderAnalysis();
+  if(document.getElementById('page-compare').classList.contains('active')) renderCompare();
+}
+
+function deleteProject(id){
+  if(!requireManagement('delete projects'))return;
+  const p=PROJECTS.find(x=>x.id===id);if(!p)return;
+  if(!confirm('Delete "'+p.name+'"? It will be moved to Trash, where it can be restored for 30 days.'))return;
+  PROJECTS=PROJECTS.filter(x=>x.id!==id);
+  p.deletedAt=Date.now();
+  p.deletedBy=window.CURRENT_USER_EMAIL||'';
+  TRASH.unshift(p);
+  save();
+  renderDashboard();
+  if(document.getElementById('page-projects').classList.contains('active')) renderProjects();
+  if(document.getElementById('page-analysis').classList.contains('active')) renderAnalysis();
+  if(document.getElementById('page-compare').classList.contains('active')) renderCompare();
+  updateTrashBadge();
+}
+
+function restoreProject(id){
+  if(!requireManagement('restore projects from Trash'))return;
+  const idx=TRASH.findIndex(x=>x.id===id);if(idx<0)return;
+  const p=TRASH[idx];
+  TRASH.splice(idx,1);
+  delete p.deletedAt;delete p.deletedBy;
+  PROJECTS.push(p);
+  save();
+  renderTrash();renderDashboard();
+  if(document.getElementById('page-projects').classList.contains('active')) renderProjects();
+  if(document.getElementById('page-analysis').classList.contains('active')) renderAnalysis();
+  if(document.getElementById('page-compare').classList.contains('active')) renderCompare();
+}
+
+function permanentlyDeleteProject(id){
+  if(!requireManagement('permanently delete projects'))return;
+  const p=TRASH.find(x=>x.id===id);if(!p)return;
+  if(!confirm('Permanently delete "'+p.name+'"? This cannot be undone.'))return;
+  TRASH=TRASH.filter(x=>x.id!==id);
+  save();renderTrash();
+}
+
+function emptyTrash(){
+  if(!requireManagement('empty Trash'))return;
+  if(!TRASH.length){alert('Trash is already empty.');return;}
+  if(!confirm('Permanently delete all '+TRASH.length+' item(s) in Trash? This cannot be undone.'))return;
+  TRASH=[];
+  save();renderTrash();
+}
+
+function purgeOldTrash(){
+  const cutoff=Date.now()-30*24*60*60*1000;
+  const before=TRASH.length;
+  TRASH=TRASH.filter(p=>(p.deletedAt||0)>=cutoff);
+  if(TRASH.length!==before){ localStorage.setItem('ysse_trash',JSON.stringify(TRASH)); if(typeof pushToCloud==='function') pushToCloud(); }
+}
+
+function renderTrash(){
+  purgeOldTrash();
+  const tbody=document.getElementById('body-trash');
+  const empty=document.getElementById('trash-empty');
+  if(!tbody) return;
+  if(!TRASH.length){ tbody.innerHTML=''; if(empty) empty.style.display='block'; updateTrashBadge(); return; }
+  if(empty) empty.style.display='none';
+  tbody.innerHTML=TRASH.map(p=>{
+    const delDate=p.deletedAt?new Date(p.deletedAt).toLocaleDateString('en-MY'):'-';
+    const daysLeft=p.deletedAt?Math.max(0,30-Math.floor((Date.now()-p.deletedAt)/86400000)):30;
+    return '<tr><td>'+delDate+'</td><td><strong>'+p.name+'</strong></td><td>'+(p.client||'-')+'</td><td>'+branchBadge(p.branch)+'</td><td>'+userLabel(p.deletedBy)+'</td><td>'+daysLeft+' days</td>'+
+      '<td style="white-space:nowrap"><button class="btn btn-accent btn-sm mgmt-only" onclick="restoreProject(\''+p.id+'\')">Restore</button> <button class="btn btn-danger btn-sm mgmt-only" onclick="permanentlyDeleteProject(\''+p.id+'\')">Delete Forever</button></td></tr>';
+  }).join('');
+  updateTrashBadge();
+}
+
+function updateTrashBadge(){
+  const badge=document.getElementById('trash-badge');
+  if(!badge) return;
+  if(TRASH.length){ badge.style.display='inline-block'; badge.textContent=TRASH.length; } else { badge.style.display='none'; }
+}
+
+function applyRoleToUI(){
+  document.body.classList.toggle('role-qs',!isManagement());
+}
+
+function renderUsers(){
+  if(!requireManagement('view Manage Users'))return showPage('dashboard',document.querySelectorAll('.nav-tab')[0]);
+  const tbody=document.getElementById('body-users');
+  const empty=document.getElementById('users-empty');
+  if(!tbody) return;
+  if(!ALL_USERS.length){ tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+  if(empty) empty.style.display='none';
+  const mgmtCount=ALL_USERS.filter(u=>u.role==='management').length;
+  tbody.innerHTML=ALL_USERS.map(u=>{
+    const addedOn=u.addedAt?new Date(u.addedAt).toLocaleDateString('en-MY'):'-';
+    const isLastMgmt=u.role==='management'&&mgmtCount<=1;
+    return '<tr>'+
+      '<td><input value="'+(u.name?u.name.replace(/"/g,'&quot;'):'')+'" placeholder="-" onchange="updateUserProfile(\''+u.email+'\',\'name\',this.value)" style="width:120px;border:1px solid #ddd;border-radius:3px;padding:3px 5px;font-size:12px"></td>'+
+      '<td><input value="'+(u.position?u.position.replace(/"/g,'&quot;'):'')+'" placeholder="-" onchange="updateUserProfile(\''+u.email+'\',\'position\',this.value)" style="width:140px;border:1px solid #ddd;border-radius:3px;padding:3px 5px;font-size:12px"></td>'+
+      '<td>'+u.email+(u.email===window.CURRENT_USER_EMAIL?' <span style="color:#888;font-size:10px">(you)</span>':'')+'</td>'+
+      '<td><select onchange="changeUserRole(\''+u.email+'\',this.value)" '+(isLastMgmt?'disabled title="Cannot change the last Management user"':'')+' style="font-size:12px;padding:3px">'+
+      '<option value="qs"'+(u.role==='qs'?' selected':'')+'>QS / Engineer</option>'+
+      '<option value="management"'+(u.role==='management'?' selected':'')+'>Management</option></select></td>'+
+      '<td>'+addedOn+'</td>'+
+      '<td><button class="btn btn-danger btn-sm" '+(isLastMgmt?'disabled title="Cannot remove the last Management user"':'')+' onclick="removeUser(\''+u.email+'\')">Remove</button></td></tr>';
+  }).join('');
+}
+
+function addUser(){
+  if(!requireManagement('add users'))return;
+  const nameEl=document.getElementById('nu-name');
+  const posEl=document.getElementById('nu-position');
+  const emailEl=document.getElementById('nu-email');
+  const roleEl=document.getElementById('nu-role');
+  const name=nameEl.value.trim();
+  const position=posEl.value.trim();
+  const email=emailEl.value.trim().toLowerCase();
+  const role=roleEl.value;
+  if(!email||!email.includes('@')){alert('Please enter a valid email.');return;}
+  if(ALL_USERS.some(u=>u.email===email)){alert('That user already exists. Edit their details from the list below instead.');return;}
+  if(typeof window.addUserToFirestore==='function') window.addUserToFirestore(email,role,name,position);
+  nameEl.value='';posEl.value='';emailEl.value='';
+}
+
+function updateUserProfile(email,field,value){
+  if(!requireManagement('edit user details'))return;
+  if(typeof window.updateUserField==='function') window.updateUserField(email,field,value.trim());
+}
+
+function userLabel(email){
+  if(!email) return '-';
+  const u=ALL_USERS.find(function(x){return x.email===email;});
+  if(u&&u.name) return u.name+(u.position?' ('+u.position+')':'');
+  return email;
+}
+
+function changeUserRole(email,role){
+  if(!requireManagement('change user roles'))return;
+  const u=ALL_USERS.find(x=>x.email===email);
+  if(u&&u.role==='management'&&role!=='management'){
+    const mgmtCount=ALL_USERS.filter(x=>x.role==='management').length;
+    if(mgmtCount<=1){alert('Cannot demote the last Management user — promote someone else first.');renderUsers();return;}
+  }
+  if(typeof window.updateUserRole==='function') window.updateUserRole(email,role);
+}
+
+function removeUser(email){
+  const u=ALL_USERS.find(x=>x.email===email);if(!u)return;
+  if(!requireManagement('remove users'))return;
+  if(u.role==='management'&&ALL_USERS.filter(x=>x.role==='management').length<=1){alert('Cannot remove the last Management user.');return;}
+  if(!confirm('Remove '+email+'? They will lose access to this system (their Firebase login still works elsewhere unless you also delete it in Firebase Console).'))return;
+  if(typeof window.removeUserFromFirestore==='function') window.removeUserFromFirestore(email);
+}
+
+function applyQuotationDataToForm(d){
+  importedQuoteDetail=JSON.parse(JSON.stringify(d));
+  if(d.project){document.getElementById('f-name').value=d.project.name||'';document.getElementById('f-client').value=d.project.client||'';document.getElementById('f-no').value=d.project.no||'';if(d.project.branch)document.getElementById('f-branch').value=d.project.branch;}
+  if(d.state){
+    const calc=calcPendingQuoteCats(d);
+    CATS.forEach(cat=>{
+      document.getElementById('q-'+cat).value=calc.cats[cat].sub.toFixed(2);
+    });
+  }
+  if(d.markup)document.getElementById('q-markup').value=d.markup;
+  updateQuotedTotal();
+}
+
+function importQuotation(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      applyQuotationDataToForm(d);
+      alert('Quotation imported. Review amounts then save.');
+    }catch(err){alert('Invalid JSON: '+err.message);}
+  };
+  r.readAsText(file);e.target.value='';
+}
+
+function calcPendingQuoteCats(q){
+  const otm=n(q.otMult)||1.5,nm=n(q.normMult)||1.0,sm=n(q.sunMult)||2.0;
+  const cats={};
+  let total=0;
+  CATS.forEach(function(c){
+    const rows=(q.state&&q.state[c])?q.state[c]:[];
+    let sub=0;
+    const detailed=rows.map(function(row){
+      let amt=0;
+      if(c==='manhours'){
+        const pax=n(row.pax),rate=n(row.rate),norm=n(row.normHrs),ot=n(row.otHrs),sun=n(row.sunHrs),days=n(row.days);
+        const rowOT=(row.otMult!==''&&row.otMult!=null)?n(row.otMult):otm;
+        amt=pax*(norm*rate*nm+ot*rate*rowOT+sun*rate*sm)*days;
+      } else if(c==='subcon'){
+        amt=n(row.rate);
+      } else if(c==='materials'){
+        const qty=n(row.qty),lenPcs=n(row.lenPcs),kgm=n(row.kgm),rate=n(row.rate);
+        const tl=qty*lenPcs,tk=tl*kgm;
+        if(row.priceby==='kg') amt=tk*rate;
+        else if(row.priceby==='m') amt=tl*rate;
+        else amt=qty*rate;
+      } else {
+        amt=n(row.qty)*n(row.rate);
+      }
+      sub+=amt;
+      return Object.assign({},row,{amt:amt});
+    });
+    cats[c]={rows:detailed,sub:sub};
+    total+=sub;
+  });
+  const markup=n(q.markup);
+  const markupAmt=total*markup/100;
+  return {cats:cats,total:total,markup:markup,markupAmt:markupAmt,finalPrice:total+markupAmt};
+}
+
+function renderPending(){
+  const tbody=document.getElementById('body-pending');
+  const list=PENDING_QUOTES.filter(q=>q.status!=='converted'&&q.status!=='dismissed');
+  document.getElementById('pending-empty').style.display=list.length?'none':'block';
+  tbody.innerHTML=list.map(q=>{
+    const calc=calcPendingQuoteCats(q);
+    const submitted=q.submittedAt?new Date(q.submittedAt).toLocaleDateString('en-MY'):'-';
+    const proj=q.project||{};
+    return '<tr><td>'+submitted+'</td><td>'+(proj.name||'-')+'</td><td>'+(proj.client||'-')+'</td><td>'+(proj.no||'-')+'</td><td>'+(BRANCH_LABELS[proj.branch]||proj.branch||'-')+'</td><td>'+(proj.by||'-')+'</td><td>'+fmt(calc.finalPrice)+'</td><td><span class="badge badge-quoted">Pending</span></td>'+
+      '<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="viewQuoteDetails(\''+q.id+'\')">View Details</button> <button class="btn btn-accent btn-sm mgmt-only" onclick="convertPendingQuote(\''+q.id+'\')">Convert to Project</button> <button class="btn btn-ghost btn-sm mgmt-only" onclick="dismissPendingQuoteUI(\''+q.id+'\')">Dismiss</button></td></tr>';
+  }).join('');
+  const badge=document.getElementById('pending-badge');
+  if(badge){ if(list.length){badge.style.display='inline-block';badge.textContent=list.length;} else {badge.style.display='none';} }
+}
+
+function renderCatTable(cat,data){
+  const rows=data.rows.filter(function(r){return n(r.amt)>0 || (r.desc&&String(r.desc).trim());});
+  if(!rows.length) return '';
+  let head='',body='';
+  if(cat==='materials'){
+    head='<tr><th>Description</th><th style="text-align:right">Qty</th><th style="text-align:right">Len/Pcs</th><th style="text-align:right">Kg/m</th><th>Price By</th><th style="text-align:right">Rate (RM)</th><th style="text-align:right">Amount (RM)</th></tr>';
+    body=rows.map(function(r){return '<tr><td>'+(r.desc||'-')+'</td><td style="text-align:right">'+(r.qty||0)+'</td><td style="text-align:right">'+(r.lenPcs||0)+'</td><td style="text-align:right">'+(r.kgm||0)+'</td><td>'+(r.priceby||'-')+'</td><td style="text-align:right">'+fmt(n(r.rate))+'</td><td style="text-align:right;font-weight:700">'+fmt(r.amt)+'</td></tr>';}).join('');
+  } else if(cat==='manhours'){
+    head='<tr><th>Position</th><th style="text-align:right">Pax</th><th style="text-align:right">Rate/hr</th><th style="text-align:right">Normal Hrs</th><th style="text-align:right">OT Hrs</th><th style="text-align:right">Sun/PH Hrs</th><th style="text-align:right">Days</th><th style="text-align:right">Amount (RM)</th></tr>';
+    body=rows.map(function(r){return '<tr><td>'+(r.pos||'-')+'</td><td style="text-align:right">'+(r.pax||0)+'</td><td style="text-align:right">'+fmt(n(r.rate))+'</td><td style="text-align:right">'+(r.normHrs||0)+'</td><td style="text-align:right">'+(r.otHrs||0)+'</td><td style="text-align:right">'+(r.sunHrs||0)+'</td><td style="text-align:right">'+(r.days||0)+'</td><td style="text-align:right;font-weight:700">'+fmt(r.amt)+'</td></tr>';}).join('');
+  } else if(cat==='subcon'){
+    head='<tr><th>Subcontractor</th><th style="text-align:right">Amount (RM)</th></tr>';
+    body=rows.map(function(r){return '<tr><td>'+(r.desc||'-')+'</td><td style="text-align:right;font-weight:700">'+fmt(r.amt)+'</td></tr>';}).join('');
+  } else {
+    head='<tr><th>Description</th><th style="text-align:right">Qty</th><th>Unit</th><th style="text-align:right">Rate (RM)</th><th style="text-align:right">Amount (RM)</th></tr>';
+    body=rows.map(function(r){return '<tr><td>'+(r.desc||'-')+'</td><td style="text-align:right">'+(r.qty||0)+'</td><td>'+(r.unit||'-')+'</td><td style="text-align:right">'+fmt(n(r.rate))+'</td><td style="text-align:right;font-weight:700">'+fmt(r.amt)+'</td></tr>';}).join('');
+  }
+  return '<div style="margin-bottom:18px"><div style="font-weight:700;font-size:13px;color:var(--dark);margin-bottom:6px">'+CAT_LABELS[cat]+' <span style="color:#888;font-weight:400">&mdash; Subtotal: RM '+fmt(data.sub)+'</span></div><table class="projects" style="font-size:12px;width:100%"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
+}
+
+function buildQuoteDetailHtml(q){
+  const calc=calcPendingQuoteCats(q);
+  const proj=q.project||{};
+  const submitted=q.submittedAt?new Date(q.submittedAt).toLocaleString('en-MY'):'-';
+  let html='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;font-size:12px">'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Project Name</div><div style="font-weight:700">'+(proj.name||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Client</div><div style="font-weight:700">'+(proj.client||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Project No.</div><div style="font-weight:700">'+(proj.no||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Branch</div><div style="font-weight:700">'+(BRANCH_LABELS[proj.branch]||proj.branch||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Prepared By</div><div style="font-weight:700">'+(proj.by||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Submitted</div><div style="font-weight:700">'+submitted+'</div></div>'+
+  '</div>';
+  CATS.forEach(function(c){ html+=renderCatTable(c,calc.cats[c]); });
+  html+='<div style="border-top:2px solid #eee;margin-top:10px;padding-top:12px;max-width:360px;margin-left:auto;font-size:13px">'+
+    '<div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:700"><span>TOTAL COST</span><span>RM '+fmt(calc.total)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;padding:4px 0;color:#555"><span>Markup ('+calc.markup+'%)</span><span>RM '+fmt(calc.markupAmt)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:700;font-size:15px;color:var(--accent);border-top:1px solid #eee"><span>FINAL QUOTATION PRICE</span><span>RM '+fmt(calc.finalPrice)+'</span></div>'+
+  '</div>';
+  const hasRC=(q.rcLen&&n(q.rcLen)>0)||(q.rcWeight&&n(q.rcWeight)>0);
+  if(hasRC){
+    const L=n(q.rcLen),W=n(q.rcWid),H=n(q.rcHgt),unit=q.rcDimUnit||'ft',weight=n(q.rcWeight);
+    const FT2_TO_M2=0.09290304,FT3_TO_M3=0.028316846592;
+    let areaFt2=0,areaM2=0,volFt3=0,volM3=0;
+    if(L>0&&W>0){
+      if(unit==='ft'){ areaFt2=L*W; areaM2=areaFt2*FT2_TO_M2; if(H>0){ volFt3=L*W*H; volM3=volFt3*FT3_TO_M3; } }
+      else { areaM2=L*W; areaFt2=areaM2/FT2_TO_M2; if(H>0){ volM3=L*W*H; volFt3=volM3/FT3_TO_M3; } }
+    }
+    const quote=calc.finalPrice;
+    html+='<div style="margin-top:18px;background:#f7fafc;border-radius:6px;padding:14px 16px">'+
+      '<div style="font-weight:700;font-size:13px;margin-bottom:8px">Effective Rate Check (as entered by QS)</div>'+
+      '<div style="font-size:12px;color:#555;margin-bottom:8px">Dimensions: '+(L||0)+' × '+(W||0)+(H>0?(' × '+H):'')+' ('+unit+')'+(weight>0?('&nbsp; | &nbsp;Weight: '+weight+' ton'):'')+'</div>'+
+      '<div style="display:flex;gap:16px;font-size:12px;flex-wrap:wrap">'+
+        '<div>RM/ft²: <b>'+(areaFt2>0?fmt(quote/areaFt2):'-')+'</b></div>'+
+        '<div>RM/m²: <b>'+(areaM2>0?fmt(quote/areaM2):'-')+'</b></div>'+
+        '<div>RM/ft³: <b>'+(volFt3>0?fmt(quote/volFt3):'-')+'</b></div>'+
+        '<div>RM/m³: <b>'+(volM3>0?fmt(quote/volM3):'-')+'</b></div>'+
+        '<div>RM/ton: <b>'+(weight>0?fmt(quote/weight):'-')+'</b></div>'+
+      '</div>'+
+    '</div>';
+  }
+  return html;
+}
+
+function viewQuoteDetails(id){
+  const q=PENDING_QUOTES.find(function(x){return x.id===id;});
+  if(!q) return;
+  const proj=q.project||{};
+  document.getElementById('qd-title').textContent='Quote Details — '+(proj.name||'Untitled Project');
+  document.getElementById('quote-detail-body').innerHTML=buildQuoteDetailHtml(q);
+  document.getElementById('quote-detail-overlay').classList.add('open');
+}
+function closeQuoteDetail(){
+  document.getElementById('quote-detail-overlay').classList.remove('open');
+  editingProjectId=null;
+  editingQuoteDetail=null;
+  quoteDetailViewMode='original';
+}
+
+function openBackupHistory(){
+  if(!requireManagement('view Backup History'))return;
+  document.getElementById('backup-history-overlay').classList.add('open');
+  const tbody=document.getElementById('backup-history-body');
+  const empty=document.getElementById('backup-history-empty');
+  if(tbody) tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mid);padding:20px">Loading…</td></tr>';
+  if(typeof window.listBackups!=='function') return;
+  window.listBackups(function(list){
+    if(!tbody) return;
+    if(!list.length){ tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if(empty) empty.style.display='none';
+    tbody.innerHTML=list.map(function(b){
+      const savedAt=b.timestamp?new Date(b.timestamp).toLocaleString('en-MY'):'-';
+      return '<tr><td>'+(b.date||'-')+'</td><td>'+savedAt+'</td><td style="text-align:right">'+(b.projectCount||0)+'</td>'+
+        '<td><button class="btn btn-accent btn-sm" onclick="restoreBackupUI(\''+b.id+'\')">Restore</button></td></tr>';
+    }).join('');
+  });
+}
+function closeBackupHistory(){
+  document.getElementById('backup-history-overlay').classList.remove('open');
+}
+function restoreBackupUI(id){
+  if(!requireManagement('restore a backup'))return;
+  if(!confirm('Restore the backup from '+id+'? This will replace the CURRENT live projects and trash data for everyone, immediately. This cannot be undone (though it will itself become a new backup point going forward).\n\nAre you sure?'))return;
+  if(typeof window.restoreBackup!=='function') return;
+  window.restoreBackup(id,function(ok,err){
+    if(!ok){ alert('Could not restore backup: '+(err||'unknown error')); return; }
+    closeBackupHistory();
+    renderDashboard();
+    if(document.getElementById('page-projects').classList.contains('active')) renderProjects();
+    if(document.getElementById('page-analysis').classList.contains('active')) renderAnalysis();
+    if(document.getElementById('page-compare').classList.contains('active')) renderCompare();
+    alert('Backup restored successfully.');
+  });
+}
+
+let editingProjectId=null;
+let editingQuoteDetail=null;
+let quoteDetailViewMode='original';
+
+function viewProjectQuoteDetails(id){
+  const p=PROJECTS.find(function(x){return x.id===id;});
+  if(!p||!p.quoteDetail) return;
+  editingProjectId=id;
+  editingQuoteDetail=null;
+  quoteDetailViewMode='original';
+  document.getElementById('qd-title').textContent='Quote Details — '+(p.name||'Untitled Project');
+  renderQuoteDetailModal();
+  document.getElementById('quote-detail-overlay').classList.add('open');
+}
+
+function renderQuoteDetailModal(){
+  const p=PROJECTS.find(function(x){return x.id===editingProjectId;});
+  const body=document.getElementById('quote-detail-body');
+  if(!p||!body) return;
+  const toggleHtml='<div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid #eee;padding-bottom:12px">'+
+    '<button class="btn btn-sm '+(quoteDetailViewMode==='original'?'btn-primary':'btn-ghost')+'" onclick="switchQuoteDetailView(\'original\')">Original Submission</button>'+
+    '<button class="btn btn-sm '+(quoteDetailViewMode==='edited'?'btn-primary':'btn-ghost')+'" onclick="switchQuoteDetailView(\'edited\')">Management Adjusted'+(p.quoteDetailEdited?'':' (none yet)')+'</button>'+
+  '</div>';
+  if(quoteDetailViewMode==='original'){
+    body.innerHTML=toggleHtml+buildQuoteDetailHtml(p.quoteDetail);
+  } else {
+    if(!editingQuoteDetail){
+      editingQuoteDetail=JSON.parse(JSON.stringify(p.quoteDetailEdited||p.quoteDetail));
+    }
+    body.innerHTML=toggleHtml+buildEditableQuoteDetailHtml(editingQuoteDetail);
+  }
+}
+
+function switchQuoteDetailView(mode){
+  quoteDetailViewMode=mode;
+  renderQuoteDetailModal();
+}
+
+function updateEditingRow(cat,idx,field,val){
+  if(!editingQuoteDetail||!editingQuoteDetail.state||!editingQuoteDetail.state[cat]) return;
+  editingQuoteDetail.state[cat][idx][field]=val;
+  renderQuoteDetailModal();
+}
+function updateEditingMarkup(val){
+  if(!editingQuoteDetail) return;
+  editingQuoteDetail.markup=val;
+  renderQuoteDetailModal();
+}
+function discardQuoteDetailEdits(){
+  if(!confirm('Discard your unsaved adjustments? Anything already saved as "Management Adjusted" is not affected.'))return;
+  const p=PROJECTS.find(function(x){return x.id===editingProjectId;});
+  if(!p) return;
+  editingQuoteDetail=JSON.parse(JSON.stringify(p.quoteDetailEdited||p.quoteDetail));
+  renderQuoteDetailModal();
+}
+function saveQuoteDetailEdits(){
+  if(!requireManagement('edit quote details'))return;
+  const idx=PROJECTS.findIndex(function(x){return x.id===editingProjectId;});
+  if(idx<0||!editingQuoteDetail) return;
+  editingQuoteDetail.editedBy=window.CURRENT_USER_EMAIL||'';
+  editingQuoteDetail.editedAt=Date.now();
+  PROJECTS[idx].quoteDetailEdited=JSON.parse(JSON.stringify(editingQuoteDetail));
+  const calc=calcPendingQuoteCats(editingQuoteDetail);
+  PROJECTS[idx].quoted=Object.assign({},PROJECTS[idx].quoted,{
+    materials:calc.cats.materials.sub,consumables:calc.cats.consumables.sub,transport:calc.cats.transport.sub,
+    crane:calc.cats.crane.sub,manhours:calc.cats.manhours.sub,others:calc.cats.others.sub,subcon:calc.cats.subcon.sub,
+    markup:calc.markup,finalPrice:calc.finalPrice
+  });
+  save();
+  renderDashboard();
+  if(document.getElementById('page-projects').classList.contains('active')) renderProjects();
+  if(document.getElementById('page-analysis').classList.contains('active')) renderAnalysis();
+  if(document.getElementById('page-compare').classList.contains('active')) renderCompare();
+  renderQuoteDetailModal();
+}
+
+function renderEditableCatTable(cat,calcData,detail){
+  const rows=(detail.state&&detail.state[cat])?detail.state[cat]:[];
+  if(!rows.length) return '';
+  function inp(val,onchange,width){return '<input type="number" value="'+(val===undefined||val===null?'':val)+'" step="0.01" onchange="'+onchange+'" style="width:'+(width||60)+'px;padding:3px;border:1px solid #ccc;border-radius:3px;font-size:11px;text-align:right">';}
+  function txt(val,onchange,width){return '<input type="text" value="'+(val===undefined||val===null?'':String(val).replace(/"/g,'&quot;'))+'" onchange="'+onchange+'" style="width:'+(width||90)+'px;padding:3px;border:1px solid #ccc;border-radius:3px;font-size:11px">';}
+  let head='',body='';
+  if(cat==='materials'){
+    head='<tr><th>Description</th><th>Qty</th><th>Len/Pcs</th><th>Kg/m</th><th>Price By</th><th>Rate (RM)</th><th>Amount (RM)</th></tr>';
+    body=rows.map(function(r,i){
+      const amt=(calcData.rows[i]&&calcData.rows[i].amt)||0;
+      return '<tr><td>'+txt(r.desc,"updateEditingRow('materials',"+i+",'desc',this.value)",120)+'</td>'+
+        '<td>'+inp(r.qty,"updateEditingRow('materials',"+i+",'qty',this.value)",50)+'</td>'+
+        '<td>'+inp(r.lenPcs,"updateEditingRow('materials',"+i+",'lenPcs',this.value)",55)+'</td>'+
+        '<td>'+inp(r.kgm,"updateEditingRow('materials',"+i+",'kgm',this.value)",55)+'</td>'+
+        '<td><select onchange="updateEditingRow(\'materials\','+i+',\'priceby\',this.value)" style="font-size:11px;padding:2px"><option value="pcs"'+(r.priceby==='pcs'?' selected':'')+'>pcs</option><option value="m"'+(r.priceby==='m'?' selected':'')+'>m</option><option value="kg"'+(r.priceby==='kg'?' selected':'')+'>kg</option></select></td>'+
+        '<td>'+inp(r.rate,"updateEditingRow('materials',"+i+",'rate',this.value)",65)+'</td>'+
+        '<td style="text-align:right;font-weight:700">'+fmt(amt)+'</td></tr>';
+    }).join('');
+  } else if(cat==='manhours'){
+    head='<tr><th>Position</th><th>Pax</th><th>Rate/hr</th><th>Normal</th><th>OT</th><th>Sun/PH</th><th>Days</th><th>Amount (RM)</th></tr>';
+    body=rows.map(function(r,i){
+      const amt=(calcData.rows[i]&&calcData.rows[i].amt)||0;
+      return '<tr><td>'+txt(r.pos,"updateEditingRow('manhours',"+i+",'pos',this.value)",110)+'</td>'+
+        '<td>'+inp(r.pax,"updateEditingRow('manhours',"+i+",'pax',this.value)",45)+'</td>'+
+        '<td>'+inp(r.rate,"updateEditingRow('manhours',"+i+",'rate',this.value)",60)+'</td>'+
+        '<td>'+inp(r.normHrs,"updateEditingRow('manhours',"+i+",'normHrs',this.value)",50)+'</td>'+
+        '<td>'+inp(r.otHrs,"updateEditingRow('manhours',"+i+",'otHrs',this.value)",50)+'</td>'+
+        '<td>'+inp(r.sunHrs,"updateEditingRow('manhours',"+i+",'sunHrs',this.value)",50)+'</td>'+
+        '<td>'+inp(r.days,"updateEditingRow('manhours',"+i+",'days',this.value)",45)+'</td>'+
+        '<td style="text-align:right;font-weight:700">'+fmt(amt)+'</td></tr>';
+    }).join('');
+  } else if(cat==='subcon'){
+    head='<tr><th>Subcontractor</th><th>Amount (RM)</th></tr>';
+    body=rows.map(function(r,i){
+      return '<tr><td>'+txt(r.desc,"updateEditingRow('subcon',"+i+",'desc',this.value)",160)+'</td>'+
+        '<td>'+inp(r.rate,"updateEditingRow('subcon',"+i+",'rate',this.value)",70)+'</td></tr>';
+    }).join('');
+  } else {
+    head='<tr><th>Description</th><th>Qty</th><th>Unit</th><th>Rate (RM)</th><th>Amount (RM)</th></tr>';
+    body=rows.map(function(r,i){
+      const amt=(calcData.rows[i]&&calcData.rows[i].amt)||0;
+      return '<tr><td>'+txt(r.desc,"updateEditingRow('"+cat+"',"+i+",'desc',this.value)",120)+'</td>'+
+        '<td>'+inp(r.qty,"updateEditingRow('"+cat+"',"+i+",'qty',this.value)",50)+'</td>'+
+        '<td>'+txt(r.unit,"updateEditingRow('"+cat+"',"+i+",'unit',this.value)",55)+'</td>'+
+        '<td>'+inp(r.rate,"updateEditingRow('"+cat+"',"+i+",'rate',this.value)",65)+'</td>'+
+        '<td style="text-align:right;font-weight:700">'+fmt(amt)+'</td></tr>';
+    }).join('');
+  }
+  return '<div style="margin-bottom:18px"><div style="font-weight:700;font-size:13px;color:var(--dark);margin-bottom:6px">'+CAT_LABELS[cat]+' <span style="color:#888;font-weight:400">&mdash; Subtotal: RM '+fmt(calcData.sub)+'</span></div><table class="projects" style="font-size:12px;width:100%"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
+}
+
+function buildEditableQuoteDetailHtml(detail){
+  const calc=calcPendingQuoteCats(detail);
+  const proj=detail.project||{};
+  let html='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;font-size:12px">'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Project Name</div><div style="font-weight:700">'+(proj.name||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Client</div><div style="font-weight:700">'+(proj.client||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Branch</div><div style="font-weight:700">'+(BRANCH_LABELS[proj.branch]||proj.branch||'-')+'</div></div>'+
+  '</div>'+
+  '<div style="background:#fff7e6;border:1px solid #f0d9a0;border-radius:6px;padding:8px 12px;font-size:11px;color:#7a5c00;margin-bottom:14px">✎ Editing mode &mdash; changes here only affect this project\'s adjusted copy. The engineer\'s original submission is preserved under "Original Submission."'+(detail.editedAt?(' Last adjusted by '+userLabel(detail.editedBy)+' on '+new Date(detail.editedAt).toLocaleString('en-MY')+'.'):'')+'</div>';
+  CATS.forEach(function(c){ html+=renderEditableCatTable(c,calc.cats[c],detail); });
+  html+='<div style="border-top:2px solid #eee;margin-top:10px;padding-top:12px;max-width:360px;margin-left:auto;font-size:13px">'+
+    '<div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:700"><span>TOTAL COST</span><span>RM '+fmt(calc.total)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;padding:4px 0;color:#555;align-items:center"><span>Markup (%)</span><span><input type="number" value="'+(detail.markup||0)+'" min="0" step="0.5" onchange="updateEditingMarkup(this.value)" style="width:70px;text-align:right;padding:3px;border:1px solid #ccc;border-radius:3px;font-size:12px"></span></div>'+
+    '<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:700;font-size:15px;color:var(--accent);border-top:1px solid #eee"><span>FINAL QUOTATION PRICE</span><span>RM '+fmt(calc.finalPrice)+'</span></div>'+
+  '</div>'+
+  '<div style="margin-top:18px;display:flex;gap:8px;justify-content:flex-end">'+
+    '<button class="btn btn-ghost btn-sm" onclick="discardQuoteDetailEdits()">Discard Changes</button>'+
+    '<button class="btn btn-primary btn-sm" onclick="saveQuoteDetailEdits()">Save Changes</button>'+
+  '</div>';
+  return html;
+}
+
+function convertPendingQuote(id){
+  if(!requireManagement('convert pending quotes to projects'))return;
+  const q=PENDING_QUOTES.find(x=>x.id===id);if(!q)return;
+  openAddModal();
+  applyQuotationDataToForm(q);
+  convertingPendingId=id;
+  document.getElementById('convert-banner').style.display='flex';
+  document.getElementById('modal-title').textContent='Add New Project (from Pending Quote)';
+}
+
+function dismissPendingQuoteUI(id){
+  if(!requireManagement('dismiss pending quotes'))return;
+  if(!confirm('Dismiss this pending quote? It will be hidden from this list but kept in records.'))return;
+  if(typeof window.dismissPendingQuote==='function') window.dismissPendingQuote(id);
+}
+
+function badgeHtml(status){const map={quoted:['badge-quoted','Quoted'],in_progress:['badge-progress','In Progress'],completed:['badge-completed','Completed'],cancelled:['badge-cancelled','Cancelled']};const[cls,lbl]=map[status]||map.quoted;return'<span class="badge '+cls+'">'+lbl+'</span>';}
+function marginPill(m){if(!isFinite(m)||m===0)return'<span class="margin-pill margin-zero">-</span>';return'<span class="margin-pill '+(m>=0?'margin-pos':'margin-neg')+'">'+m.toFixed(1)+'%</span>';}
+function branchBadge(b){const lbl=BRANCH_LABELS[b]||b||'-';const cls=b==='jb'?'badge-quoted':'badge-progress';return'<span class="badge '+cls+'">'+lbl+'</span>';}
+function filterByBranch(list,branch){return branch?list.filter(function(p){return p.branch===branch;}):list;}
+
+let chartCompFin=null,chartCompCount=null;
+function renderCompare(){
+  const stats=BRANCHES.map(function(b){
+    const list=PROJECTS.filter(function(p){return p.branch===b;});
+    const revenue=list.reduce(function(s,p){return s+calcProject(p).revenue;},0);
+    const cost=list.reduce(function(s,p){return s+calcProject(p).aTotal;},0);
+    const profit=revenue-cost;
+    const margin=revenue>0?(profit/revenue*100):0;
+    return{branch:b,count:list.length,active:list.filter(function(p){return p.status==='in_progress';}).length,completed:list.filter(function(p){return p.status==='completed';}).length,revenue,cost,profit,margin};
+  });
+  const jb=stats[0],kc=stats[1];
+  const rows=[
+    ['Total Projects',jb.count,kc.count,jb.count-kc.count,false],
+    ['In Progress',jb.active,kc.active,jb.active-kc.active,false],
+    ['Completed',jb.completed,kc.completed,jb.completed-kc.completed,false],
+    ['Total Revenue (RM)',jb.revenue,kc.revenue,jb.revenue-kc.revenue,true],
+    ['Total Actual Cost (RM)',jb.cost,kc.cost,jb.cost-kc.cost,true],
+    ['Gross Profit / Loss (RM)',jb.profit,kc.profit,jb.profit-kc.profit,true],
+    ['Profit Margin (%)',jb.margin,kc.margin,jb.margin-kc.margin,'pct']
+  ];
+  document.getElementById('body-compare').innerHTML=rows.map(function(r){
+    var fmt1=r[4]==='pct'?r[1].toFixed(1)+'%':(r[4]?fmt(r[1]):r[1]);
+    var fmt2=r[4]==='pct'?r[2].toFixed(1)+'%':(r[4]?fmt(r[2]):r[2]);
+    var diff=r[3];
+    var diffStr=r[4]==='pct'?(diff>=0?'+':'')+diff.toFixed(1)+'%':(r[4]?(diff>=0?'+':'')+fmt(diff):diff);
+    var diffColor=r[4]?(diff>=0?'color:#065f46':'color:#991b1b'):'';
+    return'<tr><td style="font-weight:700">'+r[0]+'</td><td style="text-align:right">'+fmt1+'</td><td style="text-align:right">'+fmt2+'</td><td style="text-align:right;font-weight:700;'+diffColor+'">'+diffStr+'</td></tr>';
+  }).join('');
+  if(chartCompFin){chartCompFin.destroy();chartCompFin=null;}
+  if(document.getElementById('chart-compare-fin')){
+    chartCompFin=new Chart(document.getElementById('chart-compare-fin'),{type:'bar',data:{labels:['Revenue','Actual Cost','Profit'],datasets:[{label:'Johor Bahru',data:[jb.revenue,jb.cost,jb.profit],backgroundColor:'rgba(46,109,164,.8)',borderRadius:3},{label:'Kuching',data:[kc.revenue,kc.cost,kc.profit],backgroundColor:'rgba(240,165,0,.8)',borderRadius:3}]},options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:function(v){return'RM '+v.toLocaleString();}}}}}});
+  }
+  if(chartCompCount){chartCompCount.destroy();chartCompCount=null;}
+  if(document.getElementById('chart-compare-count')){
+    chartCompCount=new Chart(document.getElementById('chart-compare-count'),{type:'doughnut',data:{labels:['Johor Bahru','Kuching'],datasets:[{data:[jb.count,kc.count],backgroundColor:['#2E6DA4','#F0A500'],hoverOffset:6}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
+  }
+  const jbList=PROJECTS.filter(function(p){return p.branch==='jb';});
+  const kcList=PROJECTS.filter(function(p){return p.branch==='kuching';});
+  document.getElementById('body-compare-cat').innerHTML=CATS.map(function(cat,i){
+    const jbVal=jbList.reduce(function(s,p){return s+n(p.actual[cat]);},0);
+    const kcVal=kcList.reduce(function(s,p){return s+n(p.actual[cat]);},0);
+    return'<tr><td style="font-weight:700"><span style="display:inline-block;width:12px;height:12px;background:'+CAT_COLORS[i]+';border-radius:2px;margin-right:6px"></span>'+CAT_LABELS[cat]+'</td><td style="text-align:right">'+fmt(jbVal)+'</td><td style="text-align:right">'+fmt(kcVal)+'</td></tr>';
+  }).join('');
+}
+
+// ─── FORM DRAFT AUTOSAVE ──────────────────────────────────────────────────
+function saveDraft(){
+  const modal=document.getElementById('modal-overlay');
+  if(!modal.classList.contains('open'))return;
+  const draft={editId,name:document.getElementById('f-name').value,no:document.getElementById('f-no').value,client:document.getElementById('f-client').value,branch:document.getElementById('f-branch').value,status:document.getElementById('f-status').value,start:document.getElementById('f-start').value,end:document.getElementById('f-end').value,notes:document.getElementById('f-notes').value,qm:document.getElementById('q-materials').value,qco:document.getElementById('q-consumables').value,qt:document.getElementById('q-transport').value,qcr:document.getElementById('q-crane').value,qmh:document.getElementById('q-manhours').value,qo:document.getElementById('q-others').value,qs:document.getElementById('q-subcon').value,qmk:document.getElementById('q-markup').value,qf:document.getElementById('q-final').value,am:document.getElementById('a-materials').value,amrows:JSON.stringify(actualMatRows),aco:document.getElementById('a-consumables').value,acorows:JSON.stringify(actualConRows),at:document.getElementById('a-transport').value,acr:document.getElementById('a-crane').value,amh:document.getElementById('a-manhours').value,amhr:JSON.stringify(actualMhrRows),ao:document.getElementById('a-others').value,asub:document.getElementById('a-subcon').value,asubrows:JSON.stringify(actualSubconRows),ar:document.getElementById('a-revenue').value};
+  localStorage.setItem('ysse_form_draft',JSON.stringify(draft));
+}
+
+function loadDraft(){
+  const raw=localStorage.getItem('ysse_form_draft');if(!raw)return false;
+  try{
+    const d=JSON.parse(raw);
+    editId=d.editId||null;
+    document.getElementById('f-name').value=d.name||'';document.getElementById('f-no').value=d.no||'';document.getElementById('f-client').value=d.client||'';document.getElementById('f-branch').value=d.branch||'jb';document.getElementById('f-status').value=d.status||'quoted';document.getElementById('f-start').value=d.start||'';document.getElementById('f-end').value=d.end||'';document.getElementById('f-notes').value=d.notes||'';
+    document.getElementById('q-materials').value=d.qm||0;document.getElementById('q-consumables').value=d.qco||0;document.getElementById('q-transport').value=d.qt||0;document.getElementById('q-crane').value=d.qcr||0;document.getElementById('q-manhours').value=d.qmh||0;document.getElementById('q-others').value=d.qo||0;document.getElementById('q-subcon').value=d.qs||0;document.getElementById('q-markup').value=d.qmk||45;document.getElementById('q-final').value=d.qf||0;
+    document.getElementById('a-materials').value=d.am||0;actualMatRows=d.amrows?JSON.parse(d.amrows):[];renderActualCat('materials');document.getElementById('a-consumables').value=d.aco||0;actualConRows=d.acorows?JSON.parse(d.acorows):[];renderActualCat('consumables');document.getElementById('a-transport').value=d.at||0;document.getElementById('a-crane').value=d.acr||0;document.getElementById('a-manhours').value=d.amh||0;actualMhrRows=d.amhr?JSON.parse(d.amhr):[];renderActualMhr();document.getElementById('a-others').value=d.ao||0;document.getElementById('a-subcon').value=d.asub||0;actualSubconRows=d.asubrows?JSON.parse(d.asubrows):[];renderActualSubcon();document.getElementById('a-revenue').value=d.ar||0;
+    return true;
+  }catch(e){return false;}
+}
+
+// Auto-save form draft every 20 seconds while modal is open
+setInterval(saveDraft,20000);
+
+// ─── BACKUP / RESTORE ─────────────────────────────────────────────────────
+function backupData(){
+  if(!PROJECTS.length){alert('No projects to backup yet.');return;}
+  const data={backup_date:new Date().toISOString(),version:'1.0',projects:PROJECTS};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='YSSE_Projects_Backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+
+function restoreData(e){
+  const file=e.target.files[0];if(!file)return;
+  if(!confirm('Restore from backup? This will REPLACE all current project data.'))return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      const list=d.projects||d;
+      if(!Array.isArray(list)){alert('Invalid backup file.');return;}
+      PROJECTS=list;save();renderDashboard();
+      alert('Backup restored! '+PROJECTS.length+' projects loaded.');
+    }catch(err){alert('Failed to restore: '+err.message);}
+  };
+  r.readAsText(file);e.target.value='';
+}
+
+// ─── EXPORT TO EXCEL ──────────────────────────────────────────────────────
+function exportToExcel(){
+  if(!PROJECTS.length){alert('No projects to export yet.');return;}
+  const wb=XLSX.utils.book_new();
+  const headers=[['#','Project No.','Project Name','Client','Branch','Status','Start Date','End Date','Days','Budget: Materials','Budget: Consumables','Budget: Transport','Budget: Crane','Budget: Manhours','Budget: Others','Budget: Subcontractor','Markup %','Final Quote Price (RM)','Actual: Materials','Actual: Consumables','Actual: Transport','Actual: Crane','Actual: Manhours','Actual: Others','Actual: Subcontractor','Revenue (RM)','Total Actual Cost (RM)','Gross Profit/Loss (RM)','Margin %']];
+  const rows=PROJECTS.map((p,i)=>{const c=calcProject(p);const sl={quoted:'Quoted',in_progress:'In Progress',completed:'Completed',cancelled:'Cancelled'};return[i+1,p.projectNo||'',p.name,p.client||'',BRANCH_LABELS[p.branch]||p.branch||'',sl[p.status]||p.status,p.startDate||'',p.endDate||'',c.duration!=null?c.duration:'',n(p.quoted.materials),n(p.quoted.consumables),n(p.quoted.transport),n(p.quoted.crane),n(p.quoted.manhours),n(p.quoted.others),n(p.quoted.subcon),n(p.quoted.markup),n(p.quoted.finalPrice),n(p.actual.materials),n(p.actual.consumables),n(p.actual.transport),n(p.actual.crane),n(p.actual.manhours),n(p.actual.others),n(p.actual.subcon),c.revenue,c.aTotal,c.profit,parseFloat((c.margin/100).toFixed(4))];});
+  const totRow=['','','','','','TOTALS','','',''];
+  for(let i=9;i<=27;i++)totRow.push(rows.reduce((s,r)=>s+(typeof r[i]==='number'?r[i]:0),0));
+  const revSum=rows.reduce((s,r)=>s+(typeof r[25]==='number'?r[25]:0),0);
+  const profSum=rows.reduce((s,r)=>s+(typeof r[27]==='number'?r[27]:0),0);
+  totRow.push(revSum>0?parseFloat((profSum/revSum).toFixed(4)):0);
+  const ws1=XLSX.utils.aoa_to_sheet([...headers,...rows,totRow]);
+  ws1['!cols']=[{wch:4},{wch:14},{wch:30},{wch:20},{wch:12},{wch:13},{wch:12},{wch:12},{wch:6},{wch:13},{wch:14},{wch:12},{wch:10},{wch:12},{wch:10},{wch:15},{wch:9},{wch:16},{wch:13},{wch:14},{wch:12},{wch:10},{wch:12},{wch:10},{wch:15},{wch:14},{wch:16},{wch:18},{wch:10}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Project Register');
+  const totalActual=CATS.reduce((s,c)=>s+PROJECTS.reduce((ss,p)=>ss+n(p.actual[c]),0),0);
+  const catHdr=[['Category','Budget Total (RM)','Actual Total (RM)','Variance (RM)','Variance %','% of Total Actual']];
+  const catRows=CATS.map(cat=>{const q=PROJECTS.reduce((s,p)=>s+n(p.quoted[cat]),0),a=PROJECTS.reduce((s,p)=>s+n(p.actual[cat]),0),v=a-q;return[CAT_LABELS[cat],q,a,v,q>0?parseFloat((v/q).toFixed(4)):0,totalActual>0?parseFloat((a/totalActual).toFixed(4)):0];});
+  const catTot=['TOTAL',catRows.reduce((s,r)=>s+r[1],0),catRows.reduce((s,r)=>s+r[2],0),catRows.reduce((s,r)=>s+r[3],0),'',''];
+  const ws2=XLSX.utils.aoa_to_sheet([...catHdr,...catRows,catTot]);
+  ws2['!cols']=[{wch:16},{wch:18},{wch:18},{wch:16},{wch:12},{wch:18}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Category Analysis');
+  const totalRev=PROJECTS.reduce((s,p)=>s+calcProject(p).revenue,0);
+  const totalCost=PROJECTS.reduce((s,p)=>s+calcProject(p).aTotal,0);
+  const totalProfit=PROJECTS.reduce((s,p)=>s+calcProject(p).profit,0);
+  const totalBudget=CATS.reduce((s,cat)=>s+PROJECTS.reduce((ss,p)=>ss+n(p.quoted[cat]),0),0);
+  const plRows=[['P&L Summary - YSSE FABRICATOR SDN BHD'],['Export Date',new Date().toLocaleDateString('en-MY')],[''],['Metric','Value'],['Total Projects',PROJECTS.length],['Total Revenue (Invoiced)',totalRev],['Total Actual Cost',totalCost],['Total Gross Profit / Loss',totalProfit],['Average Gross Margin',totalRev>0?parseFloat((totalProfit/totalRev).toFixed(4)):0],['Total Budget (Quoted Costs)',totalBudget],['Budget vs Actual Variance',totalCost-totalBudget]];
+  const ws3=XLSX.utils.aoa_to_sheet(plRows);ws3['!cols']=[{wch:35},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws3,'P&L Summary');
+  const jbList2=PROJECTS.filter(function(p){return p.branch==='jb';});
+  const kcList2=PROJECTS.filter(function(p){return p.branch==='kuching';});
+  function brStats(list){const rev=list.reduce(function(s,p){return s+calcProject(p).revenue;},0);const cost=list.reduce(function(s,p){return s+calcProject(p).aTotal;},0);const prof=rev-cost;return{count:list.length,active:list.filter(function(p){return p.status==='in_progress';}).length,completed:list.filter(function(p){return p.status==='completed';}).length,rev,cost,prof,margin:rev>0?prof/rev:0};}
+  const jbS=brStats(jbList2),kcS=brStats(kcList2);
+  const brRows=[['Branch Comparison - YSSE FABRICATOR SDN BHD'],[''],['Metric','Johor Bahru (Main)','Kuching']];
+  brRows.push(['Total Projects',jbS.count,kcS.count]);
+  brRows.push(['In Progress',jbS.active,kcS.active]);
+  brRows.push(['Completed',jbS.completed,kcS.completed]);
+  brRows.push(['Total Revenue (RM)',jbS.rev,kcS.rev]);
+  brRows.push(['Total Actual Cost (RM)',jbS.cost,kcS.cost]);
+  brRows.push(['Gross Profit/Loss (RM)',jbS.prof,kcS.prof]);
+  brRows.push(['Profit Margin',parseFloat(jbS.margin.toFixed(4)),parseFloat(kcS.margin.toFixed(4))]);
+  CATS.forEach(function(cat){
+    const jv=jbList2.reduce(function(s,p){return s+n(p.actual[cat]);},0);
+    const kv=kcList2.reduce(function(s,p){return s+n(p.actual[cat]);},0);
+    brRows.push(['Actual: '+CAT_LABELS[cat],jv,kv]);
+  });
+  const ws4=XLSX.utils.aoa_to_sheet(brRows);ws4['!cols']=[{wch:28},{wch:20},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws4,'Branch Comparison');
+  XLSX.writeFile(wb,'YSSE_Project_Register_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+// ─── CHECK FOR UNSAVED DRAFT ON LOAD ──────────────────────────────────────
+(function(){
+  if(localStorage.getItem('ysse_form_draft')){
+    setTimeout(()=>{
+      if(confirm('An unsaved form draft was found from your last session.\nRestore it?')){
+        clearForm();
+        if(loadDraft()){
+          document.getElementById('modal-title').textContent=editId?'Edit Project (Draft Restored)':'Add New Project (Draft Restored)';
+          document.getElementById('modal-overlay').classList.add('open');
+        }
+      } else {
+        localStorage.removeItem('ysse_form_draft');
+      }
+    },600);
+  }
+})();
+
+renderDashboard();
+purgeOldTrash();
+updateTrashBadge();
+
+// Inline Budget Calculator
+(function(){
+  var calcTarget=null, calcExpr='', calcLastOp=false;
+  function showCalc(el){
+    calcTarget=el;
+    var v=parseFloat(el.value);
+    calcExpr=isNaN(v)||v===0?'':String(v);
+    calcLastOp=false;
+    updateCalcDisplay();
+    positionCalc(el);
+    document.getElementById('calc-popup').classList.add('visible');
+  }
+  function hideCalc(){
+    document.getElementById('calc-popup').classList.remove('visible');
+    calcTarget=null; calcExpr=''; calcLastOp=false;
+  }
+  function positionCalc(el){
+    var popup=document.getElementById('calc-popup');
+    var r=el.getBoundingClientRect();
+    var pw=232, ph=245;
+    var top=r.bottom+6, left=r.left;
+    if(top+ph>window.innerHeight-8) top=r.top-ph-6;
+    if(top<8) top=8;
+    if(left+pw>window.innerWidth-8) left=window.innerWidth-pw-8;
+    if(left<8) left=8;
+    popup.style.top=top+'px';
+    popup.style.left=left+'px';
+  }
+  function safeEval(expr){
+    var safe=expr.replace(/[^0-9+\-*/.()% ]/g,'');
+    try{ return Function('"use strict";return('+safe+')')(); }
+    catch(e){ return NaN; }
+  }
+  function updateCalcDisplay(){
+    document.getElementById('calc-expr').textContent=calcExpr;
+    var v=safeEval(calcExpr);
+    var endsOp=/[+\-*/%]$/.test(calcExpr);
+    document.getElementById('calc-val').textContent=(calcExpr&&!endsOp&&isFinite(v))?parseFloat(v.toFixed(8)):'';
+  }
+  window.calcFn=function(k){
+    if(!calcTarget) return;
+    var ops=['+','-','*','/','%'];
+    if(k==='AC'){
+      calcExpr=''; calcLastOp=false;
+    } else if(k==='BS'){
+      calcExpr=calcExpr.slice(0,-1); calcLastOp=false;
+    } else if(k==='='){
+      var v=safeEval(calcExpr);
+      if(isFinite(v)){
+        var result=parseFloat(v.toFixed(6));
+        calcTarget.value=result;
+        calcTarget.dispatchEvent(new Event('input',{bubbles:true}));
+        calcTarget.dispatchEvent(new Event('change',{bubbles:true}));
+        calcExpr=String(result);
+      }
+      calcLastOp=false;
+    } else {
+      var isOp=ops.indexOf(k)>=0;
+      if(isOp&&calcLastOp) calcExpr=calcExpr.slice(0,-1);
+      calcExpr+=k;
+      calcLastOp=isOp;
+    }
+    updateCalcDisplay();
+  };
+  function attachCalc(){
+    ['q-materials','q-consumables','q-transport','q-crane','q-manhours','q-others','q-subcon',
+     'q-markup','q-final','a-materials','a-consumables','a-transport','a-crane',
+     'a-manhours','a-others','a-subcon','a-revenue'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el){
+        el.addEventListener('focus',function(){ showCalc(el); });
+        el.addEventListener('blur',function(){ setTimeout(hideCalc,160); });
+      }
+    });
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',attachCalc);
+  } else {
+    attachCalc();
+  }
+})();
+
+
+// ── Actual Manhours Breakdown ─────────────────────────────────────────────────
+var actualMhrRows=[];
+function newAmhrRow(){return{pos:'',pax:'',rate:'',normHrs:'',otHrs:'',sunHrs:'',days:''};}
+function calcActualMhrTotal(){
+  var tot=actualMhrRows.reduce(function(s,r){
+    var pax=parseFloat(r.pax)||0,rate=parseFloat(r.rate)||0;
+    var norm=parseFloat(r.normHrs)||0,ot=parseFloat(r.otHrs)||0,sun=parseFloat(r.sunHrs)||0;
+    var days=parseFloat(r.days)||0;
+    return s+pax*(norm*rate*1.0+ot*rate*1.5+sun*rate*2.0)*days;
+  },0);
+  document.getElementById('a-manhours').value=tot.toFixed(2);
+  document.getElementById('amhr-total').textContent=tot.toFixed(2);
+  return tot;
+}
+function renderActualMhr(){
+  var tbody=document.getElementById('amhr-tbody');
+  if(!tbody)return;
+  if(actualMhrRows.length===0){
+    tbody.innerHTML='<tr><td colspan="10" style="padding:12px;color:#888;font-style:italic">No rows yet — click + Add Row</td></tr>';
+    calcActualMhrTotal();
+    return;
+  }
+  tbody.innerHTML=actualMhrRows.map(function(r,i){
+    var pax=parseFloat(r.pax)||0,rate=parseFloat(r.rate)||0;
+    var norm=parseFloat(r.normHrs)||0,ot=parseFloat(r.otHrs)||0,sun=parseFloat(r.sunHrs)||0;
+    var days=parseFloat(r.days)||0;
+    var rowTotal=(pax*(norm*rate*1.0+ot*rate*1.5+sun*rate*2.0)*days).toFixed(2);
+    return '<tr>'
+      +'<td style="color:#888;font-size:11px">'+(i+1)+'</td>'
+      +'<td><input class="pos-input" value="'+esc(r.pos)+'" placeholder="e.g. Welder" onchange="amhrUpdate('+i+',\'pos\',this.value)"></td>'
+      +'<td><input type="number" min="0" value="'+(r.pax||'')+'" placeholder="0" onchange="amhrUpdate('+i+',\'pax\',this.value)"></td>'
+      +'<td><input type="number" min="0" step="0.5" value="'+(r.rate||'')+'" placeholder="0.00" onchange="amhrUpdate('+i+',\'rate\',this.value)"></td>'
+      +'<td><input type="number" min="0" step="0.5" value="'+(r.normHrs||'')+'" placeholder="8" onchange="amhrUpdate('+i+',\'normHrs\',this.value)"></td>'
+      +'<td><input type="number" min="0" step="0.5" value="'+(r.otHrs||'')+'" placeholder="0" onchange="amhrUpdate('+i+',\'otHrs\',this.value)"></td>'
+      +'<td><input type="number" min="0" step="0.5" value="'+(r.sunHrs||'')+'" placeholder="0" onchange="amhrUpdate('+i+',\'sunHrs\',this.value)"></td>'
+      +'<td><input type="number" min="0" value="'+(r.days||'')+'" placeholder="1" onchange="amhrUpdate('+i+',\'days\',this.value)"></td>'
+      +'<td style="font-weight:700;color:#1A6640;white-space:nowrap">'+rowTotal+'</td>'
+      +'<td><button type="button" style="background:#C0392B;color:#fff;border:none;border-radius:4px;cursor:pointer;padding:2px 7px;font-size:12px" onclick="delActualMhrRow('+i+')">&#215;</button></td>'
+      +'</tr>';
+  }).join('');
+  calcActualMhrTotal();
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function amhrUpdate(i,field,val){
+  if(actualMhrRows[i])actualMhrRows[i][field]=val;
+  calcActualMhrTotal();
+  // update only the total cell for this row without full re-render
+  var rows=document.getElementById('amhr-tbody').querySelectorAll('tr');
+  if(rows[i]){
+    var r=actualMhrRows[i];
+    var pax=parseFloat(r.pax)||0,rate=parseFloat(r.rate)||0;
+    var norm=parseFloat(r.normHrs)||0,ot=parseFloat(r.otHrs)||0,sun=parseFloat(r.sunHrs)||0;
+    var days=parseFloat(r.days)||0;
+    var tot=(pax*(norm*rate*1.0+ot*rate*1.5+sun*rate*2.0)*days).toFixed(2);
+    var cells=rows[i].querySelectorAll('td');
+    if(cells[8])cells[8].textContent=tot;
+  }
+}
+function addActualMhrRow(){
+  actualMhrRows.push(newAmhrRow());
+  renderActualMhr();
+  // focus position input of new row
+  var rows=document.getElementById('amhr-tbody').querySelectorAll('tr');
+  if(rows.length){var inp=rows[rows.length-1].querySelector('input');if(inp)inp.focus();}
+}
+function delActualMhrRow(i){
+  actualMhrRows.splice(i,1);
+  renderActualMhr();
+}
+
+
+// ── Actual Materials & Consumables Breakdown ──────────────────────────────────
+var actualMatRows=[], actualConRows=[];
+var ACAT_ROWS={'materials':null,'consumables':null};
+function _acatRows(cat){return cat==='materials'?actualMatRows:actualConRows;}
+function _setAcatRows(cat,arr){if(cat==='materials')actualMatRows=arr;else actualConRows=arr;}
+function newAcatRow(){return{desc:'',qty:'',unit:'PCS',rate:''};}
+
+function calcActualCat(cat){
+  var rows=_acatRows(cat);
+  var tot=rows.reduce(function(s,r){
+    return s+(parseFloat(r.qty)||0)*(parseFloat(r.rate)||0);
+  },0);
+  document.getElementById('a-'+cat).value=tot.toFixed(2);
+  var totalEl=document.getElementById(cat==='materials'?'amat-total':'acon-total');
+  if(totalEl)totalEl.textContent=tot.toFixed(2);
+  return tot;
+}
+
+function renderActualCat(cat){
+  var tbodyId=cat==='materials'?'amat-tbody':'acon-tbody';
+  var tbody=document.getElementById(tbodyId);
+  if(!tbody)return;
+  var rows=_acatRows(cat);
+  if(rows.length===0){
+    tbody.innerHTML='<tr><td colspan="7" style="padding:10px;color:#888;font-style:italic">No items yet — click + Add Row</td></tr>';
+    calcActualCat(cat); return;
+  }
+  var UNITS=['PCS','M','KG','SET','LOT','NOS','TRIP','L','SUM'];
+  tbody.innerHTML=rows.map(function(r,i){
+    var amt=((parseFloat(r.qty)||0)*(parseFloat(r.rate)||0)).toFixed(2);
+    var unitOpts=UNITS.map(function(u){return'<option'+(r.unit===u?' selected':'')+'>'+u+'</option>';}).join('');
+    return '<tr>'
+      +'<td style="color:#888;font-size:11px">'+(i+1)+'</td>'
+      +'<td><input type="text" class="desc-input" value="'+esc(r.desc)+'" placeholder="Description"'
+      +' onchange="acatUpdate(\''+cat+'\','+i+',\'desc\',this.value)"></td>'
+      +'<td><input type="number" min="0" step="any" value="'+(r.qty||'')+'" placeholder="0"'
+      +' onchange="acatUpdate(\''+cat+'\','+i+',\'qty\',this.value)"></td>'
+      +'<td><select onchange="acatUpdate(\''+cat+'\','+i+',\'unit\',this.value)">'+unitOpts+'</select></td>'
+      +'<td><input type="number" min="0" step="0.01" value="'+(r.rate||'')+'" placeholder="0.00"'
+      +' onchange="acatUpdate(\''+cat+'\','+i+',\'rate\',this.value)"></td>'
+      +'<td style="font-weight:700;white-space:nowrap" id="acatamt-'+cat+'-'+i+'">'+amt+'</td>'
+      +'<td><button type="button" style="background:#C0392B;color:#fff;border:none;border-radius:4px;'
+      +'cursor:pointer;padding:2px 7px;font-size:12px" onclick="delActualCatRow(\''+cat+'\','+i+')">&#215;</button></td>'
+      +'</tr>';
+  }).join('');
+  calcActualCat(cat);
+}
+
+function acatUpdate(cat,i,field,val){
+  var rows=_acatRows(cat);
+  if(rows[i])rows[i][field]=val;
+  // update amount cell without full re-render
+  var r=rows[i];
+  var amt=((parseFloat(r.qty)||0)*(parseFloat(r.rate)||0)).toFixed(2);
+  var amtEl=document.getElementById('acatamt-'+cat+'-'+i);
+  if(amtEl)amtEl.textContent=amt;
+  calcActualCat(cat);
+}
+
+function addActualCatRow(cat){
+  var rows=_acatRows(cat);
+  rows.push(newAcatRow());
+  renderActualCat(cat);
+  var tbodyId=cat==='materials'?'amat-tbody':'acon-tbody';
+  var trs=document.getElementById(tbodyId).querySelectorAll('tr');
+  if(trs.length){var inp=trs[trs.length-1].querySelector('input');if(inp)inp.focus();}
+}
+
+function delActualCatRow(cat,i){
+  var rows=_acatRows(cat);
+  rows.splice(i,1);
+  renderActualCat(cat);
+}
+
+
+// ── Actual Subcontractor Breakdown (lumpsum) ──────────────────────────────────
+var actualSubconRows=[];
+function newAsubRow(){return{desc:'',amount:''};}
+function calcActualSubconTotal(){
+  var tot=actualSubconRows.reduce(function(s,r){return s+(parseFloat(r.amount)||0);},0);
+  document.getElementById('a-subcon').value=tot.toFixed(2);
+  var totalEl=document.getElementById('asub-total');
+  if(totalEl)totalEl.textContent=tot.toFixed(2);
+  return tot;
+}
+function renderActualSubcon(){
+  var tbody=document.getElementById('asub-tbody');
+  if(!tbody)return;
+  if(actualSubconRows.length===0){
+    tbody.innerHTML='<tr><td colspan="4" style="padding:10px;color:#888;font-style:italic">No subcontractors yet — click + Add Row</td></tr>';
+    calcActualSubconTotal();
+    return;
+  }
+  tbody.innerHTML=actualSubconRows.map(function(r,i){
+    var amt=(parseFloat(r.amount)||0).toFixed(2);
+    return '<tr>'
+      +'<td style="color:#888;font-size:11px">'+(i+1)+'</td>'
+      +'<td><input type="text" class="desc-input" value="'+esc(r.desc)+'" placeholder="Subcon name"'
+      +' onchange="asubUpdate('+i+',\'desc\',this.value)"></td>'
+      +'<td><input type="number" min="0" step="0.01" value="'+(r.amount||'')+'" placeholder="0.00"'
+      +' onchange="asubUpdate('+i+',\'amount\',this.value)"></td>'
+      +'<td><button type="button" style="background:#C0392B;color:#fff;border:none;border-radius:4px;'
+      +'cursor:pointer;padding:2px 7px;font-size:12px" onclick="delActualSubconRow('+i+')">&#215;</button></td>'
+      +'</tr>';
+  }).join('');
+  calcActualSubconTotal();
+}
+function asubUpdate(i,field,val){
+  if(actualSubconRows[i])actualSubconRows[i][field]=val;
+  calcActualSubconTotal();
+}
+function addActualSubconRow(){
+  actualSubconRows.push(newAsubRow());
+  renderActualSubcon();
+  var trs=document.getElementById('asub-tbody').querySelectorAll('tr');
+  if(trs.length){var inp=trs[trs.length-1].querySelector('input');if(inp)inp.focus();}
+}
+function delActualSubconRow(i){
+  actualSubconRows.splice(i,1);
+  renderActualSubcon();
+}
+
+
+// =====================================================================
+// FIRESTORE LIVE SYNC LAYER (additive — does not replace localStorage)
+// localStorage remains the source of truth and offline fallback.
+// Backup JSON / Restore Backup buttons above are UNCHANGED and always work
+// even if this cloud layer fails or Firebase is unreachable.
+// =====================================================================
+(function(){
+  var firebaseConfig = {
+    apiKey: "AIzaSyB0aNyPpTdHIpL_MO-h0AwtWkHmWUKeaVI",
+    authDomain: "ysse-branch-sync.firebaseapp.com",
+    projectId: "ysse-branch-sync",
+    storageBucket: "ysse-branch-sync.firebasestorage.app",
+    messagingSenderId: "953712522144",
+    appId: "1:953712522144:web:bc117e6cc16ad9301c2ac5"
+  };
+  var db=null, docRef=null, isApplyingRemote=false, cloudReady=false, pushTimer=null;
+  var pendingCol=null;
+  var usersCol=null;
+  var backupsCol=null;
+
+  function setIndicator(text,color){
+    var el=document.getElementById('cloud-sync-indicator');
+    if(el){ el.textContent=text; if(color) el.style.color=color; }
+  }
+
+  function applyRemoteProjects(list){
+    isApplyingRemote=true;
+    PROJECTS=list;
+    localStorage.setItem('ysse_projects',JSON.stringify(PROJECTS));
+    try{
+      renderDashboard();
+      if(document.getElementById('page-projects').classList.contains('active')) renderProjects();
+      if(document.getElementById('page-analysis').classList.contains('active')) renderAnalysis();
+      if(document.getElementById('page-compare').classList.contains('active')) renderCompare();
+    }catch(e){}
+    setIndicator('\u2601 Live Sync: updated from other branch just now','#6ee7b7');
+    setTimeout(function(){ setIndicator('\u2601 Live Sync: connected','#6ee7b7'); },3000);
+    isApplyingRemote=false;
+  }
+
+  window.pushToCloud=function(){
+    if(!cloudReady||!docRef||isApplyingRemote) return;
+    clearTimeout(pushTimer);
+    pushTimer=setTimeout(function(){
+      docRef.set({projects:PROJECTS,trash:TRASH,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(function(err){
+        setIndicator('\u2601 Live Sync: push failed \u2014 local backup still safe','#fca5a5');
+      });
+    },400);
+  };
+
+  function applyRemoteTrash(list){
+    isApplyingRemote=true;
+    TRASH=list;
+    localStorage.setItem('ysse_trash',JSON.stringify(TRASH));
+    try{
+      if(document.getElementById('page-trash').classList.contains('active')) renderTrash();
+      else updateTrashBadge();
+    }catch(e){}
+    isApplyingRemote=false;
+  }
+
+  function showApp(){
+    var ov=document.getElementById('login-overlay');
+    var app=document.getElementById('app-content');
+    var den=document.getElementById('access-denied-overlay');
+    if(ov) ov.style.display='none';
+    if(den) den.style.display='none';
+    if(app) app.style.display='';
+  }
+  function showLogin(msg){
+    var ov=document.getElementById('login-overlay');
+    var app=document.getElementById('app-content');
+    var den=document.getElementById('access-denied-overlay');
+    if(app) app.style.display='none';
+    if(den) den.style.display='none';
+    if(ov) ov.style.display='flex';
+    var st=document.getElementById('login-status');
+    if(st) st.textContent=msg||'Please sign in.';
+  }
+  function showAccessDenied(msg){
+    var ov=document.getElementById('login-overlay');
+    var app=document.getElementById('app-content');
+    var den=document.getElementById('access-denied-overlay');
+    if(ov) ov.style.display='none';
+    if(app) app.style.display='none';
+    if(den) den.style.display='flex';
+    var m=document.getElementById('access-denied-msg');
+    if(m&&msg) m.textContent=msg;
+  }
+
+  window.doLogin=function(){
+    var emailEl=document.getElementById('login-email');
+    var passEl=document.getElementById('login-password');
+    var errEl=document.getElementById('login-error');
+    var email=emailEl?emailEl.value.trim():'';
+    var pass=passEl?passEl.value:'';
+    if(errEl){ errEl.style.color='#c00'; errEl.textContent=''; }
+    if(!email||!pass){ if(errEl) errEl.textContent='Please enter email and password.'; return; }
+    firebase.auth().signInWithEmailAndPassword(email,pass).catch(function(err){
+      if(errEl) errEl.textContent=err&&err.message?err.message:'Sign in failed.';
+    });
+  };
+  window.doLogout=function(){
+    firebase.auth().signOut().catch(function(err){});
+  };
+  window.forgotPassword=function(){
+    var emailEl=document.getElementById('login-email');
+    var errEl=document.getElementById('login-error');
+    var email=emailEl?emailEl.value.trim():'';
+    if(!email){ if(errEl){ errEl.style.color='#c00'; errEl.textContent='Enter your email above first, then click Forgot password.'; } return; }
+    firebase.auth().sendPasswordResetEmail(email).then(function(){
+      if(errEl){ errEl.style.color='#2a7'; errEl.textContent='Password reset email sent.'; }
+    }).catch(function(err){
+      if(errEl){ errEl.style.color='#c00'; errEl.textContent=err&&err.message?err.message:'Could not send reset email.'; }
+    });
+  };
+
+  var syncStarted=false;
+  var backupAttempted=false;
+  function startSync(){
+    if(syncStarted) return;
+    syncStarted=true;
+    cloudReady=true;
+    setIndicator('\u2601 Live Sync: connected','#6ee7b7');
+    docRef.onSnapshot(function(snap){
+      if(isApplyingRemote) return;
+      var data=snap.data();
+      if(!data||!Array.isArray(data.projects)){
+        if(PROJECTS.length) window.pushToCloud();
+        return;
+      }
+      var incoming=JSON.stringify(data.projects);
+      var current=JSON.stringify(PROJECTS);
+      if(incoming!==current) applyRemoteProjects(data.projects);
+      var incomingT=JSON.stringify(data.trash||[]);
+      var currentT=JSON.stringify(TRASH);
+      if(incomingT!==currentT) applyRemoteTrash(data.trash||[]);
+      if(!backupAttempted){ backupAttempted=true; maybeRunDailyBackup(); }
+    },function(err){
+      setIndicator('\u2601 Live Sync: error \u2014 using local data only','#fca5a5');
+    });
+    pendingCol.onSnapshot(function(snap){
+      PENDING_QUOTES=snap.docs.map(function(doc){
+        var d=doc.data();
+        var submittedAt=null;
+        try{ submittedAt = d.submittedAt && d.submittedAt.toMillis ? d.submittedAt.toMillis() : null; }catch(e2){}
+        return Object.assign({},d,{id:doc.id,submittedAt:submittedAt});
+      });
+      try{
+        if(document.getElementById('page-pending').classList.contains('active')) renderPending();
+        else {
+          var badge=document.getElementById('pending-badge');
+          var cnt=PENDING_QUOTES.filter(function(q){return q.status!=='converted'&&q.status!=='dismissed';}).length;
+          if(badge){ if(cnt){badge.style.display='inline-block';badge.textContent=cnt;} else {badge.style.display='none';} }
+        }
+      }catch(e3){}
+    },function(err){
+      // Pending quotes are additive; failure here never blocks project sync or local data.
+    });
+    usersCol.onSnapshot(function(snap){
+      ALL_USERS=snap.docs.map(function(doc){ return doc.data(); });
+      var me2=(window.CURRENT_USER_EMAIL||'').toLowerCase();
+      var mine=ALL_USERS.find(function(u){ return u.email===me2; });
+      window.CURRENT_USER_ROLE = mine ? mine.role : 'qs';
+      try{
+        applyRoleToUI();
+        var who=document.getElementById('logged-in-as');
+        if(who) who.textContent='Logged in as '+userLabel(me2);
+        if(document.getElementById('page-users').classList.contains('active')) renderUsers();
+        if(document.getElementById('page-projects').classList.contains('active')) renderProjects();
+        if(document.getElementById('page-trash').classList.contains('active')) renderTrash();
+        if(document.getElementById('page-pending').classList.contains('active')) renderPending();
+      }catch(e4){}
+    },function(err){
+      // User roles are additive; failure here defaults everyone to the safer 'qs' role.
+    });
+  }
+
+  try{
+    firebase.initializeApp(firebaseConfig);
+    db=firebase.firestore();
+    docRef=db.collection('ysse_tracker').doc('shared_projects');
+    pendingCol=db.collection('ysse_pending_quotes');
+    usersCol=db.collection('ysse_users');
+    backupsCol=db.collection('ysse_backups');
+    firebase.auth().onAuthStateChanged(function(user){
+      if(user){
+        window.CURRENT_USER_EMAIL=(user.email||user.uid);
+        showLogin('Checking access...');
+        checkAccessAndProceed(user);
+      } else {
+        showLogin('Please sign in.');
+      }
+    },function(err){
+      showLogin('Auth error \u2014 please refresh and try again.');
+    });
+  }catch(e){
+    showLogin('Live Sync unavailable \u2014 cannot verify login right now.');
+  }
+
+  function checkAccessAndProceed(user){
+    var me=(user.email||user.uid||'').toLowerCase();
+    usersCol.get().then(function(snap){
+      if(snap.empty){
+        // First-ever login bootstraps as Management.
+        usersCol.doc(me).set({email:me,role:'management',addedAt:Date.now(),addedBy:'bootstrap'}).then(function(){
+          window.CURRENT_USER_ROLE='management';
+          grantAccess(user);
+        }).catch(function(err){
+          showAccessDenied('Could not verify access \u2014 please refresh and try again.');
+        });
+        return;
+      }
+      var mine=snap.docs.find(function(d){ return d.id===me; });
+      var role=mine?mine.data().role:'qs';
+      window.CURRENT_USER_ROLE=role;
+      if(role==='management'){ grantAccess(user); }
+      else { showAccessDenied(); }
+    }).catch(function(err){
+      showAccessDenied('Could not verify your access level. Please check your connection and refresh, or contact Management.');
+    });
+  }
+
+  function grantAccess(user){
+    showApp();
+    var who=document.getElementById('logged-in-as');
+    if(who) who.textContent='Logged in as '+(user.email||user.uid);
+    applyRoleToUI();
+    startSync();
+  }
+
+  window.markPendingConverted=function(id){
+    if(!pendingCol) return;
+    pendingCol.doc(id).update({status:'converted',convertedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(function(err){});
+  };
+  window.dismissPendingQuote=function(id){
+    if(!pendingCol) return;
+    pendingCol.doc(id).update({status:'dismissed'}).catch(function(err){});
+  };
+  window.addUserToFirestore=function(email,role,name,position){
+    if(!usersCol) return;
+    usersCol.doc(email).set({email:email,role:role,name:name||'',position:position||'',addedAt:Date.now(),addedBy:window.CURRENT_USER_EMAIL||''}).catch(function(err){ alert('Could not add user: '+(err&&err.message?err.message:'unknown error')); });
+  };
+  window.updateUserRole=function(email,role){
+    if(!usersCol) return;
+    usersCol.doc(email).update({role:role}).catch(function(err){ alert('Could not update role: '+(err&&err.message?err.message:'unknown error')); });
+  };
+  window.updateUserField=function(email,field,value){
+    if(!usersCol) return;
+    if(field!=='name'&&field!=='position') return;
+    var patch={}; patch[field]=value;
+    usersCol.doc(email).update(patch).catch(function(err){ alert('Could not update user: '+(err&&err.message?err.message:'unknown error')); });
+  };
+  window.removeUserFromFirestore=function(email){
+    if(!usersCol) return;
+    usersCol.doc(email).delete().catch(function(err){ alert('Could not remove user: '+(err&&err.message?err.message:'unknown error')); });
+  };
+
+  function maybeRunDailyBackup(){
+    if(!backupsCol) return;
+    var today=new Date().toISOString().slice(0,10);
+    var metaRef=backupsCol.doc('_meta');
+    metaRef.get().then(function(snap){
+      var last=snap.exists?snap.data().lastBackupDate:null;
+      if(last===today) return;
+      backupsCol.doc(today).set({
+        date:today,
+        timestamp:Date.now(),
+        createdBy:window.CURRENT_USER_EMAIL||'',
+        projects:PROJECTS,
+        trash:TRASH,
+        projectCount:PROJECTS.length
+      }).then(function(){
+        return metaRef.set({lastBackupDate:today},{merge:true});
+      }).then(function(){
+        pruneOldBackups();
+      }).catch(function(err){});
+    }).catch(function(err){});
+  }
+
+  function pruneOldBackups(){
+    backupsCol.orderBy('timestamp','desc').get().then(function(snap){
+      var docs=snap.docs.filter(function(d){ return d.id!=='_meta'; });
+      if(docs.length>30){
+        docs.slice(30).forEach(function(d){ d.ref.delete().catch(function(){}); });
+      }
+    }).catch(function(err){});
+  }
+
+  window.listBackups=function(callback){
+    if(!backupsCol){ callback([]); return; }
+    backupsCol.orderBy('timestamp','desc').limit(30).get().then(function(snap){
+      var list=snap.docs.filter(function(d){ return d.id!=='_meta'; }).map(function(d){
+        var v=d.data();
+        return {id:d.id,date:v.date,timestamp:v.timestamp,createdBy:v.createdBy,projectCount:v.projectCount};
+      });
+      callback(list);
+    }).catch(function(err){ callback([]); });
+  };
+
+  window.restoreBackup=function(id,callback){
+    if(!backupsCol){ callback(false,'not ready'); return; }
+    backupsCol.doc(id).get().then(function(snap){
+      if(!snap.exists){ callback(false,'backup not found'); return; }
+      var v=snap.data();
+      PROJECTS=v.projects||[];
+      TRASH=v.trash||[];
+      localStorage.setItem('ysse_projects',JSON.stringify(PROJECTS));
+      localStorage.setItem('ysse_trash',JSON.stringify(TRASH));
+      if(typeof window.pushToCloud==='function') window.pushToCloud();
+      callback(true);
+    }).catch(function(err){ callback(false,err&&err.message?err.message:'unknown error'); });
+  };
+})();
+</script>
+<!-- Inline Budget Calculator -->
+<div class="calc-popup" id="calc-popup" onmousedown="event.preventDefault()">
+  <div class="calc-display">
+    <div class="calc-expr" id="calc-expr"></div>
+    <div class="calc-val" id="calc-val">0</div>
+  </div>
+  <div class="calc-grid">
+    <button class="calc-btn clr" onclick="calcFn('AC')">AC</button>
+    <button class="calc-btn fn" onclick="calcFn('BS')">⌫</button>
+    <button class="calc-btn op" onclick="calcFn('%')">%</button>
+    <button class="calc-btn op" onclick="calcFn('/')">÷</button>
+    <button class="calc-btn num" onclick="calcFn('7')">7</button>
+    <button class="calc-btn num" onclick="calcFn('8')">8</button>
+    <button class="calc-btn num" onclick="calcFn('9')">9</button>
+    <button class="calc-btn op" onclick="calcFn('*')">×</button>
+    <button class="calc-btn num" onclick="calcFn('4')">4</button>
+    <button class="calc-btn num" onclick="calcFn('5')">5</button>
+    <button class="calc-btn num" onclick="calcFn('6')">6</button>
+    <button class="calc-btn op" onclick="calcFn('-')">−</button>
+    <button class="calc-btn num" onclick="calcFn('1')">1</button>
+    <button class="calc-btn num" onclick="calcFn('2')">2</button>
+    <button class="calc-btn num" onclick="calcFn('3')">3</button>
+    <button class="calc-btn op" onclick="calcFn('+')">+</button>
+    <button class="calc-btn num span2" onclick="calcFn('0')">0</button>
+    <button class="calc-btn num" onclick="calcFn('.')">.</button>
+    <button class="calc-btn eq" onclick="calcFn('=')">=</button>
+  </div>
+  <div class="calc-hint">Press = to apply result to field</div>
+</div>
+
+</div>
+</body>
+</html>
