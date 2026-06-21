@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YSSE FABRICATOR – Project Quotation Calculator</title>
+<title>Raul Tech – Project Quotation Calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -32,6 +32,12 @@ td.num,.sum-val,.quotation-price .price,.mock-amt{font-family:'JetBrains Mono',m
 .card-hdr .btns{display:flex;gap:6px;align-items:center}
 .card-hdr button{background:rgba(255,255,255,.15);border:none;color:#fff;padding:3px 10px;border-radius:3px;cursor:pointer;font-size:11px}
 .card-hdr button:hover{background:rgba(255,255,255,.28)}
+.card-hdr .title-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.card-hdr .chev{display:inline-block;transition:transform .18s ease;font-size:11px}
+.card.open .card-hdr .chev{transform:rotate(180deg)}
+.card-body{display:none}
+.card.open .card-body{display:block}
+.card-hdr .cat-total{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.75);font-family:Arial;margin-left:4px}
 .card-hdr .matdb-btn{background:rgba(92,156,148,.92);color:#10173A;font-weight:700;padding:3px 10px;border-radius:3px;cursor:pointer;font-size:11px;border:none}
 .card-hdr .matdb-btn:hover{background:#5C9C94}
 .tbl-wrap{overflow-x:auto}
@@ -107,11 +113,11 @@ td.num input{text-align:right}
 <div id="login-overlay" style="position:fixed;inset:0;background:radial-gradient(ellipse 90% 70% at 50% -10%,#1c2a6e 0%,#101a42 45%,#070d24 100%);display:flex;align-items:center;justify-content:center;z-index:9999;font-family:Arial">
   <div style="background:#fff;border-radius:14px;padding:36px 40px;width:340px;box-shadow:0 25px 70px rgba(0,0,0,.45)">
     <div style="text-align:center;margin-bottom:18px">
-      <div style="font-size:18px;font-weight:700;color:#10173A;font-family:'Space Grotesk',Arial,sans-serif">YSSE FABRICATOR SDN BHD</div>
+      <div style="font-size:18px;font-weight:700;color:#10173A;font-family:'Space Grotesk',Arial,sans-serif">RAUL TECH</div>
       <div style="font-size:11px;color:#888;letter-spacing:.5px;margin-top:2px">QUOTATION CALCULATOR</div>
     </div>
     <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px">Email</div>
-    <input type="email" id="login-email" placeholder="you@ysse.com" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:12px;outline:none" onkeydown="if(event.key==='Enter')doLogin()">
+    <input type="email" id="login-email" placeholder="you@company.com" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:12px;outline:none" onkeydown="if(event.key==='Enter')doLogin()">
     <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px">Password</div>
     <input type="password" id="login-password" placeholder="********" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:6px;outline:none" onkeydown="if(event.key==='Enter')doLogin()">
     <div id="login-error" style="color:#c00;font-size:11px;min-height:14px;margin-bottom:10px"></div>
@@ -122,12 +128,21 @@ td.num input{text-align:right}
     <div id="login-status" style="text-align:center;font-size:10px;color:#aaa;margin-top:10px">Connecting...</div>
   </div>
 </div>
+<div id="not-set-up-overlay" style="display:none;position:fixed;inset:0;background:radial-gradient(ellipse 90% 70% at 50% -10%,#1c2a6e 0%,#101a42 45%,#070d24 100%);align-items:center;justify-content:center;z-index:9999;font-family:Arial">
+  <div style="background:#fff;border-radius:14px;padding:36px 40px;width:380px;box-shadow:0 25px 70px rgba(0,0,0,.45);text-align:center">
+    <div style="font-size:32px;margin-bottom:10px">🔒</div>
+    <div style="font-size:14px;font-weight:700;color:#991b1b;margin-bottom:8px">Account Not Set Up Yet</div>
+    <div style="font-size:12px;color:#555;line-height:1.6;margin-bottom:18px">This account hasn't been added to a company workspace yet. Please ask your Management to add you via the Project Management System's "Manage Users" page, or sign in to the Project Management System yourself first if you're setting up a brand-new company.</div>
+    <button onclick="doLogout()" style="width:100%;padding:9px;background:none;border:1px solid #ccc;color:#555;border-radius:6px;font-size:12px;cursor:pointer">Log Out</button>
+  </div>
+</div>
 <div id="app-content" style="display:none">
 <div class="hdr">
   <div class="hdr-left">
-    <img src="data:image/png;base64,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EOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOhGAAAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AADgJ/8vwADdQ82eebNfAwAAAABJRU5ErkJggg==" style="height:54px;width:auto;object-fit:contain;" alt="YSSE Logo">
+    <div style="width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#3D5BFF,#9B5CFF 55%,#00E0CC);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',Arial,sans-serif;font-weight:700;color:#fff;font-size:18px;flex-shrink:0;box-shadow:0 4px 14px rgba(99,80,255,.4)">R</div>
     <div>
-      <div class="brand">YSSE FABRICATOR SDN BHD</div>
+      <div style="font-size:11px;font-weight:700;color:#cdd8ff;letter-spacing:1.5px;font-family:'Space Grotesk',Arial,sans-serif">RAUL TECH</div>
+      <div class="brand" id="hdr-company-name" style="font-size:15px">Loading…</div>
       <div class="sub">Project Quotation Calculator</div>
     </div>
   </div>
@@ -141,7 +156,7 @@ td.num input{text-align:right}
 <div class="info-bar">
   <div><label>Project Name</label><input id="proj-name" placeholder="Enter project name…"></div>
   <div><label>Client</label><input id="proj-client" placeholder="Client name…"></div>
-  <div><label>Project No.</label><input id="proj-no" placeholder="e.g. YSSE-2026-001"></div>
+  <div><label>Project No.</label><input id="proj-no" placeholder="e.g. PROJ-2026-001"></div>
   <div><label>Prepared By</label><input id="proj-by" placeholder="Your name…"></div>
   <div><label>Branch</label><select id="proj-branch"><option value="jb">Johor Bahru</option><option value="kuching">Kuching</option></select></div>
 </div>
@@ -166,13 +181,14 @@ td.num input{text-align:right}
   </div>
 
   <div class="card" id="card-materials">
-    <div class="card-hdr" style="background:#46618F">
-      <span class="title">1. MATERIALS</span>
+    <div class="card-hdr">
+      <div class="title-toggle" onclick="toggleCard('materials')"><span class="chev">▾</span><span class="title">1. MATERIALS</span><span class="cat-total" id="hdr-sub-materials">RM 0.00</span></div>
       <div class="btns">
         <button class="matdb-btn" onclick="openMatDB()">📦 Materials DB</button>
         <button onclick="addRow('materials')">+ Add Row</button>
       </div>
     </div>
+    <div class="card-body">
     <div class="tbl-wrap"><table id="tbl-materials">
       <thead><tr>
         <th style="width:30px">#</th>
@@ -196,12 +212,15 @@ td.num input{text-align:right}
         <td class="num" id="sub-materials">0.00</td><td></td>
       </tr></tfoot>
     </table></div>
+    </div>
   </div>
 
   <div class="card" id="card-consumables">
-    <div class="card-hdr" style="background:#6E6296"><span class="title">2. CONSUMABLES</span>
+    <div class="card-hdr">
+      <div class="title-toggle" onclick="toggleCard('consumables')"><span class="chev">▾</span><span class="title">2. CONSUMABLES</span><span class="cat-total" id="hdr-sub-consumables">RM 0.00</span></div>
       <div class="btns"><button onclick="addRow('consumables')">+ Add Row</button></div>
     </div>
+    <div class="card-body">
     <div class="tbl-wrap"><table id="tbl-consumables">
       <thead><tr>
         <th style="width:30px">#</th><th>Description</th>
@@ -215,12 +234,15 @@ td.num input{text-align:right}
         <td class="num" id="sub-consumables">0.00</td><td></td>
       </tr></tfoot>
     </table></div>
+    </div>
   </div>
 
   <div class="card" id="card-transport">
-    <div class="card-hdr" style="background:#3E7E84"><span class="title">3. TRANSPORT</span>
+    <div class="card-hdr">
+      <div class="title-toggle" onclick="toggleCard('transport')"><span class="chev">▾</span><span class="title">3. TRANSPORT</span><span class="cat-total" id="hdr-sub-transport">RM 0.00</span></div>
       <div class="btns"><button onclick="addRow('transport')">+ Add Row</button></div>
     </div>
+    <div class="card-body">
     <div class="tbl-wrap"><table id="tbl-transport">
       <thead><tr>
         <th style="width:30px">#</th><th>Description</th>
@@ -234,12 +256,15 @@ td.num input{text-align:right}
         <td class="num" id="sub-transport">0.00</td><td></td>
       </tr></tfoot>
     </table></div>
+    </div>
   </div>
 
   <div class="card" id="card-crane">
-    <div class="card-hdr" style="background:#A85A78"><span class="title">4. CRANE</span>
+    <div class="card-hdr">
+      <div class="title-toggle" onclick="toggleCard('crane')"><span class="chev">▾</span><span class="title">4. CRANE</span><span class="cat-total" id="hdr-sub-crane">RM 0.00</span></div>
       <div class="btns"><button onclick="addRow('crane')">+ Add Row</button></div>
     </div>
+    <div class="card-body">
     <div class="tbl-wrap"><table id="tbl-crane">
       <thead><tr>
         <th style="width:30px">#</th><th>Description</th>
@@ -253,12 +278,15 @@ td.num input{text-align:right}
         <td class="num" id="sub-crane">0.00</td><td></td>
       </tr></tfoot>
     </table></div>
+    </div>
   </div>
 
   <div class="card" id="card-others">
-    <div class="card-hdr" style="background:#475569"><span class="title">5. OTHERS</span>
+    <div class="card-hdr">
+      <div class="title-toggle" onclick="toggleCard('others')"><span class="chev">▾</span><span class="title">5. OTHERS</span><span class="cat-total" id="hdr-sub-others">RM 0.00</span></div>
       <div class="btns"><button onclick="addRow('others')">+ Add Row</button></div>
     </div>
+    <div class="card-body">
     <div class="tbl-wrap"><table id="tbl-others">
       <thead><tr>
         <th style="width:30px">#</th><th>Description</th>
@@ -272,12 +300,15 @@ td.num input{text-align:right}
         <td class="num" id="sub-others">0.00</td><td></td>
       </tr></tfoot>
     </table></div>
+    </div>
   </div>
 
   <div class="card" id="card-manhours">
-    <div class="card-hdr" style="background:#1A6640"><span class="title">6. MANHOURS</span>
+    <div class="card-hdr">
+      <div class="title-toggle" onclick="toggleCard('manhours')"><span class="chev">▾</span><span class="title">6. MANHOURS</span><span class="cat-total" id="hdr-sub-manhours">RM 0.00</span></div>
       <div class="btns"><button onclick="addMhrRow()">+ Add Row</button></div>
     </div>
+    <div class="card-body">
     <div class="tbl-wrap"><table id="tbl-manhours">
       <thead><tr>
         <th style="width:30px">#</th><th style="width:165px">Position / Role</th>
@@ -296,12 +327,15 @@ td.num input{text-align:right}
       <div><div style="opacity:.75;font-size:10px;text-transform:uppercase;letter-spacing:.5px">Total Headcount</div><div class="sv" id="mhr-total-pax">0</div></div>
       <div><div style="opacity:.75;font-size:10px;text-transform:uppercase;letter-spacing:.5px">Total Manhour Cost (RM)</div><div class="sv" id="sub-manhours">0.00</div></div>
     </div>
+    </div>
   </div>
 
   <div class="card" id="card-subcon">
-    <div class="card-hdr" style="background:#C76A1F"><span class="title">7. SUBCONTRACTOR</span>
+    <div class="card-hdr">
+      <div class="title-toggle" onclick="toggleCard('subcon')"><span class="chev">▾</span><span class="title">7. SUBCONTRACTOR</span><span class="cat-total" id="hdr-sub-subcon">RM 0.00</span></div>
       <div class="btns"><button onclick="addSubconRow()">+ Add Row</button></div>
     </div>
+    <div class="card-body">
     <div class="tbl-wrap"><table id="tbl-subcon">
       <thead><tr>
         <th style="width:30px">#</th><th>Subcontractor Name</th>
@@ -313,6 +347,7 @@ td.num input{text-align:right}
         <td class="num" id="sub-subcon">0.00</td><td></td>
       </tr></tfoot>
     </table></div>
+    </div>
   </div>
 
   <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
@@ -758,7 +793,7 @@ function deleteMat(id){
 }
 function exportMatDB(){
   const blob=new Blob([JSON.stringify({version:'1.0',exported:new Date().toISOString(),materials:MATDB},null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='YSSE_Materials_DB.json';a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Materials_DB.json';a.click();
 }
 function importMatDB(e){
   const file=e.target.files[0];if(!file)return;
@@ -835,7 +870,18 @@ function renderStd(cat){
     else sub+=n(row.qty)*n(row.rate);
   });
   document.getElementById('sub-'+cat).textContent=fmt(sub);
+  setCatHeaderTotal(cat,sub);
   recalcSummary();
+}
+
+function setCatHeaderTotal(cat,val){
+  const el=document.getElementById('hdr-sub-'+cat);
+  if(el) el.textContent='RM '+fmt(val);
+}
+
+function toggleCard(cat){
+  const card=document.getElementById('card-'+cat);
+  if(card) card.classList.toggle('open');
 }
 
 function renderSimple(cat){
@@ -859,6 +905,7 @@ function renderSimple(cat){
   let sub=0;
   S[cat].forEach(row=>{ sub+=n(row.qty)*n(row.rate); });
   document.getElementById('sub-'+cat).textContent=fmt(sub);
+  setCatHeaderTotal(cat,sub);
   recalcSummary();
 }
 
@@ -909,6 +956,7 @@ function renderMhr(){
   document.getElementById('mhr-total-days').textContent=fmt(totalDays);
   document.getElementById('mhr-total-pax').textContent=totalPax;
   document.getElementById('sub-manhours').textContent=fmt(totalRM);
+  setCatHeaderTotal('manhours',totalRM);
   recalcSummary();
 }
 function updM(i,field,val){S.manhours[i][field]=val;renderMhr();}
@@ -931,6 +979,7 @@ function renderSubcon(){
   let sub=0;
   S.subcon.forEach(row=>{ sub+=n(row.rate); });
   document.getElementById('sub-subcon').textContent=fmt(sub);
+  setCatHeaderTotal('subcon',sub);
   recalcSummary();
 }
 function updSubcon(i,field,val){S.subcon[i][field]=val;renderSubcon();}
@@ -1026,7 +1075,7 @@ function saveProject(){
   const data=buildQuoteData();
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=(data.project.name||'quotation').replace(/[^a-zA-Z0-9]/g,'_')+'_YSSE.json';a.click();
+  a.download=(data.project.name||'quotation').replace(/[^a-zA-Z0-9]/g,'_')+'_Quotation.json';a.click();
 }
 function submitToManagement(){
   const name=document.getElementById('proj-name').value.trim();
@@ -1209,6 +1258,7 @@ renderAll();
   var pendingCol=null;
   var quotesCol=null;
   var usersCol=null;
+  var settingsRef=null;
 
   function setIndicator(text,color){
     var el=document.getElementById('cloud-sync-indicator');
@@ -1217,7 +1267,7 @@ renderAll();
 
   window.pushPendingQuote=function(data,callback){
     if(!cloudReady||!pendingCol){ if(callback)callback(false,'not ready'); return; }
-    var payload=Object.assign({},data,{status:'pending',submittedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    var payload=Object.assign({},data,{status:'pending',customerId:window.CURRENT_CUSTOMER_ID||'ysse',submittedAt:firebase.firestore.FieldValue.serverTimestamp()});
     pendingCol.add(payload).then(function(){ if(callback)callback(true); }).catch(function(err){ if(callback)callback(false,err); });
   };
 
@@ -1249,13 +1299,25 @@ renderAll();
   function showApp(){
     var ov=document.getElementById('login-overlay');
     var app=document.getElementById('app-content');
+    var nsu=document.getElementById('not-set-up-overlay');
     if(ov) ov.style.display='none';
+    if(nsu) nsu.style.display='none';
     if(app) app.style.display='';
+  }
+  function showNotSetUp(){
+    var ov=document.getElementById('login-overlay');
+    var app=document.getElementById('app-content');
+    var nsu=document.getElementById('not-set-up-overlay');
+    if(ov) ov.style.display='none';
+    if(app) app.style.display='none';
+    if(nsu) nsu.style.display='flex';
   }
   function showLogin(msg){
     var ov=document.getElementById('login-overlay');
     var app=document.getElementById('app-content');
+    var nsu=document.getElementById('not-set-up-overlay');
     if(app) app.style.display='none';
+    if(nsu) nsu.style.display='none';
     if(ov) ov.style.display='flex';
     var st=document.getElementById('login-status');
     if(st) st.textContent=msg||'Please sign in.';
@@ -1309,7 +1371,10 @@ renderAll();
       setIndicator('\u2601 Live Sync: error \u2014 using local data only','#fca5a5');
     });
     quotesCol.onSnapshot(function(snap){
-      ALL_QUOTES=snap.docs.map(function(doc){ return Object.assign({},doc.data(),{id:doc.id}); });
+      var myCustomerId=window.CURRENT_CUSTOMER_ID||'ysse';
+      ALL_QUOTES=snap.docs.filter(function(doc){
+        return (doc.data().customerId||'ysse')===myCustomerId;
+      }).map(function(doc){ return Object.assign({},doc.data(),{id:doc.id}); });
       try{
         if(document.getElementById('quotes-lib-overlay').classList.contains('open')) renderQuotesLibrary();
       }catch(e5){}
@@ -1321,35 +1386,43 @@ renderAll();
   try{
     firebase.initializeApp(firebaseConfig);
     db=firebase.firestore();
-    docRef=db.collection('ysse_quotation').doc('shared_matdb');
+    // docRef is assigned per-tenant below, once the signed-in user's company is known.
     pendingCol=db.collection('ysse_pending_quotes');
     quotesCol=db.collection('ysse_quotes');
     usersCol=db.collection('ysse_users');
     firebase.auth().onAuthStateChanged(function(user){
-      if(user){
+      if(!user){ showLogin('Please sign in.'); return; }
+      window.CURRENT_USER_EMAIL=user.email||user.uid;
+      var myEmail=(user.email||'').toLowerCase();
+      if(!myEmail||!usersCol){ showNotSetUp(); return; }
+      usersCol.doc(myEmail).get().then(function(snap){
+        if(!snap.exists){
+          // Unrecognized account \u2014 never default to a tenant, since that could leak data into the wrong company.
+          showNotSetUp();
+          return;
+        }
+        var v=snap.data();
+        var customerId=v.customerId||'ysse';
+        window.CURRENT_CUSTOMER_ID=customerId;
+        window.CURRENT_USER_NAME=v.name||'';
+        window.CURRENT_USER_POSITION=v.position||'';
+        docRef=db.collection('ysse_quotation').doc(customerId==='ysse'?'shared_matdb':customerId);
+        settingsRef=db.collection('ysse_settings').doc(customerId==='ysse'?'company':customerId);
+        settingsRef.onSnapshot(function(snap){
+          var data=snap.data();
+          var hdr=document.getElementById('hdr-company-name');
+          if(hdr) hdr.textContent=(data&&data.companyName)?data.companyName.toUpperCase():'COMPANY';
+        },function(err){});
         showApp();
         var who=document.getElementById('logged-in-as');
-        if(who) who.textContent='Logged in as '+(user.email||user.uid);
-        window.CURRENT_USER_EMAIL=user.email||user.uid;
+        if(who) who.textContent='Logged in as '+(v.name?(v.name+(v.position?' ('+v.position+')':'')):myEmail);
+        var byEl=document.getElementById('proj-by');
+        if(byEl&&v.name&&!byEl.value.trim()) byEl.value=v.name;
         startSync();
         if(typeof window.maybeOpenLibraryFromURL==='function') window.maybeOpenLibraryFromURL();
-        var myEmail=(user.email||'').toLowerCase();
-        if(myEmail&&usersCol){
-          usersCol.doc(myEmail).get().then(function(snap){
-            if(!snap.exists) return;
-            var v=snap.data();
-            window.CURRENT_USER_NAME=v.name||'';
-            window.CURRENT_USER_POSITION=v.position||'';
-            if(v.name){
-              if(who) who.textContent='Logged in as '+v.name+(v.position?' ('+v.position+')':'');
-              var byEl=document.getElementById('proj-by');
-              if(byEl&&!byEl.value.trim()) byEl.value=v.name;
-            }
-          }).catch(function(err){});
-        }
-      } else {
-        showLogin('Please sign in.');
-      }
+      }).catch(function(err){
+        showLogin('Could not verify your access level. Please check your connection and refresh.');
+      });
     },function(err){
       showLogin('Auth error \u2014 please refresh and try again.');
     });
@@ -1359,10 +1432,11 @@ renderAll();
 
   window.autosaveQuote=function(payload,existingId,callback){
     if(!quotesCol){ if(callback) callback(null,new Error('not ready')); return; }
+    var taggedPayload=Object.assign({},payload,{customerId:window.CURRENT_CUSTOMER_ID||'ysse'});
     if(existingId){
-      quotesCol.doc(existingId).set(payload,{merge:true}).then(function(){ if(callback) callback(existingId); }).catch(function(err){ if(callback) callback(null,err); });
+      quotesCol.doc(existingId).set(taggedPayload,{merge:true}).then(function(){ if(callback) callback(existingId); }).catch(function(err){ if(callback) callback(null,err); });
     } else {
-      quotesCol.add(payload).then(function(ref){ if(callback) callback(ref.id); }).catch(function(err){ if(callback) callback(null,err); });
+      quotesCol.add(taggedPayload).then(function(ref){ if(callback) callback(ref.id); }).catch(function(err){ if(callback) callback(null,err); });
     }
   };
   window.deleteQuoteDoc=function(id,callback){

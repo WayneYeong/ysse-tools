@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YSSE FABRICATOR - Project Management System</title>
+<title>Raul Tech - Project Management System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -47,6 +47,7 @@ table.projects td[style*="text-align:right"],.kpi-val,.margin-pill,.badge,.mock-
 .badge-progress{background:#fef3c7;color:#92400e}
 .badge-completed{background:#d1fae5;color:#065f46}
 .badge-cancelled{background:#f3f4f6;color:#6b7280}
+.badge-overdue{background:#fee2e2;color:#991b1b}
 .tbl-card{background:var(--card);border-radius:7px;box-shadow:0 1px 4px rgba(0,0,0,.1);overflow:hidden}
 .tbl-card-hdr{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
 .tbl-card-hdr h3{font-size:13px;font-weight:700;color:var(--dark)}
@@ -66,6 +67,12 @@ table.projects tr:hover td{background:#f0f6ff}
 .btn-danger{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}.btn-danger:hover{background:#fca5a5}
 .btn-ghost{background:transparent;border:1px solid var(--mid);color:var(--mid)}.btn-ghost:hover{background:#eef1ff}
 body.role-qs .mgmt-only{display:none!important}
+.more-dropdown{position:relative;display:inline-block}
+.more-dropdown-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:#fff;border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.22);min-width:200px;z-index:500;overflow:hidden}
+.more-dropdown-menu.open{display:block}
+.more-dropdown-menu button{display:block;width:100%;text-align:left;padding:10px 16px;background:none;border:none;font-size:12.5px;color:#1a1a1a;cursor:pointer;white-space:nowrap}
+.more-dropdown-menu button:hover{background:#f0f4f8}
+.more-dropdown-menu button+button{border-top:1px solid #eef1f5}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto}
 .modal-overlay.open{display:flex}
 .modal{background:#fff;border-radius:8px;width:780px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)}
@@ -185,11 +192,11 @@ body.role-qs .mgmt-only{display:none!important}
 <div id="login-overlay" style="position:fixed;inset:0;background:radial-gradient(ellipse 90% 70% at 50% -10%,#1c2a6e 0%,#101a42 45%,#070d24 100%);display:flex;align-items:center;justify-content:center;z-index:9999;font-family:Arial">
   <div style="background:#fff;border-radius:14px;padding:36px 40px;width:340px;box-shadow:0 25px 70px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.06)">
     <div style="text-align:center;margin-bottom:18px">
-      <div style="font-size:18px;font-weight:700;color:var(--dark);font-family:'Space Grotesk',Arial,sans-serif">YSSE FABRICATOR SDN BHD</div>
+      <div style="font-size:18px;font-weight:700;color:var(--dark);font-family:'Space Grotesk',Arial,sans-serif">RAUL TECH</div>
       <div style="font-size:11px;color:#888;letter-spacing:.5px;margin-top:2px">PROJECT MANAGEMENT SYSTEM</div>
     </div>
     <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px">Email</div>
-    <input type="email" id="login-email" placeholder="you@ysse.com" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:12px;outline:none" onkeydown="if(event.key==='Enter')doLogin()">
+    <input type="email" id="login-email" placeholder="you@company.com" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:12px;outline:none" onkeydown="if(event.key==='Enter')doLogin()">
     <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px">Password</div>
     <input type="password" id="login-password" placeholder="********" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:6px;outline:none" onkeydown="if(event.key==='Enter')doLogin()">
     <div id="login-error" style="color:#c00;font-size:11px;min-height:14px;margin-bottom:10px"></div>
@@ -202,7 +209,7 @@ body.role-qs .mgmt-only{display:none!important}
 </div>
 <div id="access-denied-overlay" style="display:none;position:fixed;inset:0;background:radial-gradient(ellipse 90% 70% at 50% -10%,#1c2a6e 0%,#101a42 45%,#070d24 100%);align-items:center;justify-content:center;z-index:9999;font-family:Arial">
   <div style="background:#fff;border-radius:14px;padding:36px 40px;width:380px;box-shadow:0 25px 70px rgba(0,0,0,.45);text-align:center">
-    <div style="font-size:18px;font-weight:700;color:var(--dark);font-family:'Space Grotesk',Arial,sans-serif">YSSE FABRICATOR SDN BHD</div>
+    <div style="font-size:18px;font-weight:700;color:var(--dark);font-family:'Space Grotesk',Arial,sans-serif">RAUL TECH</div>
     <div style="font-size:11px;color:#888;letter-spacing:.5px;margin-top:2px;margin-bottom:18px">PROJECT MANAGEMENT SYSTEM</div>
     <div style="font-size:32px;margin-bottom:10px">&#128274;</div>
     <div style="font-size:14px;font-weight:700;color:#991b1b;margin-bottom:8px">Access Restricted</div>
@@ -211,12 +218,24 @@ body.role-qs .mgmt-only{display:none!important}
     <button onclick="doLogout()" style="width:100%;padding:9px;background:none;border:1px solid #ccc;color:#555;border-radius:6px;font-size:12px;cursor:pointer">Log Out</button>
   </div>
 </div>
+<div id="company-setup-overlay" style="display:none;position:fixed;inset:0;background:radial-gradient(ellipse 90% 70% at 50% -10%,#1c2a6e 0%,#101a42 45%,#070d24 100%);align-items:center;justify-content:center;z-index:9999;font-family:Arial">
+  <div style="background:#fff;border-radius:14px;padding:36px 40px;width:380px;box-shadow:0 25px 70px rgba(0,0,0,.45);text-align:center">
+    <div style="font-size:18px;font-weight:700;color:var(--dark);font-family:'Space Grotesk',Arial,sans-serif">Welcome 👋</div>
+    <div style="font-size:12px;color:#888;margin-top:4px;margin-bottom:18px">We don't recognize this account yet. Set up your company to get started — you'll be the first Management user, with your own private, isolated workspace.</div>
+    <div style="text-align:left;font-size:12px;font-weight:700;color:#555;margin-bottom:4px">Company Name</div>
+    <input type="text" id="cs-setup-company-name" placeholder="e.g. Wawas Trading" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:6px;outline:none" onkeydown="if(event.key==='Enter')completeCompanySetup()">
+    <div id="company-setup-error" style="color:#c00;font-size:11px;min-height:14px;margin-bottom:10px;text-align:left"></div>
+    <button onclick="completeCompanySetup()" style="width:100%;padding:10px;background:linear-gradient(120deg,var(--mid),var(--accent3));color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">Create My Company</button>
+    <button onclick="doLogout()" style="width:100%;padding:9px;background:none;border:1px solid #ccc;color:#555;border-radius:6px;font-size:12px;cursor:pointer">Log Out</button>
+  </div>
+</div>
 <div id="app-content" style="display:none">
 <div class="hdr">
   <div class="hdr-left">
-    <img src="data:image/png;base64,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EOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOhGAAAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAQKADAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAAACHQAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAAEOgAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAAIBABwAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAABDoAAAh0AABAoAMAgEAHAAAEOgAACHQAAECgAwCAQAcAAAQ6AAAIdAAAQKADAIBABwAABDoAACDQAQBAoAMAAAIdAAAEOgAAINABAECgAwAAAh0AAAQ6AAAg0AEAQKADAAACHQAABDoAACDQAQAAgQ4AAAIdAAAQ6AAAINABAACBDgAAAh0AABDoAAAg0AEAAIEOAAACHQAAEOgAACDQAQAAgQ4AAAh0AAAQ6AAAgEAHAACBDgAACHQAABDoAACAQAcAAIEOAAAIdAAAEOgAAIBABwAAgQ4AAAh0AADgJ/8vwADdQ82eebNfAwAAAABJRU5ErkJggg==" style="height:48px;width:auto;object-fit:contain" alt="YSSE Logo">
+    <div style="width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#3D5BFF,#9B5CFF 55%,#00E0CC);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',Arial,sans-serif;font-weight:700;color:#fff;font-size:18px;flex-shrink:0;box-shadow:0 4px 14px rgba(99,80,255,.4)">R</div>
     <div>
-      <div class="brand">YSSE FABRICATOR SDN BHD</div>
+      <div style="font-size:11px;font-weight:700;color:#cdd8ff;letter-spacing:1.5px;font-family:'Space Grotesk',Arial,sans-serif">RAUL TECH</div>
+      <div class="brand" id="hdr-company-name" style="font-size:15px;margin-top:1px">Loading…</div>
       <div class="sub-brand">Project Management System</div>
     </div>
   </div>
@@ -224,12 +243,18 @@ body.role-qs .mgmt-only{display:none!important}
     <div style="display:flex;gap:8px">
       <button class="btn btn-accent" onclick="openAddModal()">+ New Project</button>
       <button class="btn btn-green" onclick="window.open('YSSE_Quotation_Calculator_Live.html','_blank')">Open Quotation Calculator</button>
-      <button class="btn btn-green" onclick="window.open('YSSE_Quotation_Calculator_Live.html?view=library','_blank')">📚 Quotes Library</button>
-      <button class="btn btn-green" onclick="exportToExcel()">Export to Excel</button>
-      <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="backupData()">Backup JSON</button>
-      <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="document.getElementById('restore-input').click()">Restore Backup</button>
-      <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="openBackupHistory()">☁ Backup History</button>
-      <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="window.print()">Print</button>
+      <div class="more-dropdown">
+        <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="toggleMoreMenu(event)">⋯ More</button>
+        <div class="more-dropdown-menu" id="more-menu">
+          <button onclick="window.open('YSSE_Quotation_Calculator_Live.html?view=library','_blank')">📚 Quotes Library</button>
+          <button onclick="exportToExcel()">📊 Export to Excel</button>
+          <button onclick="backupData()">💾 Backup JSON</button>
+          <button onclick="document.getElementById('restore-input').click()">⤴ Restore Backup</button>
+          <button onclick="openBackupHistory()">☁ Backup History</button>
+          <button class="mgmt-only" onclick="openCompanySettings()">⚙ Company Settings</button>
+          <button onclick="window.print()">🖨 Print</button>
+        </div>
+      </div>
       <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="doLogout()">Log Out</button>
       <input type="file" id="restore-input" accept=".json" style="display:none" onchange="restoreData(event)">
     </div>
@@ -244,6 +269,8 @@ body.role-qs .mgmt-only{display:none!important}
   <div class="nav-tab" onclick="showPage('analysis',this)">Category Analysis</div>
   <div class="nav-tab" onclick="showPage('compare',this)">Compare Branches</div>
   <div class="nav-tab" onclick="showPage('pending',this)">Pending Quotes <span id="pending-badge" style="display:none;background:var(--accent);color:#10173A;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;font-weight:700">0</span></div>
+  <div class="nav-tab" onclick="showPage('invoices',this)">Invoices <span id="invoice-badge" style="display:none;background:#C0392B;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;font-weight:700">0</span></div>
+  <div class="nav-tab" onclick="showPage('clients',this)">Clients</div>
   <div class="nav-tab mgmt-only" onclick="showPage('trash',this)">Trash <span id="trash-badge" style="display:none;background:#999;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;font-weight:700">0</span></div>
   <div class="nav-tab mgmt-only" onclick="showPage('users',this)">Manage Users</div>
 </div>
@@ -371,6 +398,46 @@ body.role-qs .mgmt-only{display:none!important}
   </div>
 </div>
 
+<div class="page" id="page-invoices">
+  <div class="kpi-grid" style="margin-bottom:14px">
+    <div class="kpi green"><div class="kpi-label">Outstanding (Unpaid)</div><div class="kpi-val" id="kpi-inv-outstanding">RM 0</div><div class="kpi-sub">Across all invoices</div></div>
+    <div class="kpi" style="border-color:#C0392B"><div class="kpi-label">Overdue</div><div class="kpi-val" id="kpi-inv-overdue">0</div><div class="kpi-sub" id="kpi-inv-overdue-amt">RM 0 overdue</div></div>
+    <div class="kpi accent"><div class="kpi-label">Pending (not yet due)</div><div class="kpi-val" id="kpi-inv-pending">0</div><div class="kpi-sub">Awaiting payment</div></div>
+    <div class="kpi green"><div class="kpi-label">Paid This Month</div><div class="kpi-val" id="kpi-inv-paid">RM 0</div><div class="kpi-sub">Payments received</div></div>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-card-hdr">
+      <h3>Invoices &mdash; Client Payment Tracking</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="inv-filter-status" onchange="renderInvoices()">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="overdue">Overdue</option>
+          <option value="paid">Paid</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="openInvoiceModal()">+ New Invoice</button>
+      </div>
+    </div>
+    <table class="projects"><thead><tr>
+      <th>Invoice No.</th><th>Project</th><th>Client</th><th>Issue Date</th><th>Due Date</th><th>Amount (RM)</th><th>Status</th><th>Days Overdue</th><th>Paid Date</th><th>Actions</th>
+    </tr></thead><tbody id="body-invoices"></tbody></table>
+    <div id="invoices-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No invoices yet. Click "+ New Invoice" to issue one against a project.</div>
+  </div>
+</div>
+
+<div class="page" id="page-clients">
+  <div class="tbl-card">
+    <div class="tbl-card-hdr">
+      <h3>Clients &mdash; Contact &amp; Billing Details</h3>
+      <button class="btn btn-primary btn-sm mgmt-only" onclick="openClientModal()">+ Add Client</button>
+    </div>
+    <table class="projects"><thead><tr>
+      <th>Client / Company Name</th><th>Attention (Contact Person)</th><th>Phone</th><th>Email</th><th>Address</th><th>Actions</th>
+    </tr></thead><tbody id="body-clients"></tbody></table>
+    <div id="clients-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No clients added yet. Add one so quotations and invoices can include their address and attention line automatically.</div>
+  </div>
+</div>
+
 <div class="page" id="page-trash">
   <div class="tbl-card">
     <div class="tbl-card-hdr">
@@ -425,7 +492,10 @@ body.role-qs .mgmt-only{display:none!important}
     <div class="section-hdr">Project Information</div>
     <div class="form-grid three">
       <div class="form-group"><label>Project Name *</label><input id="f-name" placeholder="e.g. KLCC Tower Fabrication"></div>
-      <div class="form-group"><label>Project No.</label><input id="f-no" placeholder="e.g. YSSE-2026-001"></div>
+      <div class="form-group"><label>Project No.</label><input id="f-no" placeholder="e.g. PROJ-2026-001"></div>
+      <div class="form-group"><label>Link to Client Record</label>
+        <select id="f-client-link" onchange="onProjectClientLinkChange()"></select>
+      </div>
       <div class="form-group"><label>Client *</label><input id="f-client" placeholder="Client company name"></div>
       <div class="form-group"><label>Branch *</label>
         <select id="f-branch">
@@ -603,6 +673,89 @@ body.role-qs .mgmt-only{display:none!important}
 </div>
 </div>
 
+<div class="modal-overlay" id="invoice-modal-overlay">
+<div class="modal" onclick="event.stopPropagation()">
+  <div class="modal-hdr">
+    <h3 id="invoice-modal-title">New Invoice</h3>
+    <button class="modal-close" onclick="closeInvoiceModal()">x</button>
+  </div>
+  <div class="modal-body">
+    <div class="section-hdr">Invoice Details</div>
+    <div class="form-grid three">
+      <div class="form-group"><label>Project *</label>
+        <select id="inv-project"></select>
+      </div>
+      <div class="form-group"><label>Invoice No. *</label><input id="inv-no" placeholder="e.g. INV-2026-001"></div>
+      <div class="form-group"><label>Amount (RM) *</label><input type="number" id="inv-amount" placeholder="0.00" step="0.01"></div>
+      <div class="form-group"><label>Issue Date *</label><input type="date" id="inv-issue-date"></div>
+      <div class="form-group"><label>Due Date *</label><input type="date" id="inv-due-date"></div>
+      <div class="form-group"><label>Payment Received Date</label><input type="date" id="inv-paid-date"></div>
+      <div class="form-group span2"><label>Notes</label><textarea id="inv-notes" rows="2" placeholder="Payment terms, reference, remarks..." style="resize:vertical"></textarea></div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeInvoiceModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveInvoice()">Save Invoice</button>
+  </div>
+</div>
+</div>
+
+<div class="modal-overlay" id="settings-modal-overlay">
+<div class="modal" onclick="event.stopPropagation()">
+  <div class="modal-hdr">
+    <h3>⚙ Company Settings &mdash; used on Quotation &amp; Invoice templates</h3>
+    <button class="modal-close" onclick="closeCompanySettings()">x</button>
+  </div>
+  <div class="modal-body">
+    <div style="font-size:11.5px;color:var(--sub);margin-bottom:14px">These details appear on every Quotation and Invoice PDF generated from the system. Changes apply for everyone, on every device.</div>
+    <div class="section-hdr">Company Information</div>
+    <div class="form-grid three">
+      <div class="form-group span2"><label>Company Name *</label><input id="cs-name" placeholder="e.g. YSSE Fabricator Sdn Bhd"></div>
+      <div class="form-group"><label>Phone</label><input id="cs-phone" placeholder="e.g. 016-782 8223 (Wayne)"></div>
+      <div class="form-group span2"><label>Email</label><input id="cs-email" placeholder="e.g. weiwen@ysse.com.my"></div>
+    </div>
+    <div class="section-hdr">Branch Addresses</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Johor Bahru (JB) Address</label><textarea id="cs-addr-jb" rows="2" style="resize:vertical"></textarea></div>
+      <div class="form-group"><label>Kuching Address</label><textarea id="cs-addr-kuching" rows="2" style="resize:vertical"></textarea></div>
+    </div>
+    <div class="section-hdr">Bank Details (shown on Invoices)</div>
+    <div class="form-grid three">
+      <div class="form-group"><label>Bank Name</label><input id="cs-bank-name" placeholder="e.g. CIMB Bank"></div>
+      <div class="form-group"><label>Account No.</label><input id="cs-bank-acc" placeholder="e.g. 8006950596"></div>
+      <div class="form-group"><label>Account Holder Name</label><input id="cs-bank-holder" placeholder="e.g. YSSE Fabricator Sdn Bhd"></div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeCompanySettings()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveCompanySettingsForm()">Save Settings</button>
+  </div>
+</div>
+</div>
+
+<div class="modal-overlay" id="client-modal-overlay">
+<div class="modal" onclick="event.stopPropagation()">
+  <div class="modal-hdr">
+    <h3 id="client-modal-title">Add Client</h3>
+    <button class="modal-close" onclick="closeClientModal()">x</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-grid three">
+      <div class="form-group span2"><label>Client / Company Name *</label><input id="cl-name" placeholder="e.g. ABC Construction Sdn Bhd"></div>
+      <div class="form-group"><label>Attention (Contact Person)</label><input id="cl-attention" placeholder="e.g. Mr. Tan"></div>
+      <div class="form-group"><label>Phone</label><input id="cl-phone" placeholder="e.g. 012-345 6789"></div>
+      <div class="form-group span2"><label>Email</label><input id="cl-email" placeholder="e.g. contact@client.com"></div>
+      <div class="form-group" style="grid-column:span 3"><label>Address</label><textarea id="cl-address" rows="2" placeholder="Full billing address" style="resize:vertical"></textarea></div>
+      <div class="form-group" style="grid-column:span 3"><label>Notes</label><textarea id="cl-notes" rows="2" style="resize:vertical"></textarea></div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeClientModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveClient()">Save Client</button>
+  </div>
+</div>
+</div>
+
 <div class="detail-overlay" id="detail-overlay" onclick="closeDetail()"></div>
 <div class="detail-panel" id="detail-panel">
   <div class="detail-hdr">
@@ -613,6 +766,7 @@ body.role-qs .mgmt-only{display:none!important}
     <div style="display:flex;gap:8px;align-items:center">
       <span id="dp-badge"></span>
       <button class="btn btn-ghost btn-sm" id="dp-quote-detail-btn" style="display:none;color:#fff;border-color:rgba(255,255,255,.4)">View Quote Details</button>
+      <button class="btn btn-ghost btn-sm" id="dp-quote-pdf-btn" style="color:#fff;border-color:rgba(255,255,255,.4)">📄 Quotation PDF</button>
       <button class="btn btn-accent btn-sm" id="dp-edit-btn">Edit</button>
       <button onclick="closeDetail()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">x</button>
     </div>
@@ -626,6 +780,27 @@ const CAT_COLORS=['#2E6DA4','#F0A500','#1A6640','#8B4513','#C0392B','#7B68EE','#
 const BRANCHES=['jb','kuching'];
 const BRANCH_LABELS={jb:'Johor Bahru',kuching:'Kuching'};
 
+const DEFAULT_COMPANY_SETTINGS={
+  companyName:'YSSE Fabricator Sdn Bhd',
+  branches:{
+    jb:{label:'Johor Bahru',address:'No3, Jalan Maju Cemerlang 4, Taman Perindustrian Maju Cemerlang, 81800 Ulu Tiram, Johor'},
+    kuching:{label:'Kuching',address:'No245, Block 12, MLTD, Jalan Setia Raja, Muara Tabuan Light Industrial Park, 93350 Kuching, Sarawak'}
+  },
+  phone:'016-782 8223 (Wayne)',
+  email:'weiwen@ysse.com.my',
+  bank:{bankName:'CIMB Bank',accountNo:'8006950596',accountHolder:'YSSE Fabricator Sdn Bhd'}
+};
+const BLANK_COMPANY_SETTINGS={
+  companyName:'',
+  branches:{ jb:{label:'Johor Bahru',address:''}, kuching:{label:'Kuching',address:''} },
+  phone:'',
+  email:'',
+  bank:{bankName:'',accountNo:'',accountHolder:''}
+};
+let COMPANY_SETTINGS=JSON.parse(localStorage.getItem('ysse_company_settings')||'null')||JSON.parse(JSON.stringify(DEFAULT_COMPANY_SETTINGS));
+
+const COMPANY_LOGO_SVG='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="56" height="62"><rect width="200" height="220" fill="#0B5A82"/><polygon points="0,0 100,95 200,0 200,40 122,118 122,220 78,220 78,118 0,40" fill="#ffffff"/></svg>';
+
 let PROJECTS=JSON.parse(localStorage.getItem('ysse_projects')||'[]');
 (function migrateBranches(){
   var changed=false;
@@ -633,6 +808,10 @@ let PROJECTS=JSON.parse(localStorage.getItem('ysse_projects')||'[]');
   if(changed){ localStorage.setItem('ysse_projects',JSON.stringify(PROJECTS)); }
 })();
 let TRASH=JSON.parse(localStorage.getItem('ysse_trash')||'[]');
+let INVOICES=JSON.parse(localStorage.getItem('ysse_invoices')||'[]');
+let CLIENTS=JSON.parse(localStorage.getItem('ysse_clients')||'[]');
+let editInvoiceId=null;
+let editClientId=null;
 let editId=null;
 let convertingPendingId=null;
 let importedQuoteDetail=null;
@@ -656,6 +835,8 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 function save(){
   localStorage.setItem('ysse_projects',JSON.stringify(PROJECTS));
   localStorage.setItem('ysse_trash',JSON.stringify(TRASH));
+  localStorage.setItem('ysse_invoices',JSON.stringify(INVOICES));
+  localStorage.setItem('ysse_clients',JSON.stringify(CLIENTS));
   if(typeof pushToCloud==='function') pushToCloud();
   const t=new Date();
   const ts=t.toLocaleDateString('en-MY')+' '+t.toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -682,6 +863,8 @@ function showPage(id,tab){
   if(id==='analysis')  renderAnalysis();
   if(id==='compare')   renderCompare();
   if(id==='pending')   renderPending();
+  if(id==='invoices')  renderInvoices();
+  if(id==='clients')   renderClients();
   if(id==='trash')     renderTrash();
   if(id==='users')     renderUsers();
 }
@@ -749,6 +932,7 @@ function openDetail(id){
   document.getElementById('dp-no').textContent=p.projectNo||'';
   document.getElementById('dp-badge').innerHTML=badgeHtml(p.status);
   document.getElementById('dp-edit-btn').onclick=()=>{closeDetail();openEditModal(id);};
+  document.getElementById('dp-quote-pdf-btn').onclick=()=>generateQuotationDoc(id);
   const qdBtn=document.getElementById('dp-quote-detail-btn');
   if(qdBtn){
     if(p.quoteDetail){ qdBtn.style.display=''; qdBtn.onclick=()=>viewProjectQuoteDetails(id); }
@@ -764,12 +948,29 @@ function openDetail(id){
 }
 function closeDetail(){document.getElementById('detail-overlay').classList.remove('open');document.getElementById('detail-panel').classList.remove('open');}
 
+function toggleMoreMenu(evt){
+  evt.stopPropagation();
+  document.getElementById('more-menu').classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+  const menu=document.getElementById('more-menu');
+  if(menu && menu.classList.contains('open') && !menu.contains(e.target)){
+    menu.classList.remove('open');
+  }
+});
+
+function onProjectClientLinkChange(){
+  const sel=document.getElementById('f-client-link');
+  const c=CLIENTS.find(function(x){return x.id===sel.value;});
+  if(c) document.getElementById('f-client').value=c.name;
+}
 function openAddModal(){
   editId=null;
   convertingPendingId=null;
   document.getElementById('convert-banner').style.display='none';
   document.getElementById('modal-title').textContent='Add New Project';
   clearForm();
+  populateClientDropdown(document.getElementById('f-client-link'),'');
   document.getElementById('modal-overlay').classList.add('open');
 }
 function openEditModal(id){
@@ -777,6 +978,7 @@ function openEditModal(id){
   editId=id;
   document.getElementById('modal-title').textContent='Edit Project - '+p.name;
   clearForm();
+  populateClientDropdown(document.getElementById('f-client-link'),p.clientId||'');
   importedQuoteDetail=p.quoteDetail?JSON.parse(JSON.stringify(p.quoteDetail)):null;
   document.getElementById('f-name').value=p.name;
   document.getElementById('f-no').value=p.projectNo||'';
@@ -835,6 +1037,7 @@ function saveProject(){
     id:editId||uid(),
     createdAt:editId?(PROJECTS.find(x=>x.id===editId)||{}).createdAt||Date.now():Date.now(),
     name,client:document.getElementById('f-client').value.trim(),
+    clientId:document.getElementById('f-client-link').value||null,
     branch:document.getElementById('f-branch').value||'jb',
     projectNo:document.getElementById('f-no').value.trim(),
     status:document.getElementById('f-status').value,
@@ -941,10 +1144,12 @@ function renderUsers(){
   const tbody=document.getElementById('body-users');
   const empty=document.getElementById('users-empty');
   if(!tbody) return;
-  if(!ALL_USERS.length){ tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+  const myCustomerId=window.CURRENT_CUSTOMER_ID||'ysse';
+  const myUsers=ALL_USERS.filter(u=>(u.customerId||'ysse')===myCustomerId);
+  if(!myUsers.length){ tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
   if(empty) empty.style.display='none';
-  const mgmtCount=ALL_USERS.filter(u=>u.role==='management').length;
-  tbody.innerHTML=ALL_USERS.map(u=>{
+  const mgmtCount=myUsers.filter(u=>u.role==='management').length;
+  tbody.innerHTML=myUsers.map(u=>{
     const addedOn=u.addedAt?new Date(u.addedAt).toLocaleDateString('en-MY'):'-';
     const isLastMgmt=u.role==='management'&&mgmtCount<=1;
     return '<tr>'+
@@ -971,7 +1176,7 @@ function addUser(){
   const role=roleEl.value;
   if(!email||!email.includes('@')){alert('Please enter a valid email.');return;}
   if(ALL_USERS.some(u=>u.email===email)){alert('That user already exists. Edit their details from the list below instead.');return;}
-  if(typeof window.addUserToFirestore==='function') window.addUserToFirestore(email,role,name,position);
+  if(typeof window.addUserToFirestore==='function') window.addUserToFirestore(email,role,name,position,window.CURRENT_CUSTOMER_ID||'ysse');
   nameEl.value='';posEl.value='';emailEl.value='';
 }
 
@@ -1079,6 +1284,359 @@ function renderPending(){
   }).join('');
   const badge=document.getElementById('pending-badge');
   if(badge){ if(list.length){badge.style.display='inline-block';badge.textContent=list.length;} else {badge.style.display='none';} }
+}
+
+/* ===================== INVOICES ===================== */
+
+function computeInvoiceStatus(inv){
+  if(inv.paidDate){
+    return {status:'paid',label:'Paid',daysOverdue:0};
+  }
+  const today=new Date(); today.setHours(0,0,0,0);
+  const due=inv.dueDate?new Date(inv.dueDate):null;
+  if(due){ due.setHours(0,0,0,0); }
+  if(due && today>due){
+    const daysOverdue=Math.round((today-due)/86400000);
+    return {status:'overdue',label:'Overdue',daysOverdue:daysOverdue};
+  }
+  return {status:'pending',label:'Pending',daysOverdue:0};
+}
+
+function updateInvoiceBadge(){
+  const overdueCount=INVOICES.filter(function(inv){return computeInvoiceStatus(inv).status==='overdue';}).length;
+  const badge=document.getElementById('invoice-badge');
+  if(badge){ if(overdueCount){badge.style.display='inline-block';badge.textContent=overdueCount;} else {badge.style.display='none';} }
+}
+
+function populateInvoiceProjectDropdown(){
+  const sel=document.getElementById('inv-project');
+  if(!sel) return;
+  sel.innerHTML='<option value="">Select a project...</option>'+PROJECTS.map(function(p){
+    return '<option value="'+p.id+'">'+(p.name||'Untitled')+' &mdash; '+(p.client||'No client')+'</option>';
+  }).join('');
+}
+
+function renderInvoices(){
+  const filterStatus=document.getElementById('inv-filter-status').value;
+  let list=INVOICES.map(function(inv){
+    const st=computeInvoiceStatus(inv);
+    const proj=PROJECTS.find(function(p){return p.id===inv.projectId;})||{};
+    return Object.assign({},inv,{_status:st.status,_label:st.label,_daysOverdue:st.daysOverdue,_projName:proj.name||'(deleted project)',_client:proj.client||'-'});
+  });
+  if(filterStatus) list=list.filter(function(inv){return inv._status===filterStatus;});
+  list.sort(function(a,b){
+    const order={overdue:0,pending:1,paid:2};
+    if(order[a._status]!==order[b._status]) return order[a._status]-order[b._status];
+    return new Date(a.dueDate)-new Date(b.dueDate);
+  });
+  const tbody=document.getElementById('body-invoices');
+  document.getElementById('invoices-empty').style.display=list.length?'none':'block';
+  tbody.innerHTML=list.map(function(inv){
+    const statusClass=inv._status==='paid'?'badge-completed':(inv._status==='overdue'?'badge-overdue':'badge-progress');
+    const overdueCell=inv._status==='overdue'?('<span style="color:#C0392B;font-weight:700">'+inv._daysOverdue+' days</span>'):'-';
+    const paidCell=inv.paidDate?new Date(inv.paidDate).toLocaleDateString('en-MY'):'-';
+    return '<tr><td>'+(inv.invoiceNo||'-')+'</td><td>'+inv._projName+'</td><td>'+inv._client+'</td>'+
+      '<td>'+(inv.issueDate?new Date(inv.issueDate).toLocaleDateString('en-MY'):'-')+'</td>'+
+      '<td>'+(inv.dueDate?new Date(inv.dueDate).toLocaleDateString('en-MY'):'-')+'</td>'+
+      '<td style="text-align:right;font-weight:700">'+fmt(n(inv.amount))+'</td>'+
+      '<td><span class="badge '+statusClass+'">'+inv._label+'</span></td>'+
+      '<td>'+overdueCell+'</td><td>'+paidCell+'</td>'+
+      '<td style="white-space:nowrap">'+(inv._status!=='paid'?'<button class="btn btn-green btn-sm" onclick="markInvoicePaid(\''+inv.id+'\')">Mark Paid</button> ':'')+
+      '<button class="btn btn-accent btn-sm" onclick="generateInvoiceDoc(\''+inv.id+'\')">📄 PDF</button> '+
+      '<button class="btn btn-ghost btn-sm" onclick="openInvoiceModal(\''+inv.id+'\')">Edit</button> '+
+      '<button class="btn btn-danger btn-sm mgmt-only" onclick="deleteInvoice(\''+inv.id+'\')">Delete</button></td></tr>';
+  }).join('');
+  // KPIs
+  const unpaid=INVOICES.filter(function(inv){return !inv.paidDate;});
+  const overdue=unpaid.filter(function(inv){return computeInvoiceStatus(inv).status==='overdue';});
+  const pendingOnly=unpaid.filter(function(inv){return computeInvoiceStatus(inv).status==='pending';});
+  const outstandingTotal=unpaid.reduce(function(s,inv){return s+n(inv.amount);},0);
+  const overdueTotal=overdue.reduce(function(s,inv){return s+n(inv.amount);},0);
+  const now=new Date();
+  const paidThisMonth=INVOICES.filter(function(inv){
+    if(!inv.paidDate) return false;
+    const d=new Date(inv.paidDate);
+    return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+  }).reduce(function(s,inv){return s+n(inv.amount);},0);
+  document.getElementById('kpi-inv-outstanding').textContent=fmtRM(outstandingTotal);
+  document.getElementById('kpi-inv-overdue').textContent=overdue.length;
+  document.getElementById('kpi-inv-overdue-amt').textContent=fmtRM(overdueTotal)+' overdue';
+  document.getElementById('kpi-inv-pending').textContent=pendingOnly.length;
+  document.getElementById('kpi-inv-paid').textContent=fmtRM(paidThisMonth);
+  updateInvoiceBadge();
+}
+
+function openInvoiceModal(id){
+  populateInvoiceProjectDropdown();
+  editInvoiceId=id||null;
+  const inv=id?INVOICES.find(function(x){return x.id===id;}):null;
+  document.getElementById('invoice-modal-title').textContent=inv?'Edit Invoice':'New Invoice';
+  document.getElementById('inv-project').value=inv?inv.projectId:'';
+  document.getElementById('inv-no').value=inv?inv.invoiceNo:'';
+  document.getElementById('inv-amount').value=inv?inv.amount:'';
+  document.getElementById('inv-issue-date').value=inv?inv.issueDate:'';
+  document.getElementById('inv-due-date').value=inv?inv.dueDate:'';
+  document.getElementById('inv-paid-date').value=inv?(inv.paidDate||''):'';
+  document.getElementById('inv-notes').value=inv?(inv.notes||''):'';
+  document.getElementById('invoice-modal-overlay').classList.add('open');
+}
+
+function closeInvoiceModal(){
+  document.getElementById('invoice-modal-overlay').classList.remove('open');
+  editInvoiceId=null;
+}
+
+function saveInvoice(){
+  const projectId=document.getElementById('inv-project').value;
+  const invoiceNo=document.getElementById('inv-no').value.trim();
+  const amount=n(document.getElementById('inv-amount').value);
+  const issueDate=document.getElementById('inv-issue-date').value;
+  const dueDate=document.getElementById('inv-due-date').value;
+  if(!projectId){alert('Please select a project.');return;}
+  if(!invoiceNo){alert('Invoice No. is required.');return;}
+  if(!issueDate||!dueDate){alert('Issue Date and Due Date are required.');return;}
+  if(amount<=0){alert('Amount must be greater than 0.');return;}
+  const inv={
+    id:editInvoiceId||uid(),
+    projectId:projectId,
+    invoiceNo:invoiceNo,
+    amount:amount,
+    issueDate:issueDate,
+    dueDate:dueDate,
+    paidDate:document.getElementById('inv-paid-date').value||null,
+    notes:document.getElementById('inv-notes').value.trim(),
+    createdAt:editInvoiceId?((INVOICES.find(function(x){return x.id===editInvoiceId;})||{}).createdAt||Date.now()):Date.now()
+  };
+  if(editInvoiceId){
+    const idx=INVOICES.findIndex(function(x){return x.id===editInvoiceId;});
+    if(idx>=0) INVOICES[idx]=inv;
+  } else {
+    INVOICES.push(inv);
+  }
+  save();
+  closeInvoiceModal();
+  renderInvoices();
+}
+
+function markInvoicePaid(id){
+  const inv=INVOICES.find(function(x){return x.id===id;});
+  if(!inv) return;
+  const today=new Date().toISOString().slice(0,10);
+  inv.paidDate=today;
+  save();
+  renderInvoices();
+}
+
+function deleteInvoice(id){
+  if(!requireManagement('delete invoices'))return;
+  if(!confirm('Delete this invoice? This cannot be undone.'))return;
+  INVOICES=INVOICES.filter(function(x){return x.id!==id;});
+  save();
+  renderInvoices();
+}
+
+/* ===================== COMPANY SETTINGS ===================== */
+
+function openCompanySettings(){
+  if(!requireManagement('edit Company Settings'))return;
+  const s=COMPANY_SETTINGS;
+  document.getElementById('cs-name').value=s.companyName||'';
+  document.getElementById('cs-phone').value=s.phone||'';
+  document.getElementById('cs-email').value=s.email||'';
+  document.getElementById('cs-addr-jb').value=(s.branches&&s.branches.jb&&s.branches.jb.address)||'';
+  document.getElementById('cs-addr-kuching').value=(s.branches&&s.branches.kuching&&s.branches.kuching.address)||'';
+  document.getElementById('cs-bank-name').value=(s.bank&&s.bank.bankName)||'';
+  document.getElementById('cs-bank-acc').value=(s.bank&&s.bank.accountNo)||'';
+  document.getElementById('cs-bank-holder').value=(s.bank&&s.bank.accountHolder)||'';
+  document.getElementById('settings-modal-overlay').classList.add('open');
+}
+function closeCompanySettings(){
+  document.getElementById('settings-modal-overlay').classList.remove('open');
+}
+function saveCompanySettingsForm(){
+  const name=document.getElementById('cs-name').value.trim();
+  if(!name){alert('Company Name is required.');return;}
+  COMPANY_SETTINGS={
+    companyName:name,
+    phone:document.getElementById('cs-phone').value.trim(),
+    email:document.getElementById('cs-email').value.trim(),
+    branches:{
+      jb:{label:'Johor Bahru',address:document.getElementById('cs-addr-jb').value.trim()},
+      kuching:{label:'Kuching',address:document.getElementById('cs-addr-kuching').value.trim()}
+    },
+    bank:{
+      bankName:document.getElementById('cs-bank-name').value.trim(),
+      accountNo:document.getElementById('cs-bank-acc').value.trim(),
+      accountHolder:document.getElementById('cs-bank-holder').value.trim()
+    }
+  };
+  localStorage.setItem('ysse_company_settings',JSON.stringify(COMPANY_SETTINGS));
+  if(typeof settingsRef!=='undefined' && settingsRef){
+    settingsRef.set(COMPANY_SETTINGS).catch(function(err){
+      alert('Saved locally, but could not sync to other devices: '+(err&&err.message?err.message:'unknown error'));
+    });
+  }
+  closeCompanySettings();
+  alert('Company Settings saved. These details will now appear on Quotation and Invoice PDFs.');
+}
+
+/* ===================== CLIENTS ===================== */
+
+function renderClients(){
+  const tbody=document.getElementById('body-clients');
+  document.getElementById('clients-empty').style.display=CLIENTS.length?'none':'block';
+  tbody.innerHTML=CLIENTS.map(function(c){
+    return '<tr><td style="font-weight:700">'+(c.name||'-')+'</td><td>'+(c.attention||'-')+'</td><td>'+(c.phone||'-')+'</td><td>'+(c.email||'-')+'</td><td style="font-size:11.5px;color:#555;max-width:240px">'+(c.address||'-')+'</td>'+
+      '<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="openClientModal(\''+c.id+'\')">Edit</button> '+
+      '<button class="btn btn-danger btn-sm mgmt-only" onclick="deleteClient(\''+c.id+'\')">Delete</button></td></tr>';
+  }).join('');
+}
+
+function populateClientDropdown(selectEl,selectedId){
+  if(!selectEl) return;
+  selectEl.innerHTML='<option value="">No linked client record (free text below)</option>'+CLIENTS.map(function(c){
+    return '<option value="'+c.id+'"'+(c.id===selectedId?' selected':'')+'>'+(c.name||'Untitled')+'</option>';
+  }).join('');
+}
+
+function openClientModal(id){
+  if(!requireManagement('add or edit clients'))return;
+  editClientId=id||null;
+  const c=id?CLIENTS.find(function(x){return x.id===id;}):null;
+  document.getElementById('client-modal-title').textContent=c?'Edit Client':'Add Client';
+  document.getElementById('cl-name').value=c?c.name:'';
+  document.getElementById('cl-attention').value=c?(c.attention||''):'';
+  document.getElementById('cl-phone').value=c?(c.phone||''):'';
+  document.getElementById('cl-email').value=c?(c.email||''):'';
+  document.getElementById('cl-address').value=c?(c.address||''):'';
+  document.getElementById('cl-notes').value=c?(c.notes||''):'';
+  document.getElementById('client-modal-overlay').classList.add('open');
+}
+function closeClientModal(){
+  document.getElementById('client-modal-overlay').classList.remove('open');
+  editClientId=null;
+}
+function saveClient(){
+  const name=document.getElementById('cl-name').value.trim();
+  if(!name){alert('Client / Company Name is required.');return;}
+  const client={
+    id:editClientId||uid(),
+    name:name,
+    attention:document.getElementById('cl-attention').value.trim(),
+    phone:document.getElementById('cl-phone').value.trim(),
+    email:document.getElementById('cl-email').value.trim(),
+    address:document.getElementById('cl-address').value.trim(),
+    notes:document.getElementById('cl-notes').value.trim(),
+    createdAt:editClientId?((CLIENTS.find(function(x){return x.id===editClientId;})||{}).createdAt||Date.now()):Date.now()
+  };
+  if(editClientId){
+    const idx=CLIENTS.findIndex(function(x){return x.id===editClientId;});
+    if(idx>=0) CLIENTS[idx]=client;
+  } else {
+    CLIENTS.push(client);
+  }
+  save();
+  closeClientModal();
+  if(document.getElementById('page-clients').classList.contains('active')) renderClients();
+  const projSel=document.getElementById('f-client-link');
+  if(projSel) populateClientDropdown(projSel,projSel.value);
+}
+function deleteClient(id){
+  if(!requireManagement('delete clients'))return;
+  if(!confirm('Delete this client record? Existing projects/invoices keep their saved client name and address, but the link will be removed.'))return;
+  CLIENTS=CLIENTS.filter(function(x){return x.id!==id;});
+  PROJECTS.forEach(function(p){ if(p.clientId===id) p.clientId=null; });
+  save();
+  renderClients();
+}
+
+/* ===================== QUOTATION / INVOICE PDF TEMPLATES ===================== */
+
+function letterheadHtml(branchKey){
+  const s=COMPANY_SETTINGS;
+  const branch=(s.branches&&s.branches[branchKey])||{label:BRANCH_LABELS[branchKey]||branchKey,address:''};
+  return '<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #0B5A82;padding-bottom:16px;margin-bottom:24px">'+
+    '<div style="display:flex;gap:14px;align-items:flex-start">'+COMPANY_LOGO_SVG+
+    '<div><div style="font-size:18px;font-weight:700;color:#10173A">'+(s.companyName||'-')+'</div>'+
+    '<div style="font-size:11px;color:#555;max-width:320px;margin-top:4px;line-height:1.5">'+(branch.address||'')+'</div>'+
+    '<div style="font-size:11px;color:#555;margin-top:4px">'+(s.phone||'')+(s.phone&&s.email?' &middot; ':'')+(s.email||'')+'</div></div>'+
+    '</div></div>';
+}
+
+function openPrintWindow(title,bodyHtml){
+  const w=window.open('','_blank');
+  if(!w){alert('Please allow popups to generate the document.');return;}
+  w.document.write('<!DOCTYPE html><html><head><title>'+title+'</title><meta charset="UTF-8">'+
+    '<style>body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;padding:40px;max-width:820px;margin:0 auto}'+
+    'table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:8px 10px;border-bottom:1px solid #e0e8f0;font-size:13px;text-align:left}'+
+    'th{background:#f0f4f8;text-transform:uppercase;font-size:11px;letter-spacing:.3px;color:#555}'+
+    '.right{text-align:right}.totalrow td{font-weight:700;font-size:15px;border-top:2px solid #10173A;border-bottom:none}'+
+    '.printbtn{margin-bottom:20px}@media print{.printbtn{display:none}}</style></head><body>'+
+    '<div class="printbtn"><button onclick="window.print()" style="padding:10px 20px;background:#0B5A82;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer">🖨 Print / Save as PDF</button></div>'+
+    bodyHtml+'</body></html>');
+  w.document.close();
+}
+
+function billToHtml(p,labelText){
+  const client=p.clientId?CLIENTS.find(function(x){return x.id===p.clientId;}):
+    CLIENTS.find(function(x){return x.name&&p.client&&x.name.toLowerCase()===p.client.toLowerCase();});
+  return '<div style="margin-bottom:20px"><div style="font-size:11px;color:#888;text-transform:uppercase">'+(labelText||'Client')+'</div>'+
+    '<div style="font-weight:700;font-size:15px">'+(p.client||'-')+'</div>'+
+    (client&&client.attention?('<div style="font-size:12.5px;margin-top:2px">Attn: '+client.attention+'</div>'):'')+
+    (client&&client.address?('<div style="font-size:12px;color:#555;margin-top:2px;max-width:340px;line-height:1.5">'+client.address+'</div>'):'')+
+    '<div style="font-size:13px;margin-top:4px">'+(p.name||'-')+'</div></div>';
+}
+
+function generateQuotationDoc(projectId){
+  const p=PROJECTS.find(function(x){return x.id===projectId;});
+  if(!p){alert('Project not found.');return;}
+  const rows=CATS.map(function(c){
+    const amt=n(p.quoted[c]);
+    return amt>0?'<tr><td>'+CAT_LABELS[c]+'</td><td class="right">'+fmtRM(amt)+'</td></tr>':'';
+  }).join('');
+  const subtotal=CATS.reduce(function(s,c){return s+n(p.quoted[c]);},0);
+  const markup=n(p.quoted.markup);
+  const markupAmt=subtotal*markup/100;
+  const today=new Date().toLocaleDateString('en-MY');
+  const body=letterheadHtml(p.branch)+
+    '<div style="display:flex;justify-content:space-between;margin-bottom:20px">'+
+    '<div><div style="font-size:22px;font-weight:700;color:#0B5A82">QUOTATION</div>'+
+    '<div style="font-size:12px;color:#555;margin-top:4px">Date: '+today+'</div></div>'+
+    '<div style="text-align:right"><div style="font-size:11px;color:#888;text-transform:uppercase">Project No.</div><div style="font-weight:700">'+(p.projectNo||'-')+'</div></div></div>'+
+    billToHtml(p,'Client')+
+    '<table><thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+rows+
+    '<tr><td>Subtotal</td><td class="right">'+fmtRM(subtotal)+'</td></tr>'+
+    '<tr><td>Markup ('+markup+'%)</td><td class="right">'+fmtRM(markupAmt)+'</td></tr>'+
+    '<tr class="totalrow"><td>Total Quotation Price</td><td class="right">'+fmtRM(subtotal+markupAmt)+'</td></tr>'+
+    '</tbody></table>'+
+    (p.notes?('<div style="margin-top:20px;font-size:12px;color:#555"><strong>Notes:</strong> '+p.notes+'</div>'):'')+
+    '<div style="margin-top:40px;font-size:11px;color:#888">This quotation is valid for 30 days from the date of issue.</div>';
+  openPrintWindow('Quotation - '+(p.name||'Project'),body);
+}
+
+function generateInvoiceDoc(invoiceId){
+  const inv=INVOICES.find(function(x){return x.id===invoiceId;});
+  if(!inv){alert('Invoice not found.');return;}
+  const p=PROJECTS.find(function(x){return x.id===inv.projectId;})||{};
+  const st=computeInvoiceStatus(inv);
+  const bank=COMPANY_SETTINGS.bank||{};
+  const body=letterheadHtml(p.branch)+
+    '<div style="display:flex;justify-content:space-between;margin-bottom:20px">'+
+    '<div><div style="font-size:22px;font-weight:700;color:#0B5A82">INVOICE</div>'+
+    '<div style="font-size:12px;color:#555;margin-top:4px">Invoice No: '+(inv.invoiceNo||'-')+'</div></div>'+
+    '<div style="text-align:right">'+
+    '<div style="font-size:11px;color:#888;text-transform:uppercase">Issue Date</div><div style="font-weight:700">'+(inv.issueDate?new Date(inv.issueDate).toLocaleDateString('en-MY'):'-')+'</div>'+
+    '<div style="font-size:11px;color:#888;text-transform:uppercase;margin-top:6px">Due Date</div><div style="font-weight:700">'+(inv.dueDate?new Date(inv.dueDate).toLocaleDateString('en-MY'):'-')+'</div></div></div>'+
+    billToHtml(p,'Bill To')+
+    '<table><thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+
+    '<tr><td>'+(p.name||'Project')+(inv.notes?(' &mdash; '+inv.notes):'')+'</td><td class="right">'+fmtRM(n(inv.amount))+'</td></tr>'+
+    '<tr class="totalrow"><td>Total Due</td><td class="right">'+fmtRM(n(inv.amount))+'</td></tr>'+
+    '</tbody></table>'+
+    '<div style="margin-top:8px;font-size:12px;color:'+(st.status==='overdue'?'#C0392B':'#555')+';font-weight:'+(st.status==='overdue'?'700':'400')+'">Status: '+st.label+(st.status==='overdue'?(' ('+st.daysOverdue+' days overdue)'):'')+'</div>'+
+    '<div style="margin-top:28px;padding:16px;background:#f0f4f8;border-radius:6px"><div style="font-size:12px;font-weight:700;margin-bottom:6px">Payment Details</div>'+
+    '<div style="font-size:12px;color:#444">Bank: '+(bank.bankName||'-')+'<br>Account No: '+(bank.accountNo||'-')+'<br>Account Holder: '+(bank.accountHolder||'-')+'</div></div>'+
+    '<div style="margin-top:30px;font-size:11px;color:#888">Please make payment by the due date above. Contact us if you have any questions regarding this invoice.</div>';
+  openPrintWindow('Invoice - '+(inv.invoiceNo||'Invoice'),body);
 }
 
 function renderCatTable(cat,data){
@@ -1438,7 +1996,8 @@ function backupData(){
   if(!PROJECTS.length){alert('No projects to backup yet.');return;}
   const data={backup_date:new Date().toISOString(),version:'1.0',projects:PROJECTS};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='YSSE_Projects_Backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  const fileSlug=(COMPANY_SETTINGS.companyName||'Projects').replace(/[^a-zA-Z0-9]+/g,'_');
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fileSlug+'_Backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();
 }
 
 function restoreData(e){
@@ -1482,14 +2041,14 @@ function exportToExcel(){
   const totalCost=PROJECTS.reduce((s,p)=>s+calcProject(p).aTotal,0);
   const totalProfit=PROJECTS.reduce((s,p)=>s+calcProject(p).profit,0);
   const totalBudget=CATS.reduce((s,cat)=>s+PROJECTS.reduce((ss,p)=>ss+n(p.quoted[cat]),0),0);
-  const plRows=[['P&L Summary - YSSE FABRICATOR SDN BHD'],['Export Date',new Date().toLocaleDateString('en-MY')],[''],['Metric','Value'],['Total Projects',PROJECTS.length],['Total Revenue (Invoiced)',totalRev],['Total Actual Cost',totalCost],['Total Gross Profit / Loss',totalProfit],['Average Gross Margin',totalRev>0?parseFloat((totalProfit/totalRev).toFixed(4)):0],['Total Budget (Quoted Costs)',totalBudget],['Budget vs Actual Variance',totalCost-totalBudget]];
+  const plRows=[['P&L Summary - '+(COMPANY_SETTINGS.companyName||'Company')],['Export Date',new Date().toLocaleDateString('en-MY')],[''],['Metric','Value'],['Total Projects',PROJECTS.length],['Total Revenue (Invoiced)',totalRev],['Total Actual Cost',totalCost],['Total Gross Profit / Loss',totalProfit],['Average Gross Margin',totalRev>0?parseFloat((totalProfit/totalRev).toFixed(4)):0],['Total Budget (Quoted Costs)',totalBudget],['Budget vs Actual Variance',totalCost-totalBudget]];
   const ws3=XLSX.utils.aoa_to_sheet(plRows);ws3['!cols']=[{wch:35},{wch:20}];
   XLSX.utils.book_append_sheet(wb,ws3,'P&L Summary');
   const jbList2=PROJECTS.filter(function(p){return p.branch==='jb';});
   const kcList2=PROJECTS.filter(function(p){return p.branch==='kuching';});
   function brStats(list){const rev=list.reduce(function(s,p){return s+calcProject(p).revenue;},0);const cost=list.reduce(function(s,p){return s+calcProject(p).aTotal;},0);const prof=rev-cost;return{count:list.length,active:list.filter(function(p){return p.status==='in_progress';}).length,completed:list.filter(function(p){return p.status==='completed';}).length,rev,cost,prof,margin:rev>0?prof/rev:0};}
   const jbS=brStats(jbList2),kcS=brStats(kcList2);
-  const brRows=[['Branch Comparison - YSSE FABRICATOR SDN BHD'],[''],['Metric','Johor Bahru (Main)','Kuching']];
+  const brRows=[['Branch Comparison - '+(COMPANY_SETTINGS.companyName||'Company')],[''],['Metric','Johor Bahru (Main)','Kuching']];
   brRows.push(['Total Projects',jbS.count,kcS.count]);
   brRows.push(['In Progress',jbS.active,kcS.active]);
   brRows.push(['Completed',jbS.completed,kcS.completed]);
@@ -1504,7 +2063,8 @@ function exportToExcel(){
   });
   const ws4=XLSX.utils.aoa_to_sheet(brRows);ws4['!cols']=[{wch:28},{wch:20},{wch:20}];
   XLSX.utils.book_append_sheet(wb,ws4,'Branch Comparison');
-  XLSX.writeFile(wb,'YSSE_Project_Register_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  const exportSlug=(COMPANY_SETTINGS.companyName||'Project').replace(/[^a-zA-Z0-9]+/g,'_');
+  XLSX.writeFile(wb,exportSlug+'_Register_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
 // ─── CHECK FOR UNSAVED DRAFT ON LOAD ──────────────────────────────────────
@@ -1527,6 +2087,7 @@ function exportToExcel(){
 renderDashboard();
 purgeOldTrash();
 updateTrashBadge();
+updateInvoiceBadge();
 
 // Inline Budget Calculator
 (function(){
@@ -1824,6 +2385,7 @@ function delActualSubconRow(i){
   var pendingCol=null;
   var usersCol=null;
   var backupsCol=null;
+  var settingsRef=null;
 
   function setIndicator(text,color){
     var el=document.getElementById('cloud-sync-indicator');
@@ -1849,7 +2411,7 @@ function delActualSubconRow(i){
     if(!cloudReady||!docRef||isApplyingRemote) return;
     clearTimeout(pushTimer);
     pushTimer=setTimeout(function(){
-      docRef.set({projects:PROJECTS,trash:TRASH,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(function(err){
+      docRef.set({projects:PROJECTS,trash:TRASH,invoices:INVOICES,clients:CLIENTS,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(function(err){
         setIndicator('\u2601 Live Sync: push failed \u2014 local backup still safe','#fca5a5');
       });
     },400);
@@ -1866,20 +2428,45 @@ function delActualSubconRow(i){
     isApplyingRemote=false;
   }
 
+  function applyRemoteInvoices(list){
+    isApplyingRemote=true;
+    INVOICES=list;
+    localStorage.setItem('ysse_invoices',JSON.stringify(INVOICES));
+    try{
+      if(document.getElementById('page-invoices').classList.contains('active')) renderInvoices();
+      else updateInvoiceBadge();
+    }catch(e){}
+    isApplyingRemote=false;
+  }
+
+  function applyRemoteClients(list){
+    isApplyingRemote=true;
+    CLIENTS=list;
+    localStorage.setItem('ysse_clients',JSON.stringify(CLIENTS));
+    try{
+      if(document.getElementById('page-clients').classList.contains('active')) renderClients();
+    }catch(e){}
+    isApplyingRemote=false;
+  }
+
   function showApp(){
     var ov=document.getElementById('login-overlay');
     var app=document.getElementById('app-content');
     var den=document.getElementById('access-denied-overlay');
+    var setup=document.getElementById('company-setup-overlay');
     if(ov) ov.style.display='none';
     if(den) den.style.display='none';
+    if(setup) setup.style.display='none';
     if(app) app.style.display='';
   }
   function showLogin(msg){
     var ov=document.getElementById('login-overlay');
     var app=document.getElementById('app-content');
     var den=document.getElementById('access-denied-overlay');
+    var setup=document.getElementById('company-setup-overlay');
     if(app) app.style.display='none';
     if(den) den.style.display='none';
+    if(setup) setup.style.display='none';
     if(ov) ov.style.display='flex';
     var st=document.getElementById('login-status');
     if(st) st.textContent=msg||'Please sign in.';
@@ -1888,8 +2475,10 @@ function delActualSubconRow(i){
     var ov=document.getElementById('login-overlay');
     var app=document.getElementById('app-content');
     var den=document.getElementById('access-denied-overlay');
+    var setup=document.getElementById('company-setup-overlay');
     if(ov) ov.style.display='none';
     if(app) app.style.display='none';
+    if(setup) setup.style.display='none';
     if(den) den.style.display='flex';
     var m=document.getElementById('access-denied-msg');
     if(m&&msg) m.textContent=msg;
@@ -1942,12 +2531,22 @@ function delActualSubconRow(i){
       var incomingT=JSON.stringify(data.trash||[]);
       var currentT=JSON.stringify(TRASH);
       if(incomingT!==currentT) applyRemoteTrash(data.trash||[]);
+      var incomingI=JSON.stringify(data.invoices||[]);
+      var currentI=JSON.stringify(INVOICES);
+      if(incomingI!==currentI) applyRemoteInvoices(data.invoices||[]);
+      var incomingC=JSON.stringify(data.clients||[]);
+      var currentC=JSON.stringify(CLIENTS);
+      if(incomingC!==currentC) applyRemoteClients(data.clients||[]);
       if(!backupAttempted){ backupAttempted=true; maybeRunDailyBackup(); }
     },function(err){
       setIndicator('\u2601 Live Sync: error \u2014 using local data only','#fca5a5');
     });
     pendingCol.onSnapshot(function(snap){
-      PENDING_QUOTES=snap.docs.map(function(doc){
+      var myCustomerId=window.CURRENT_CUSTOMER_ID||'ysse';
+      PENDING_QUOTES=snap.docs.filter(function(doc){
+        var cid=doc.data().customerId||'ysse';
+        return cid===myCustomerId;
+      }).map(function(doc){
         var d=doc.data();
         var submittedAt=null;
         try{ submittedAt = d.submittedAt && d.submittedAt.toMillis ? d.submittedAt.toMillis() : null; }catch(e2){}
@@ -1981,12 +2580,32 @@ function delActualSubconRow(i){
     },function(err){
       // User roles are additive; failure here defaults everyone to the safer 'qs' role.
     });
+    settingsRef.onSnapshot(function(snap){
+      var data=snap.data();
+      var customerId=window.CURRENT_CUSTOMER_ID||'ysse';
+      if(!data||!data.companyName){
+        // No settings saved yet for this tenant. YSSE bootstraps with its real defaults;
+        // any other (new) company bootstraps with a blank template so it never inherits YSSE's details.
+        var bootstrap=customerId==='ysse'?DEFAULT_COMPANY_SETTINGS:Object.assign(
+          JSON.parse(JSON.stringify(BLANK_COMPANY_SETTINGS)),
+          {companyName:window.CURRENT_COMPANY_NAME||'My Company'}
+        );
+        settingsRef.set(bootstrap).catch(function(err){});
+        return;
+      }
+      COMPANY_SETTINGS=data;
+      localStorage.setItem('ysse_company_settings',JSON.stringify(COMPANY_SETTINGS));
+      var hdr=document.getElementById('hdr-company-name');
+      if(hdr && data.companyName) hdr.textContent=data.companyName.toUpperCase();
+    },function(err){
+      // Settings are non-critical to core workflow; fall back to local/default values on error.
+    });
   }
 
   try{
     firebase.initializeApp(firebaseConfig);
     db=firebase.firestore();
-    docRef=db.collection('ysse_tracker').doc('shared_projects');
+    // docRef and settingsRef are assigned per-tenant in applyCustomerScope() once the signed-in user's company is known.
     pendingCol=db.collection('ysse_pending_quotes');
     usersCol=db.collection('ysse_users');
     backupsCol=db.collection('ysse_backups');
@@ -2005,13 +2624,24 @@ function delActualSubconRow(i){
     showLogin('Live Sync unavailable \u2014 cannot verify login right now.');
   }
 
+  function slugifyCompanyName(name){
+    return (name||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'company';
+  }
+
+  function applyCustomerScope(customerId){
+    window.CURRENT_CUSTOMER_ID=customerId;
+    docRef=db.collection('ysse_tracker').doc(customerId==='ysse'?'shared_projects':customerId);
+    settingsRef=db.collection('ysse_settings').doc(customerId==='ysse'?'company':customerId);
+  }
+
   function checkAccessAndProceed(user){
     var me=(user.email||user.uid||'').toLowerCase();
     usersCol.get().then(function(snap){
       if(snap.empty){
-        // First-ever login bootstraps as Management.
-        usersCol.doc(me).set({email:me,role:'management',addedAt:Date.now(),addedBy:'bootstrap'}).then(function(){
+        // First-ever login across the whole system bootstraps as Management of YSSE (original behavior, preserved).
+        usersCol.doc(me).set({email:me,role:'management',customerId:'ysse',addedAt:Date.now(),addedBy:'bootstrap'}).then(function(){
           window.CURRENT_USER_ROLE='management';
+          applyCustomerScope('ysse');
           grantAccess(user);
         }).catch(function(err){
           showAccessDenied('Could not verify access \u2014 please refresh and try again.');
@@ -2019,14 +2649,55 @@ function delActualSubconRow(i){
         return;
       }
       var mine=snap.docs.find(function(d){ return d.id===me; });
-      var role=mine?mine.data().role:'qs';
+      if(!mine){
+        // Unrecognized email, but other companies already exist on this system \u2014 offer self-service company setup.
+        showCompanySetup(user);
+        return;
+      }
+      var role=mine.data().role;
+      var customerId=mine.data().customerId||'ysse';
       window.CURRENT_USER_ROLE=role;
+      applyCustomerScope(customerId);
       if(role==='management'){ grantAccess(user); }
       else { showAccessDenied(); }
     }).catch(function(err){
       showAccessDenied('Could not verify your access level. Please check your connection and refresh, or contact Management.');
     });
   }
+
+  function showCompanySetup(user){
+    var ov=document.getElementById('login-overlay');
+    var app=document.getElementById('app-content');
+    var den=document.getElementById('access-denied-overlay');
+    var setup=document.getElementById('company-setup-overlay');
+    if(ov) ov.style.display='none';
+    if(app) app.style.display='none';
+    if(den) den.style.display='none';
+    if(setup){
+      setup.style.display='flex';
+      setup.dataset.userEmail=(user.email||user.uid||'').toLowerCase();
+    }
+  }
+
+  window.completeCompanySetup=function(){
+    var nameEl=document.getElementById('cs-setup-company-name');
+    var errEl=document.getElementById('company-setup-error');
+    var name=nameEl?nameEl.value.trim():'';
+    if(!name){ if(errEl) errEl.textContent='Please enter a company name.'; return; }
+    var customerId=slugifyCompanyName(name);
+    var setup=document.getElementById('company-setup-overlay');
+    var email=setup?setup.dataset.userEmail:'';
+    if(!email){ if(errEl) errEl.textContent='Session expired \u2014 please refresh and sign in again.'; return; }
+    usersCol.doc(email).set({email:email,role:'management',customerId:customerId,companyName:name,addedAt:Date.now(),addedBy:'self-setup'}).then(function(){
+      window.CURRENT_USER_ROLE='management';
+      window.CURRENT_COMPANY_NAME=name;
+      applyCustomerScope(customerId);
+      if(setup) setup.style.display='none';
+      grantAccess(firebase.auth().currentUser);
+    }).catch(function(err){
+      if(errEl) errEl.textContent=err&&err.message?err.message:'Could not set up your company. Please try again.';
+    });
+  };
 
   function grantAccess(user){
     showApp();
@@ -2044,9 +2715,9 @@ function delActualSubconRow(i){
     if(!pendingCol) return;
     pendingCol.doc(id).update({status:'dismissed'}).catch(function(err){});
   };
-  window.addUserToFirestore=function(email,role,name,position){
+  window.addUserToFirestore=function(email,role,name,position,customerId){
     if(!usersCol) return;
-    usersCol.doc(email).set({email:email,role:role,name:name||'',position:position||'',addedAt:Date.now(),addedBy:window.CURRENT_USER_EMAIL||''}).catch(function(err){ alert('Could not add user: '+(err&&err.message?err.message:'unknown error')); });
+    usersCol.doc(email).set({email:email,role:role,name:name||'',position:position||'',customerId:customerId||'ysse',addedAt:Date.now(),addedBy:window.CURRENT_USER_EMAIL||''}).catch(function(err){ alert('Could not add user: '+(err&&err.message?err.message:'unknown error')); });
   };
   window.updateUserRole=function(email,role){
     if(!usersCol) return;
@@ -2065,12 +2736,14 @@ function delActualSubconRow(i){
 
   function maybeRunDailyBackup(){
     if(!backupsCol) return;
+    var customerId=window.CURRENT_CUSTOMER_ID||'ysse';
     var today=new Date().toISOString().slice(0,10);
-    var metaRef=backupsCol.doc('_meta');
+    var metaRef=backupsCol.doc(customerId+'_meta');
     metaRef.get().then(function(snap){
       var last=snap.exists?snap.data().lastBackupDate:null;
       if(last===today) return;
-      backupsCol.doc(today).set({
+      backupsCol.doc(customerId+'_'+today).set({
+        customerId:customerId,
         date:today,
         timestamp:Date.now(),
         createdBy:window.CURRENT_USER_EMAIL||'',
@@ -2086,8 +2759,9 @@ function delActualSubconRow(i){
   }
 
   function pruneOldBackups(){
+    var customerId=window.CURRENT_CUSTOMER_ID||'ysse';
     backupsCol.orderBy('timestamp','desc').get().then(function(snap){
-      var docs=snap.docs.filter(function(d){ return d.id!=='_meta'; });
+      var docs=snap.docs.filter(function(d){ return !d.id.endsWith('_meta') && d.data().customerId===customerId; });
       if(docs.length>30){
         docs.slice(30).forEach(function(d){ d.ref.delete().catch(function(){}); });
       }
@@ -2096,8 +2770,9 @@ function delActualSubconRow(i){
 
   window.listBackups=function(callback){
     if(!backupsCol){ callback([]); return; }
-    backupsCol.orderBy('timestamp','desc').limit(30).get().then(function(snap){
-      var list=snap.docs.filter(function(d){ return d.id!=='_meta'; }).map(function(d){
+    var customerId=window.CURRENT_CUSTOMER_ID||'ysse';
+    backupsCol.orderBy('timestamp','desc').limit(120).get().then(function(snap){
+      var list=snap.docs.filter(function(d){ return !d.id.endsWith('_meta') && d.data().customerId===customerId; }).slice(0,30).map(function(d){
         var v=d.data();
         return {id:d.id,date:v.date,timestamp:v.timestamp,createdBy:v.createdBy,projectCount:v.projectCount};
       });
