@@ -1,0 +1,107 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function myEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    function userExists() {
+      return isSignedIn() && exists(/databases/$(database)/documents/ysse_users/$(myEmail()));
+    }
+
+    function userData() {
+      return get(/databases/$(database)/documents/ysse_users/$(myEmail())).data;
+    }
+
+    function myRole() {
+      return userExists() ? userData().role : null;
+    }
+
+    function myCustomerId() {
+      return userExists() ? (userData().customerId == null ? 'ysse' : userData().customerId) : null;
+    }
+
+    function myPerms() {
+      return userExists() ? (userData().permissions == null ? {} : userData().permissions) : {};
+    }
+
+    function isOwner() {
+      return myRole() == 'owner';
+    }
+
+    function isManagement() {
+      return isOwner() || myRole() == 'management';
+    }
+
+    // Owner always has every toggle on. Management is gated by their explicit per-feature
+    // toggle, defaulting to allowed if the toggle was never set (matches the app's own default).
+    function hasPerm(key) {
+      return isOwner() || (myRole() == 'management' && (!(key in myPerms()) || myPerms()[key] == true));
+    }
+
+    function canUseDashboard() {
+      return isOwner() || (myRole() == 'management' && hasPerm('dashboard'));
+    }
+
+    function canUseQuotation() {
+      return isOwner() || myRole() == 'qs' || (myRole() == 'management' && hasPerm('quotation'));
+    }
+
+    function canUseSettings() {
+      return isOwner() || (myRole() == 'management' && hasPerm('settings'));
+    }
+
+    // 'ysse' is the original tenant and kept its legacy literal doc IDs for backward
+    // compatibility; every other tenant's doc ID is just its own customerId.
+    function trackerDocId() {
+      return myCustomerId() == 'ysse' ? 'shared_projects' : myCustomerId();
+    }
+    function settingsDocId() {
+      return myCustomerId() == 'ysse' ? 'company' : myCustomerId();
+    }
+    function quotationDocId() {
+      return myCustomerId() == 'ysse' ? 'shared_matdb' : myCustomerId();
+    }
+
+    match /ysse_users/{userId} {
+      // Reading the whole collection is still required client-side to detect "first ever
+      // login" and to compute per-tenant owner/permission state from a live listener.
+      allow read: if isSignedIn();
+      allow create: if (isManagement() && request.resource.data.customerId == myCustomerId())
+                    || (isSignedIn() && userId == myEmail() && !exists(/databases/$(database)/documents/ysse_users/$(userId)));
+      allow update, delete: if isManagement() && resource.data.customerId == myCustomerId();
+    }
+
+    match /ysse_tracker/{docId} {
+      allow read, write: if canUseDashboard() && docId == trackerDocId();
+    }
+
+    match /ysse_settings/{docId} {
+      allow read: if isManagement() && docId == settingsDocId();
+      allow write: if canUseSettings() && docId == settingsDocId();
+    }
+
+    match /ysse_quotation/{docId} {
+      allow read, write: if canUseQuotation() && docId == quotationDocId();
+    }
+
+    match /ysse_pending_quotes/{quoteId} {
+      allow read, update, delete: if canUseDashboard() && resource.data.customerId == myCustomerId();
+      allow create: if isSignedIn() && request.resource.data.customerId == myCustomerId();
+    }
+
+    match /ysse_quotes/{quoteId} {
+      allow read, update, delete: if canUseQuotation() && resource.data.customerId == myCustomerId();
+      allow create: if canUseQuotation() && request.resource.data.customerId == myCustomerId();
+    }
+
+    match /ysse_backups/{docId} {
+      allow read, write: if canUseDashboard() && docId.matches(myCustomerId() + '(_.*)?');
+    }
+  }
+}
