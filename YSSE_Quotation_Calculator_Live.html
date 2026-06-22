@@ -1440,8 +1440,10 @@ renderAll();
         window.CURRENT_USER_NAME=v.name||'';
         window.CURRENT_USER_POSITION=v.position||'';
         // Reload MATDB from THIS tenant's own cache now that we know who's signing in — never leave
-        // whatever a previously logged-in company on this browser left behind in memory.
-        MATDB=(JSON.parse(localStorage.getItem(matLsKey())||'null')||DEFAULT_MATERIALS.map(function(m){return Object.assign({},m);})).map(function(m){return Object.assign({branch:'kuching'},m);});
+        // whatever a previously logged-in company on this browser left behind in memory. A tenant
+        // with no cache yet (brand-new customer, no Firestore doc either) starts fully empty rather
+        // than pre-seeded with YSSE's structural-steel catalog — that's YSSE-specific, not generic.
+        MATDB=(JSON.parse(localStorage.getItem(matLsKey())||'null')||[]).map(function(m){return Object.assign({branch:'kuching'},m);});
         docRef=db.collection('ysse_quotation').doc(customerId==='ysse'?'shared_matdb':customerId);
         settingsRef=db.collection('ysse_settings').doc(customerId==='ysse'?'company':customerId);
         settingsRef.onSnapshot(function(snap){
