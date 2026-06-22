@@ -19,15 +19,19 @@ service cloud.firestore {
     }
 
     function myRole() {
-      return userExists() ? userData().role : null;
+      return userExists() ? userData().get('role', null) : null;
     }
 
+    // Use the safe map-access form get(key, default) — direct property access (data.customerId)
+    // throws "Property X is undefined on object" when the field is entirely absent from the
+    // document, rather than returning null. This broke every account created before the
+    // multi-tenant customerId field existed (including the original YSSE owner account).
     function myCustomerId() {
-      return userExists() ? (userData().customerId == null ? 'ysse' : userData().customerId) : null;
+      return userExists() ? userData().get('customerId', 'ysse') : null;
     }
 
     function myPerms() {
-      return userExists() ? (userData().permissions == null ? {} : userData().permissions) : {};
+      return userExists() ? userData().get('permissions', {}) : {};
     }
 
     function isOwner() {
