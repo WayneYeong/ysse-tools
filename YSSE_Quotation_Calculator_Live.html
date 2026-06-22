@@ -158,7 +158,7 @@ td.num input{text-align:right}
   <div><label>Client</label><input id="proj-client" placeholder="Client name…"></div>
   <div><label>Project No.</label><input id="proj-no" placeholder="e.g. PROJ-2026-001"></div>
   <div><label>Prepared By</label><input id="proj-by" placeholder="Your name…"></div>
-  <div><label>Branch</label><select id="proj-branch"><option value="jb">Johor Bahru</option><option value="kuching">Kuching</option></select></div>
+  <div><label>Branch</label><select id="proj-branch"></select></div>
 </div>
 
 <div class="ot-bar">
@@ -641,6 +641,20 @@ const DEFAULT_MATERIALS=[
 let MATDB=DEFAULT_MATERIALS.map(m=>Object.assign({branch:'kuching'},m));
 function saveMatDB(){localStorage.setItem(matLsKey(),JSON.stringify(MATDB));if(typeof pushToCloud==='function') pushToCloud();}
 
+// Project "Branch" reflects this tenant's own COMPANY_SETTINGS.branches (set during company
+// setup in the Project Management tool) — not a fixed JB/Kuching pair.
+function firstProjBranchKey(){ return Object.keys(window.CURRENT_BRANCHES||{})[0]||''; }
+function renderProjBranchSelect(){
+  const sel=document.getElementById('proj-branch');
+  if(!sel) return;
+  const cur=sel.value;
+  const keys=Object.keys(window.CURRENT_BRANCHES||{});
+  sel.innerHTML=keys.length
+    ? keys.map(function(k){return '<option value="'+k+'">'+(window.CURRENT_BRANCHES[k].label||k)+'</option>';}).join('')
+    : '<option value="">No branches set up yet</option>';
+  if(keys.indexOf(cur)!==-1) sel.value=cur;
+}
+
 // ─── MATERIAL PICKER ──────────────────────────────────────────────────────
 let pickerRow=null;
 function openPicker(rowIdx){
@@ -1104,7 +1118,7 @@ function applyLoadedData(data){
     document.getElementById('proj-client').value=data.project.client||'';
     document.getElementById('proj-no').value=data.project.no||'';
     document.getElementById('proj-by').value=data.project.by||'';
-    document.getElementById('proj-branch').value=data.project.branch||'jb';
+    document.getElementById('proj-branch').value=data.project.branch||firstProjBranchKey();
   }
   if(data.otMult)document.getElementById('ot-mult').value=data.otMult;
   if(data.normMult)document.getElementById('ot-norm').value=data.normMult;
@@ -1155,7 +1169,7 @@ function renderQuotesLibrary(){
   const tbody=document.getElementById('quotes-lib-body');
   const empty=document.getElementById('quotes-lib-empty');
   if(!tbody) return;
-  const qLibBranchLabel={both:'Both',jb:'JB',kuching:'Kuching'};
+  const qLibBranchLabel=window.CURRENT_BRANCHES?Object.fromEntries(Object.keys(window.CURRENT_BRANCHES).map(function(k){return[k,window.CURRENT_BRANCHES[k].label||k];})):{};
   const q=(document.getElementById('quotes-lib-search').value||'').toLowerCase();
   let list=ALL_QUOTES.slice().sort(function(a,b){return (b.updatedAt||0)-(a.updatedAt||0);});
   if(q){
@@ -1170,7 +1184,7 @@ function renderQuotesLibrary(){
     const proj=x.project||{};
     const finalPrice=computeQuoteFinalPrice(x);
     const updated=x.updatedAt?new Date(x.updatedAt).toLocaleString('en-MY'):'-';
-    return '<tr><td><strong>'+(proj.name||'Untitled')+'</strong></td><td>'+(proj.client||'-')+'</td><td>'+(qLibBranchLabel[proj.branch||'jb']||proj.branch||'-')+'</td><td>'+(proj.by||x.ownerEmail||'-')+'</td><td style="text-align:right">'+fmt(finalPrice)+'</td><td>'+updated+'</td>'+
+    return '<tr><td><strong>'+(proj.name||'Untitled')+'</strong></td><td>'+(proj.client||'-')+'</td><td>'+(qLibBranchLabel[proj.branch]||proj.branch||'-')+'</td><td>'+(proj.by||x.ownerEmail||'-')+'</td><td style="text-align:right">'+fmt(finalPrice)+'</td><td>'+updated+'</td>'+
       '<td style="white-space:nowrap"><button class="pick-btn" onclick="openQuoteFromLibrary(\''+x.id+'\')">Open</button> <button onclick="deleteQuoteFromLibrary(\''+x.id+'\')" style="background:none;border:none;color:#c00;cursor:pointer;font-size:12px;padding:0 6px">Delete</button></td></tr>';
   }).join('');
 }
@@ -1228,7 +1242,7 @@ function clearAll(){
   S.manhours=[newMhrRow(),newMhrRow()];
   S.subcon=[newSubconRow(),newSubconRow()];
   ['proj-name','proj-client','proj-no','proj-by'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('proj-branch').value='jb';
+  document.getElementById('proj-branch').value=firstProjBranchKey();
   document.getElementById('ot-mult').value='1.5';
   document.getElementById('ot-norm').value='1.0';
   document.getElementById('ot-sun').value='2.0';
@@ -1450,6 +1464,8 @@ renderAll();
           var data=snap.data();
           var hdr=document.getElementById('hdr-company-name');
           if(hdr) hdr.textContent=(data&&data.companyName)?data.companyName.toUpperCase():'COMPANY';
+          window.CURRENT_BRANCHES=(data&&data.branches)||{};
+          renderProjBranchSelect();
         },function(err){});
         showApp();
         var who=document.getElementById('logged-in-as');

@@ -225,7 +225,11 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
     <div style="font-size:18px;font-weight:700;color:var(--dark);font-family:'Space Grotesk',Arial,sans-serif">Welcome 👋</div>
     <div style="font-size:12px;color:#888;margin-top:4px;margin-bottom:18px">We don't recognize this account yet. Set up your company to get started — you'll be the first Management user, with your own private, isolated workspace.</div>
     <div style="text-align:left;font-size:12px;font-weight:700;color:#555;margin-bottom:4px">Company Name</div>
-    <input type="text" id="cs-setup-company-name" placeholder="e.g. Wawas Trading" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:6px;outline:none" onkeydown="if(event.key==='Enter')completeCompanySetup()">
+    <input type="text" id="cs-setup-company-name" placeholder="e.g. Wawas Trading" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:14px;outline:none">
+    <div style="text-align:left;font-size:12px;font-weight:700;color:#555;margin-bottom:4px">Branch(es)</div>
+    <div style="text-align:left;font-size:10.5px;color:#999;margin-bottom:6px">Name your location(s) — e.g. "Main Office", "Warehouse". You can add more or rename these later in Company Settings.</div>
+    <div id="cs-setup-branches"><input type="text" class="cs-setup-branch-name" placeholder="e.g. Main Office" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:6px;outline:none"></div>
+    <button type="button" onclick="addSetupBranchField()" style="width:100%;padding:7px;background:none;border:1px dashed #ccc;color:#888;border-radius:5px;font-size:11.5px;cursor:pointer;margin-bottom:10px">+ Add another branch</button>
     <div id="company-setup-error" style="color:#c00;font-size:11px;min-height:14px;margin-bottom:10px;text-align:left"></div>
     <button onclick="completeCompanySetup()" style="width:100%;padding:10px;background:linear-gradient(120deg,var(--mid),var(--accent3));color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">Create My Company</button>
     <button onclick="doLogout()" style="width:100%;padding:9px;background:none;border:1px solid #ccc;color:#555;border-radius:6px;font-size:12px;cursor:pointer">Log Out</button>
@@ -283,8 +287,6 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
     <label style="font-size:11px;font-weight:700;color:var(--dark);text-transform:uppercase">Branch:</label>
     <select id="dash-branch-filter" onchange="renderDashboard()">
       <option value="">All Branches</option>
-      <option value="jb">Johor Bahru</option>
-      <option value="kuching">Kuching</option>
     </select>
   </div>
   <div class="kpi-grid">
@@ -315,8 +317,6 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
       <input id="search" placeholder="Search project / client..." oninput="renderProjects()" style="width:220px">
       <select id="filter-branch" onchange="renderProjects()">
         <option value="">All Branches</option>
-        <option value="jb">Johor Bahru</option>
-        <option value="kuching">Kuching</option>
       </select>
       <select id="filter-status" onchange="renderProjects()">
         <option value="">All Status</option>
@@ -350,8 +350,6 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
     <label style="font-size:11px;font-weight:700;color:var(--dark);text-transform:uppercase">Branch:</label>
     <select id="analysis-branch-filter" onchange="renderAnalysis()">
       <option value="">All Branches</option>
-      <option value="jb">Johor Bahru</option>
-      <option value="kuching">Kuching</option>
     </select>
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
@@ -369,8 +367,8 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
 <div class="page" id="page-compare">
   <div class="tbl-card" style="margin-bottom:16px">
     <div class="tbl-card-hdr"><h3>Branch Comparison &mdash; Financial &amp; P&amp;L</h3></div>
-    <table class="projects"><thead><tr>
-      <th>Metric</th><th>Johor Bahru (Main)</th><th>Kuching</th><th>Difference (JB - Kuching)</th>
+    <table class="projects"><thead><tr id="compare-hdr-row">
+      <th>Metric</th>
     </tr></thead><tbody id="body-compare"></tbody></table>
   </div>
   <div class="charts-row">
@@ -379,8 +377,8 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
   </div>
   <div class="tbl-card">
     <div class="tbl-card-hdr"><h3>Category Spend &mdash; Branch Comparison</h3></div>
-    <table class="projects"><thead><tr>
-      <th>Category</th><th>Johor Bahru Actual (RM)</th><th>Kuching Actual (RM)</th>
+    <table class="projects"><thead><tr id="compare-cat-hdr-row">
+      <th>Category</th>
     </tr></thead><tbody id="body-compare-cat"></tbody></table>
   </div>
 </div>
@@ -503,10 +501,7 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
       </div>
       <div class="form-group"><label>Client *</label><input id="f-client" placeholder="Client company name"></div>
       <div class="form-group"><label>Branch *</label>
-        <select id="f-branch">
-          <option value="jb">Johor Bahru (Main)</option>
-          <option value="kuching">Kuching</option>
-        </select>
+        <select id="f-branch"></select>
       </div>
       <div class="form-group"><label>Status</label>
         <select id="f-status">
@@ -719,11 +714,10 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
       <div class="form-group"><label>Phone</label><input id="cs-phone" placeholder="e.g. 016-782 8223 (Wayne)"></div>
       <div class="form-group span2"><label>Email</label><input id="cs-email" placeholder="e.g. weiwen@ysse.com.my"></div>
     </div>
-    <div class="section-hdr">Branch Addresses</div>
-    <div class="form-grid">
-      <div class="form-group"><label>Johor Bahru (JB) Address</label><textarea id="cs-addr-jb" rows="2" style="resize:vertical"></textarea></div>
-      <div class="form-group"><label>Kuching Address</label><textarea id="cs-addr-kuching" rows="2" style="resize:vertical"></textarea></div>
-    </div>
+    <div class="section-hdr">Branches</div>
+    <div style="font-size:11px;color:var(--sub);margin-bottom:8px">Each branch's name appears throughout the system (project dropdown, comparisons, etc). Address is optional and shown on quotation/invoice letterheads.</div>
+    <div id="cs-branches-list"></div>
+    <button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="addCsBranchRow()">+ Add Branch</button>
     <div class="section-hdr">Bank Details (shown on Invoices)</div>
     <div class="form-grid three">
       <div class="form-group"><label>Bank Name</label><input id="cs-bank-name" placeholder="e.g. CIMB Bank"></div>
@@ -782,8 +776,14 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
 const CATS=['materials','consumables','transport','crane','manhours','others','subcon'];
 const CAT_LABELS={materials:'Materials',consumables:'Consumables',transport:'Transport',crane:'Crane',manhours:'Manhours',others:'Others',subcon:'Subcontractor'};
 const CAT_COLORS=['#2E6DA4','#F0A500','#1A6640','#8B4513','#C0392B','#7B68EE','#E67E22'];
-const BRANCHES=['jb','kuching'];
-const BRANCH_LABELS={jb:'Johor Bahru',kuching:'Kuching'};
+// Branches are per-tenant data (COMPANY_SETTINGS.branches), not a fixed list — every company
+// names its own locations during one-time setup (see completeCompanySetup) and can edit them
+// later in Company Settings. These helpers replace what used to be hardcoded BRANCHES/BRANCH_LABELS
+// constants for "Johor Bahru" and "Kuching" (YSSE's actual branches, not a universal default).
+function branchKeys(){ return Object.keys((COMPANY_SETTINGS&&COMPANY_SETTINGS.branches)||{}); }
+function branchLabel(key){ const b=COMPANY_SETTINGS&&COMPANY_SETTINGS.branches&&COMPANY_SETTINGS.branches[key]; return (b&&b.label)||key||'-'; }
+function firstBranchKey(){ return branchKeys()[0]||''; }
+function slugifyBranchName(name){ return (name||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'branch'; }
 
 const DEFAULT_COMPANY_SETTINGS={
   companyName:'YSSE Fabricator Sdn Bhd',
@@ -795,9 +795,11 @@ const DEFAULT_COMPANY_SETTINGS={
   email:'weiwen@ysse.com.my',
   bank:{bankName:'CIMB Bank',accountNo:'8006950596',accountHolder:'YSSE Fabricator Sdn Bhd'}
 };
+// A brand-new company starts with NO branches pre-filled — they're entered once during
+// one-time company setup (completeCompanySetup) and never inherit YSSE's JB/Kuching locations.
 const BLANK_COMPANY_SETTINGS={
   companyName:'',
-  branches:{ jb:{label:'Johor Bahru',address:''}, kuching:{label:'Kuching',address:''} },
+  branches:{},
   phone:'',
   email:'',
   bank:{bankName:'',accountNo:'',accountHolder:''}
@@ -813,7 +815,27 @@ let COMPANY_SETTINGS=JSON.parse(JSON.stringify(DEFAULT_COMPANY_SETTINGS));
 const COMPANY_LOGO_SVG='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="56" height="62"><rect width="200" height="220" fill="#0B5A82"/><polygon points="0,0 100,95 200,0 200,40 122,118 122,220 78,220 78,118 0,40" fill="#ffffff"/></svg>';
 
 function lsKey(base){ return base+'__'+(window.CURRENT_CUSTOMER_ID||'pending'); }
-function ensureBranchDefaults(){ PROJECTS.forEach(function(p){ if(!p.branch) p.branch='kuching'; }); }
+function ensureBranchDefaults(){ const fb=firstBranchKey(); if(!fb)return; PROJECTS.forEach(function(p){ if(!p.branch) p.branch=fb; }); }
+
+// Repopulates every branch <select> (filters + the New Project form) from this tenant's own
+// COMPANY_SETTINGS.branches. Called whenever the active tenant or its branch list changes.
+function renderBranchSelects(){
+  const keys=branchKeys();
+  const opts=keys.map(function(k){ return '<option value="'+k+'">'+branchLabel(k)+'</option>'; }).join('');
+  ['dash-branch-filter','filter-branch','analysis-branch-filter'].forEach(function(id){
+    const el=document.getElementById(id);
+    if(!el) return;
+    const cur=el.value;
+    el.innerHTML='<option value="">All Branches</option>'+opts;
+    if(keys.indexOf(cur)!==-1) el.value=cur;
+  });
+  const fb=document.getElementById('f-branch');
+  if(fb){
+    const cur=fb.value;
+    fb.innerHTML=opts||'<option value="">No branches set up yet</option>';
+    if(keys.indexOf(cur)!==-1) fb.value=cur;
+  }
+}
 
 let PROJECTS=[];
 let TRASH=[];
@@ -972,7 +994,7 @@ function openDetail(id){
     if(p.quoteDetail){ qdBtn.style.display=''; qdBtn.onclick=()=>viewProjectQuoteDetails(id); }
     else { qdBtn.style.display='none'; }
   }
-  const chips=[p.branch?'<span class="chip">Branch: <strong>'+(BRANCH_LABELS[p.branch]||p.branch)+'</strong></span>':'',p.client?'<span class="chip">Client: <strong>'+p.client+'</strong></span>':'',p.startDate?'<span class="chip">Start: <strong>'+p.startDate+'</strong></span>':'',p.endDate?'<span class="chip">End: <strong>'+p.endDate+'</strong></span>':'',c.duration!=null?'<span class="chip">Duration: <strong>'+c.duration+' days</strong></span>':''].filter(Boolean).join('');
+  const chips=[p.branch?'<span class="chip">Branch: <strong>'+branchLabel(p.branch)+'</strong></span>':'',p.client?'<span class="chip">Client: <strong>'+p.client+'</strong></span>':'',p.startDate?'<span class="chip">Start: <strong>'+p.startDate+'</strong></span>':'',p.endDate?'<span class="chip">End: <strong>'+p.endDate+'</strong></span>':'',c.duration!=null?'<span class="chip">Duration: <strong>'+c.duration+' days</strong></span>':''].filter(Boolean).join('');
   const profClass=c.profit>=0?'profit':'loss';
   let catRows='';
   CATS.forEach((cat,i)=>{const q=n(p.quoted[cat]),a=n(p.actual[cat]),max=Math.max(q,a,1);catRows+='<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:3px"><span style="font-weight:700">'+CAT_LABELS[cat]+'</span><span>Budget: <strong>RM '+fmt(q)+'</strong> | Actual: <strong>RM '+fmt(a)+'</strong></span></div><div style="position:relative;height:16px;background:#e5e7eb;border-radius:4px;overflow:hidden"><div style="position:absolute;left:0;top:0;height:100%;width:'+(q/max*100).toFixed(1)+'%;background:rgba(46,109,164,.5);border-radius:4px"></div><div style="position:absolute;left:0;top:0;height:100%;width:'+(a/max*100).toFixed(1)+'%;background:'+(a>q?'rgba(192,57,43,.7)':'rgba(26,102,64,.7)')+';border-radius:4px"></div></div>'+(a>q?'<div style="font-size:10px;color:#991b1b;margin-top:1px">Over budget by RM '+fmt(a-q)+'</div>':(a>0&&a<q?'<div style="font-size:10px;color:#065f46;margin-top:1px">Under budget by RM '+fmt(q-a)+'</div>':''))+'</div>';});
@@ -1017,7 +1039,7 @@ function openEditModal(id){
   document.getElementById('f-name').value=p.name;
   document.getElementById('f-no').value=p.projectNo||'';
   document.getElementById('f-client').value=p.client||'';
-  document.getElementById('f-branch').value=p.branch||'kuching';
+  document.getElementById('f-branch').value=p.branch||firstBranchKey();
   document.getElementById('f-status').value=p.status;
   document.getElementById('f-start').value=p.startDate||'';
   document.getElementById('f-end').value=p.endDate||'';
@@ -1047,7 +1069,7 @@ function closeModal(){
 function clearForm(){
   importedQuoteDetail=null;
   ['f-name','f-no','f-client','f-notes'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-branch').value='jb';
+  document.getElementById('f-branch').value=firstBranchKey();
   document.getElementById('f-status').value='quoted';
   document.getElementById('f-start').value='';document.getElementById('f-end').value='';
   CATS.forEach(c=>{document.getElementById('q-'+c).value=0;document.getElementById('a-'+c).value=0;});
@@ -1072,7 +1094,7 @@ function saveProject(){
     createdAt:editId?(PROJECTS.find(x=>x.id===editId)||{}).createdAt||Date.now():Date.now(),
     name,client:document.getElementById('f-client').value.trim(),
     clientId:document.getElementById('f-client-link').value||null,
-    branch:document.getElementById('f-branch').value||'jb',
+    branch:document.getElementById('f-branch').value||firstBranchKey(),
     projectNo:document.getElementById('f-no').value.trim(),
     status:document.getElementById('f-status').value,
     startDate:document.getElementById('f-start').value,
@@ -1331,7 +1353,7 @@ function renderPending(){
     const calc=calcPendingQuoteCats(q);
     const submitted=q.submittedAt?new Date(q.submittedAt).toLocaleDateString('en-MY'):'-';
     const proj=q.project||{};
-    return '<tr><td>'+submitted+'</td><td>'+(proj.name||'-')+'</td><td>'+(proj.client||'-')+'</td><td>'+(proj.no||'-')+'</td><td>'+(BRANCH_LABELS[proj.branch]||proj.branch||'-')+'</td><td>'+(proj.by||'-')+'</td><td>'+fmt(calc.finalPrice)+'</td><td><span class="badge badge-quoted">Pending</span></td>'+
+    return '<tr><td>'+submitted+'</td><td>'+(proj.name||'-')+'</td><td>'+(proj.client||'-')+'</td><td>'+(proj.no||'-')+'</td><td>'+(branchLabel(proj.branch)||'-')+'</td><td>'+(proj.by||'-')+'</td><td>'+fmt(calc.finalPrice)+'</td><td><span class="badge badge-quoted">Pending</span></td>'+
       '<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="viewQuoteDetails(\''+q.id+'\')">View Details</button> <button class="btn btn-accent btn-sm mgmt-only" onclick="convertPendingQuote(\''+q.id+'\')">Convert to Project</button> <button class="btn btn-ghost btn-sm mgmt-only" onclick="dismissPendingQuoteUI(\''+q.id+'\')">Dismiss</button></td></tr>';
   }).join('');
   const badge=document.getElementById('pending-badge');
@@ -1489,14 +1511,26 @@ function deleteInvoice(id){
 
 /* ===================== COMPANY SETTINGS ===================== */
 
+function csBranchRowHtml(key,label,address){
+  return '<div class="cs-branch-row" data-key="'+(key||'')+'" style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px">'+
+    '<input class="cs-branch-name" placeholder="Branch name, e.g. Main Office" value="'+(label||'').replace(/"/g,'&quot;')+'" style="flex:1;padding:8px 10px;border:1px solid #ccc;border-radius:5px;font-size:12.5px">'+
+    '<textarea class="cs-branch-addr" placeholder="Address (optional)" rows="1" style="flex:2;resize:vertical;padding:8px 10px;border:1px solid #ccc;border-radius:5px;font-size:12.5px">'+(address||'')+'</textarea>'+
+    '<button type="button" class="btn btn-ghost btn-sm" style="color:#c00" onclick="this.closest(\'.cs-branch-row\').remove()">Remove</button>'+
+  '</div>';
+}
+function addCsBranchRow(){
+  document.getElementById('cs-branches-list').insertAdjacentHTML('beforeend',csBranchRowHtml('','',''));
+}
 function openCompanySettings(){
   if(!hasPermission('settings')){ alert('You do not have permission to edit Company Settings. Ask your Owner to enable it for your account.'); return; }
   const s=COMPANY_SETTINGS;
   document.getElementById('cs-name').value=s.companyName||'';
   document.getElementById('cs-phone').value=s.phone||'';
   document.getElementById('cs-email').value=s.email||'';
-  document.getElementById('cs-addr-jb').value=(s.branches&&s.branches.jb&&s.branches.jb.address)||'';
-  document.getElementById('cs-addr-kuching').value=(s.branches&&s.branches.kuching&&s.branches.kuching.address)||'';
+  const keys=Object.keys(s.branches||{});
+  document.getElementById('cs-branches-list').innerHTML=keys.length
+    ? keys.map(function(k){return csBranchRowHtml(k,s.branches[k].label,s.branches[k].address);}).join('')
+    : csBranchRowHtml('','','');
   document.getElementById('cs-bank-name').value=(s.bank&&s.bank.bankName)||'';
   document.getElementById('cs-bank-acc').value=(s.bank&&s.bank.accountNo)||'';
   document.getElementById('cs-bank-holder').value=(s.bank&&s.bank.accountHolder)||'';
@@ -1508,20 +1542,29 @@ function closeCompanySettings(){
 function saveCompanySettingsForm(){
   const name=document.getElementById('cs-name').value.trim();
   if(!name){alert('Company Name is required.');return;}
+  const rows=Array.from(document.querySelectorAll('#cs-branches-list .cs-branch-row'));
+  const branches={};
+  rows.forEach(function(row){
+    const label=row.querySelector('.cs-branch-name').value.trim();
+    if(!label) return;
+    const existingKey=row.dataset.key;
+    const key=existingKey&&branchKeys().indexOf(existingKey)!==-1?existingKey:slugifyBranchName(label);
+    branches[key]={label:label,address:row.querySelector('.cs-branch-addr').value.trim()};
+  });
+  if(!Object.keys(branches).length){alert('Add at least one branch.');return;}
   COMPANY_SETTINGS={
     companyName:name,
     phone:document.getElementById('cs-phone').value.trim(),
     email:document.getElementById('cs-email').value.trim(),
-    branches:{
-      jb:{label:'Johor Bahru',address:document.getElementById('cs-addr-jb').value.trim()},
-      kuching:{label:'Kuching',address:document.getElementById('cs-addr-kuching').value.trim()}
-    },
+    branches:branches,
     bank:{
       bankName:document.getElementById('cs-bank-name').value.trim(),
       accountNo:document.getElementById('cs-bank-acc').value.trim(),
       accountHolder:document.getElementById('cs-bank-holder').value.trim()
     }
   };
+  ensureBranchDefaults();
+  renderBranchSelects();
   localStorage.setItem(lsKey('ysse_company_settings'),JSON.stringify(COMPANY_SETTINGS));
   if(typeof window.syncCompanySettings==='function'){
     window.syncCompanySettings(COMPANY_SETTINGS,function(err){
@@ -1606,7 +1649,7 @@ function deleteClient(id){
 
 function letterheadHtml(branchKey){
   const s=COMPANY_SETTINGS;
-  const branch=(s.branches&&s.branches[branchKey])||{label:BRANCH_LABELS[branchKey]||branchKey,address:''};
+  const branch=(s.branches&&s.branches[branchKey])||{label:branchKey,address:''};
   return '<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #0B5A82;padding-bottom:16px;margin-bottom:24px">'+
     '<div style="display:flex;gap:14px;align-items:flex-start">'+COMPANY_LOGO_SVG+
     '<div><div style="font-size:18px;font-weight:700;color:#10173A">'+(s.companyName||'-')+'</div>'+
@@ -1719,7 +1762,7 @@ function buildQuoteDetailHtml(q){
     '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Project Name</div><div style="font-weight:700">'+(proj.name||'-')+'</div></div>'+
     '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Client</div><div style="font-weight:700">'+(proj.client||'-')+'</div></div>'+
     '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Project No.</div><div style="font-weight:700">'+(proj.no||'-')+'</div></div>'+
-    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Branch</div><div style="font-weight:700">'+(BRANCH_LABELS[proj.branch]||proj.branch||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Branch</div><div style="font-weight:700">'+branchLabel(proj.branch)+'</div></div>'+
     '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Prepared By</div><div style="font-weight:700">'+(proj.by||'-')+'</div></div>'+
     '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Submitted</div><div style="font-weight:700">'+submitted+'</div></div>'+
   '</div>';
@@ -1938,7 +1981,7 @@ function buildEditableQuoteDetailHtml(detail){
   let html='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;font-size:12px">'+
     '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Project Name</div><div style="font-weight:700">'+(proj.name||'-')+'</div></div>'+
     '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Client</div><div style="font-weight:700">'+(proj.client||'-')+'</div></div>'+
-    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Branch</div><div style="font-weight:700">'+(BRANCH_LABELS[proj.branch]||proj.branch||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Branch</div><div style="font-weight:700">'+branchLabel(proj.branch)+'</div></div>'+
   '</div>'+
   '<div style="background:#fff7e6;border:1px solid #f0d9a0;border-radius:6px;padding:8px 12px;font-size:11px;color:#7a5c00;margin-bottom:14px">✎ Editing mode &mdash; changes here only affect this project\'s adjusted copy. The engineer\'s original submission is preserved under "Original Submission."'+(detail.editedAt?(' Last adjusted by '+userLabel(detail.editedBy)+' on '+new Date(detail.editedAt).toLocaleString('en-MY')+'.'):'')+'</div>';
   CATS.forEach(function(c){ html+=renderEditableCatTable(c,calc.cats[c],detail); });
@@ -1972,51 +2015,57 @@ function dismissPendingQuoteUI(id){
 
 function badgeHtml(status){const map={quoted:['badge-quoted','Quoted'],in_progress:['badge-progress','In Progress'],completed:['badge-completed','Completed'],cancelled:['badge-cancelled','Cancelled']};const[cls,lbl]=map[status]||map.quoted;return'<span class="badge '+cls+'">'+lbl+'</span>';}
 function marginPill(m){if(!isFinite(m)||m===0)return'<span class="margin-pill margin-zero">-</span>';return'<span class="margin-pill '+(m>=0?'margin-pos':'margin-neg')+'">'+m.toFixed(1)+'%</span>';}
-function branchBadge(b){const lbl=BRANCH_LABELS[b]||b||'-';const cls=b==='jb'?'badge-quoted':'badge-progress';return'<span class="badge '+cls+'">'+lbl+'</span>';}
+function branchBadge(b){const lbl=branchLabel(b);const idx=branchKeys().indexOf(b);const cls=idx%2===0?'badge-quoted':'badge-progress';return'<span class="badge '+cls+'">'+lbl+'</span>';}
 function filterByBranch(list,branch){return branch?list.filter(function(p){return p.branch===branch;}):list;}
 
+const BRANCH_CHART_COLORS=['#2E6DA4','#F0A500','#1A6640','#8B4513','#C0392B','#7B68EE'];
 let chartCompFin=null,chartCompCount=null;
 function renderCompare(){
-  const stats=BRANCHES.map(function(b){
+  const keys=branchKeys();
+  const stats=keys.map(function(b){
     const list=PROJECTS.filter(function(p){return p.branch===b;});
     const revenue=list.reduce(function(s,p){return s+calcProject(p).revenue;},0);
     const cost=list.reduce(function(s,p){return s+calcProject(p).aTotal;},0);
     const profit=revenue-cost;
     const margin=revenue>0?(profit/revenue*100):0;
-    return{branch:b,count:list.length,active:list.filter(function(p){return p.status==='in_progress';}).length,completed:list.filter(function(p){return p.status==='completed';}).length,revenue,cost,profit,margin};
+    return{branch:b,label:branchLabel(b),count:list.length,active:list.filter(function(p){return p.status==='in_progress';}).length,completed:list.filter(function(p){return p.status==='completed';}).length,revenue,cost,profit,margin};
   });
-  const jb=stats[0],kc=stats[1];
-  const rows=[
-    ['Total Projects',jb.count,kc.count,jb.count-kc.count,false],
-    ['In Progress',jb.active,kc.active,jb.active-kc.active,false],
-    ['Completed',jb.completed,kc.completed,jb.completed-kc.completed,false],
-    ['Total Revenue (RM)',jb.revenue,kc.revenue,jb.revenue-kc.revenue,true],
-    ['Total Actual Cost (RM)',jb.cost,kc.cost,jb.cost-kc.cost,true],
-    ['Gross Profit / Loss (RM)',jb.profit,kc.profit,jb.profit-kc.profit,true],
-    ['Profit Margin (%)',jb.margin,kc.margin,jb.margin-kc.margin,'pct']
+  const hdrRow=document.getElementById('compare-hdr-row');
+  if(hdrRow) hdrRow.innerHTML='<th>Metric</th>'+stats.map(function(s){return'<th>'+s.label+'</th>';}).join('');
+  const catHdrRow=document.getElementById('compare-cat-hdr-row');
+  if(catHdrRow) catHdrRow.innerHTML='<th>Category</th>'+stats.map(function(s){return'<th>'+s.label+' Actual (RM)</th>';}).join('');
+  const metricRows=[
+    ['Total Projects',function(s){return s.count;},false],
+    ['In Progress',function(s){return s.active;},false],
+    ['Completed',function(s){return s.completed;},false],
+    ['Total Revenue (RM)',function(s){return s.revenue;},true],
+    ['Total Actual Cost (RM)',function(s){return s.cost;},true],
+    ['Gross Profit / Loss (RM)',function(s){return s.profit;},true],
+    ['Profit Margin (%)',function(s){return s.margin;},'pct']
   ];
-  document.getElementById('body-compare').innerHTML=rows.map(function(r){
-    var fmt1=r[4]==='pct'?r[1].toFixed(1)+'%':(r[4]?fmt(r[1]):r[1]);
-    var fmt2=r[4]==='pct'?r[2].toFixed(1)+'%':(r[4]?fmt(r[2]):r[2]);
-    var diff=r[3];
-    var diffStr=r[4]==='pct'?(diff>=0?'+':'')+diff.toFixed(1)+'%':(r[4]?(diff>=0?'+':'')+fmt(diff):diff);
-    var diffColor=r[4]?(diff>=0?'color:#065f46':'color:#991b1b'):'';
-    return'<tr><td style="font-weight:700">'+r[0]+'</td><td style="text-align:right">'+fmt1+'</td><td style="text-align:right">'+fmt2+'</td><td style="text-align:right;font-weight:700;'+diffColor+'">'+diffStr+'</td></tr>';
+  document.getElementById('body-compare').innerHTML=metricRows.map(function(r){
+    const cells=stats.map(function(s){
+      const v=r[1](s);
+      const out=r[2]==='pct'?v.toFixed(1)+'%':(r[2]?fmt(v):v);
+      return'<td style="text-align:right">'+out+'</td>';
+    }).join('');
+    return'<tr><td style="font-weight:700">'+r[0]+'</td>'+cells+'</tr>';
   }).join('');
   if(chartCompFin){chartCompFin.destroy();chartCompFin=null;}
   if(document.getElementById('chart-compare-fin')){
-    chartCompFin=new Chart(document.getElementById('chart-compare-fin'),{type:'bar',data:{labels:['Revenue','Actual Cost','Profit'],datasets:[{label:'Johor Bahru',data:[jb.revenue,jb.cost,jb.profit],backgroundColor:'rgba(46,109,164,.8)',borderRadius:3},{label:'Kuching',data:[kc.revenue,kc.cost,kc.profit],backgroundColor:'rgba(240,165,0,.8)',borderRadius:3}]},options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:function(v){return'RM '+v.toLocaleString();}}}}}});
+    chartCompFin=new Chart(document.getElementById('chart-compare-fin'),{type:'bar',data:{labels:['Revenue','Actual Cost','Profit'],datasets:stats.map(function(s,i){return{label:s.label,data:[s.revenue,s.cost,s.profit],backgroundColor:BRANCH_CHART_COLORS[i%BRANCH_CHART_COLORS.length],borderRadius:3};})},options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:function(v){return'RM '+v.toLocaleString();}}}}}});
   }
   if(chartCompCount){chartCompCount.destroy();chartCompCount=null;}
   if(document.getElementById('chart-compare-count')){
-    chartCompCount=new Chart(document.getElementById('chart-compare-count'),{type:'doughnut',data:{labels:['Johor Bahru','Kuching'],datasets:[{data:[jb.count,kc.count],backgroundColor:['#2E6DA4','#F0A500'],hoverOffset:6}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
+    chartCompCount=new Chart(document.getElementById('chart-compare-count'),{type:'doughnut',data:{labels:stats.map(function(s){return s.label;}),datasets:[{data:stats.map(function(s){return s.count;}),backgroundColor:stats.map(function(s,i){return BRANCH_CHART_COLORS[i%BRANCH_CHART_COLORS.length];}),hoverOffset:6}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
   }
-  const jbList=PROJECTS.filter(function(p){return p.branch==='jb';});
-  const kcList=PROJECTS.filter(function(p){return p.branch==='kuching';});
+  const listsByBranch=keys.map(function(b){return PROJECTS.filter(function(p){return p.branch===b;});});
   document.getElementById('body-compare-cat').innerHTML=CATS.map(function(cat,i){
-    const jbVal=jbList.reduce(function(s,p){return s+n(p.actual[cat]);},0);
-    const kcVal=kcList.reduce(function(s,p){return s+n(p.actual[cat]);},0);
-    return'<tr><td style="font-weight:700"><span style="display:inline-block;width:12px;height:12px;background:'+CAT_COLORS[i]+';border-radius:2px;margin-right:6px"></span>'+CAT_LABELS[cat]+'</td><td style="text-align:right">'+fmt(jbVal)+'</td><td style="text-align:right">'+fmt(kcVal)+'</td></tr>';
+    const cells=listsByBranch.map(function(list){
+      const v=list.reduce(function(s,p){return s+n(p.actual[cat]);},0);
+      return'<td style="text-align:right">'+fmt(v)+'</td>';
+    }).join('');
+    return'<tr><td style="font-weight:700"><span style="display:inline-block;width:12px;height:12px;background:'+CAT_COLORS[i]+';border-radius:2px;margin-right:6px"></span>'+CAT_LABELS[cat]+'</td>'+cells+'</tr>';
   }).join('');
 }
 
@@ -2033,7 +2082,7 @@ function loadDraft(){
   try{
     const d=JSON.parse(raw);
     editId=d.editId||null;
-    document.getElementById('f-name').value=d.name||'';document.getElementById('f-no').value=d.no||'';document.getElementById('f-client').value=d.client||'';document.getElementById('f-branch').value=d.branch||'jb';document.getElementById('f-status').value=d.status||'quoted';document.getElementById('f-start').value=d.start||'';document.getElementById('f-end').value=d.end||'';document.getElementById('f-notes').value=d.notes||'';
+    document.getElementById('f-name').value=d.name||'';document.getElementById('f-no').value=d.no||'';document.getElementById('f-client').value=d.client||'';document.getElementById('f-branch').value=d.branch||firstBranchKey();document.getElementById('f-status').value=d.status||'quoted';document.getElementById('f-start').value=d.start||'';document.getElementById('f-end').value=d.end||'';document.getElementById('f-notes').value=d.notes||'';
     document.getElementById('q-materials').value=d.qm||0;document.getElementById('q-consumables').value=d.qco||0;document.getElementById('q-transport').value=d.qt||0;document.getElementById('q-crane').value=d.qcr||0;document.getElementById('q-manhours').value=d.qmh||0;document.getElementById('q-others').value=d.qo||0;document.getElementById('q-subcon').value=d.qs||0;document.getElementById('q-markup').value=d.qmk||45;document.getElementById('q-final').value=d.qf||0;
     document.getElementById('a-materials').value=d.am||0;actualMatRows=d.amrows?JSON.parse(d.amrows):[];renderActualCat('materials');document.getElementById('a-consumables').value=d.aco||0;actualConRows=d.acorows?JSON.parse(d.acorows):[];renderActualCat('consumables');document.getElementById('a-transport').value=d.at||0;document.getElementById('a-crane').value=d.acr||0;document.getElementById('a-manhours').value=d.amh||0;actualMhrRows=d.amhr?JSON.parse(d.amhr):[];renderActualMhr();document.getElementById('a-others').value=d.ao||0;document.getElementById('a-subcon').value=d.asub||0;actualSubconRows=d.asubrows?JSON.parse(d.asubrows):[];renderActualSubcon();document.getElementById('a-revenue').value=d.ar||0;
     return true;
@@ -2090,7 +2139,7 @@ function exportToExcel(){
   if(!PROJECTS.length){alert('No projects to export yet.');return;}
   const wb=XLSX.utils.book_new();
   const headers=[['#','Project No.','Project Name','Client','Branch','Status','Start Date','End Date','Days','Budget: Materials','Budget: Consumables','Budget: Transport','Budget: Crane','Budget: Manhours','Budget: Others','Budget: Subcontractor','Markup %','Final Quote Price (RM)','Actual: Materials','Actual: Consumables','Actual: Transport','Actual: Crane','Actual: Manhours','Actual: Others','Actual: Subcontractor','Revenue (RM)','Total Actual Cost (RM)','Gross Profit/Loss (RM)','Margin %']];
-  const rows=PROJECTS.map((p,i)=>{const c=calcProject(p);const sl={quoted:'Quoted',in_progress:'In Progress',completed:'Completed',cancelled:'Cancelled'};return[i+1,p.projectNo||'',p.name,p.client||'',BRANCH_LABELS[p.branch]||p.branch||'',sl[p.status]||p.status,p.startDate||'',p.endDate||'',c.duration!=null?c.duration:'',n(p.quoted.materials),n(p.quoted.consumables),n(p.quoted.transport),n(p.quoted.crane),n(p.quoted.manhours),n(p.quoted.others),n(p.quoted.subcon),n(p.quoted.markup),n(p.quoted.finalPrice),n(p.actual.materials),n(p.actual.consumables),n(p.actual.transport),n(p.actual.crane),n(p.actual.manhours),n(p.actual.others),n(p.actual.subcon),c.revenue,c.aTotal,c.profit,parseFloat((c.margin/100).toFixed(4))];});
+  const rows=PROJECTS.map((p,i)=>{const c=calcProject(p);const sl={quoted:'Quoted',in_progress:'In Progress',completed:'Completed',cancelled:'Cancelled'};return[i+1,p.projectNo||'',p.name,p.client||'',branchLabel(p.branch)||'',sl[p.status]||p.status,p.startDate||'',p.endDate||'',c.duration!=null?c.duration:'',n(p.quoted.materials),n(p.quoted.consumables),n(p.quoted.transport),n(p.quoted.crane),n(p.quoted.manhours),n(p.quoted.others),n(p.quoted.subcon),n(p.quoted.markup),n(p.quoted.finalPrice),n(p.actual.materials),n(p.actual.consumables),n(p.actual.transport),n(p.actual.crane),n(p.actual.manhours),n(p.actual.others),n(p.actual.subcon),c.revenue,c.aTotal,c.profit,parseFloat((c.margin/100).toFixed(4))];});
   const totRow=['','','','','','TOTALS','','',''];
   for(let i=9;i<=27;i++)totRow.push(rows.reduce((s,r)=>s+(typeof r[i]==='number'?r[i]:0),0));
   const revSum=rows.reduce((s,r)=>s+(typeof r[25]==='number'?r[25]:0),0);
@@ -2113,24 +2162,21 @@ function exportToExcel(){
   const plRows=[['P&L Summary - '+(COMPANY_SETTINGS.companyName||'Company')],['Export Date',new Date().toLocaleDateString('en-MY')],[''],['Metric','Value'],['Total Projects',PROJECTS.length],['Total Revenue (Invoiced)',totalRev],['Total Actual Cost',totalCost],['Total Gross Profit / Loss',totalProfit],['Average Gross Margin',totalRev>0?parseFloat((totalProfit/totalRev).toFixed(4)):0],['Total Budget (Quoted Costs)',totalBudget],['Budget vs Actual Variance',totalCost-totalBudget]];
   const ws3=XLSX.utils.aoa_to_sheet(plRows);ws3['!cols']=[{wch:35},{wch:20}];
   XLSX.utils.book_append_sheet(wb,ws3,'P&L Summary');
-  const jbList2=PROJECTS.filter(function(p){return p.branch==='jb';});
-  const kcList2=PROJECTS.filter(function(p){return p.branch==='kuching';});
+  const branchListPairs=branchKeys().map(function(b){return{key:b,label:branchLabel(b),list:PROJECTS.filter(function(p){return p.branch===b;})};});
   function brStats(list){const rev=list.reduce(function(s,p){return s+calcProject(p).revenue;},0);const cost=list.reduce(function(s,p){return s+calcProject(p).aTotal;},0);const prof=rev-cost;return{count:list.length,active:list.filter(function(p){return p.status==='in_progress';}).length,completed:list.filter(function(p){return p.status==='completed';}).length,rev,cost,prof,margin:rev>0?prof/rev:0};}
-  const jbS=brStats(jbList2),kcS=brStats(kcList2);
-  const brRows=[['Branch Comparison - '+(COMPANY_SETTINGS.companyName||'Company')],[''],['Metric','Johor Bahru (Main)','Kuching']];
-  brRows.push(['Total Projects',jbS.count,kcS.count]);
-  brRows.push(['In Progress',jbS.active,kcS.active]);
-  brRows.push(['Completed',jbS.completed,kcS.completed]);
-  brRows.push(['Total Revenue (RM)',jbS.rev,kcS.rev]);
-  brRows.push(['Total Actual Cost (RM)',jbS.cost,kcS.cost]);
-  brRows.push(['Gross Profit/Loss (RM)',jbS.prof,kcS.prof]);
-  brRows.push(['Profit Margin',parseFloat(jbS.margin.toFixed(4)),parseFloat(kcS.margin.toFixed(4))]);
+  const branchStats=branchListPairs.map(function(p){return Object.assign({label:p.label,list:p.list},brStats(p.list));});
+  const brRows=[['Branch Comparison - '+(COMPANY_SETTINGS.companyName||'Company')],[''],['Metric'].concat(branchStats.map(function(s){return s.label;}))];
+  brRows.push(['Total Projects'].concat(branchStats.map(function(s){return s.count;})));
+  brRows.push(['In Progress'].concat(branchStats.map(function(s){return s.active;})));
+  brRows.push(['Completed'].concat(branchStats.map(function(s){return s.completed;})));
+  brRows.push(['Total Revenue (RM)'].concat(branchStats.map(function(s){return s.rev;})));
+  brRows.push(['Total Actual Cost (RM)'].concat(branchStats.map(function(s){return s.cost;})));
+  brRows.push(['Gross Profit/Loss (RM)'].concat(branchStats.map(function(s){return s.prof;})));
+  brRows.push(['Profit Margin'].concat(branchStats.map(function(s){return parseFloat(s.margin.toFixed(4));})));
   CATS.forEach(function(cat){
-    const jv=jbList2.reduce(function(s,p){return s+n(p.actual[cat]);},0);
-    const kv=kcList2.reduce(function(s,p){return s+n(p.actual[cat]);},0);
-    brRows.push(['Actual: '+CAT_LABELS[cat],jv,kv]);
+    brRows.push(['Actual: '+CAT_LABELS[cat]].concat(branchStats.map(function(s){return s.list.reduce(function(sum,p){return sum+n(p.actual[cat]);},0);})));
   });
-  const ws4=XLSX.utils.aoa_to_sheet(brRows);ws4['!cols']=[{wch:28},{wch:20},{wch:20}];
+  const ws4=XLSX.utils.aoa_to_sheet(brRows);ws4['!cols']=[{wch:28}].concat(branchStats.map(function(){return{wch:20};}));
   XLSX.utils.book_append_sheet(wb,ws4,'Branch Comparison');
   const exportSlug=(COMPANY_SETTINGS.companyName||'Project').replace(/[^a-zA-Z0-9]+/g,'_');
   XLSX.writeFile(wb,exportSlug+'_Register_'+new Date().toISOString().slice(0,10)+'.xlsx');
@@ -2673,6 +2719,8 @@ function delActualSubconRow(i){
       }
       COMPANY_SETTINGS=data;
       localStorage.setItem(lsKey('ysse_company_settings'),JSON.stringify(COMPANY_SETTINGS));
+      ensureBranchDefaults();
+      renderBranchSelects();
       var hdr=document.getElementById('hdr-company-name');
       if(hdr && data.companyName) hdr.textContent=data.companyName.toUpperCase();
     },function(err){
@@ -2712,11 +2760,15 @@ function delActualSubconRow(i){
     // from a previously logged-in company in this browser tab). This is what actually stops one
     // company's data from bleeding into another's — the listeners below only refine this further.
     PROJECTS=JSON.parse(localStorage.getItem(lsKey('ysse_projects'))||'[]');
-    ensureBranchDefaults();
     TRASH=JSON.parse(localStorage.getItem(lsKey('ysse_trash'))||'[]');
     INVOICES=JSON.parse(localStorage.getItem(lsKey('ysse_invoices'))||'[]');
     CLIENTS=JSON.parse(localStorage.getItem(lsKey('ysse_clients'))||'[]');
-    COMPANY_SETTINGS=JSON.parse(localStorage.getItem(lsKey('ysse_company_settings'))||'null')||JSON.parse(JSON.stringify(DEFAULT_COMPANY_SETTINGS));
+    // YSSE bootstraps from its real defaults; every other tenant falls back to a blank template
+    // (empty branches included) so it never inherits YSSE's company details before its own
+    // Firestore settings doc loads.
+    COMPANY_SETTINGS=JSON.parse(localStorage.getItem(lsKey('ysse_company_settings'))||'null')||JSON.parse(JSON.stringify(customerId==='ysse'?DEFAULT_COMPANY_SETTINGS:BLANK_COMPANY_SETTINGS));
+    ensureBranchDefaults();
+    renderBranchSelects();
     docRef=db.collection('ysse_tracker').doc(customerId==='ysse'?'shared_projects':customerId);
     settingsRef=db.collection('ysse_settings').doc(customerId==='ysse'?'company':customerId);
   }
@@ -2773,11 +2825,22 @@ function delActualSubconRow(i){
     }
   }
 
+  window.addSetupBranchField=function(){
+    var wrap=document.getElementById('cs-setup-branches');
+    var input=document.createElement('input');
+    input.type='text';input.className='cs-setup-branch-name';input.placeholder='e.g. Warehouse';
+    input.style.cssText='width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:6px;outline:none';
+    wrap.appendChild(input);
+  };
   window.completeCompanySetup=function(){
     var nameEl=document.getElementById('cs-setup-company-name');
     var errEl=document.getElementById('company-setup-error');
     var name=nameEl?nameEl.value.trim():'';
     if(!name){ if(errEl) errEl.textContent='Please enter a company name.'; return; }
+    var branchNames=Array.from(document.querySelectorAll('.cs-setup-branch-name')).map(function(i){return i.value.trim();}).filter(Boolean);
+    if(!branchNames.length){ if(errEl) errEl.textContent='Please name at least one branch.'; return; }
+    var branches={};
+    branchNames.forEach(function(label){ branches[slugifyBranchName(label)]={label:label,address:''}; });
     var customerId=slugifyCompanyName(name);
     var setup=document.getElementById('company-setup-overlay');
     var email=setup?setup.dataset.userEmail:'';
@@ -2788,6 +2851,11 @@ function delActualSubconRow(i){
       ALL_USERS=[{email:email,role:'owner',customerId:customerId}];
       window.CURRENT_COMPANY_NAME=name;
       applyCustomerScope(customerId);
+      COMPANY_SETTINGS={companyName:name,phone:'',email:'',branches:branches,bank:{bankName:'',accountNo:'',accountHolder:''}};
+      ensureBranchDefaults();
+      renderBranchSelects();
+      localStorage.setItem(lsKey('ysse_company_settings'),JSON.stringify(COMPANY_SETTINGS));
+      settingsRef.set(COMPANY_SETTINGS).catch(function(err){});
       if(setup) setup.style.display='none';
       grantAccess(firebase.auth().currentUser);
     }).catch(function(err){
