@@ -3097,5 +3097,65 @@ function delActualSubconRow(i){
 </div>
 
 </div>
+<script>
+// PREVIEW-ONLY BOOTSTRAP — injects sample data and bypasses Firebase login so the redesigned
+// UI can be screenshotted locally. Never include this block in the real app.
+(function(){
+  // showApp/showLogin live inside the Firebase auth IIFE's closure, not on window, so they can't
+  // be called or overridden from here. Manipulate the overlay/app-content visibility directly
+  // instead. Re-applied on an interval briefly in case the real (closure-local) showLogin fires
+  // asynchronously afterward once the real Firebase auth callback resolves with no signed-in user.
+  function forceAppVisible(){
+    var ov=document.getElementById('login-overlay'); if(ov) ov.style.display='none';
+    var den=document.getElementById('access-denied-overlay'); if(den) den.style.display='none';
+    var setup=document.getElementById('company-setup-overlay'); if(setup) setup.style.display='none';
+    var app=document.getElementById('app-content'); if(app) app.style.display='';
+  }
+  function mkProject(o){
+    const blank={materials:0,consumables:0,transport:0,crane:0,manhours:0,others:0,subcon:0};
+    return Object.assign({id:'p_'+Math.random().toString(36).slice(2),quoted:Object.assign({},blank,{markup:15,finalPrice:0},o.quoted),actual:Object.assign({},blank,{revenue:0},o.actual)},o);
+  }
+  window.CURRENT_USER_ROLE='owner';
+  window.CURRENT_USER_PERMISSIONS={};
+  window.CURRENT_CUSTOMER_ID='preview';
+  window.CURRENT_USER_EMAIL='wayne@raultech.preview';
+  ALL_USERS=[
+    {email:'wayne@raultech.preview',role:'owner',customerId:'preview',name:'Wayne',position:'Director'},
+    {email:'siti@raultech.preview',role:'management',customerId:'preview',name:'Siti Rahman',position:'Project Manager',permissions:{dashboard:true,quotation:true,settings:false}},
+    {email:'ahmad@raultech.preview',role:'qs',customerId:'preview',name:'Ahmad Yusof',position:'QS Engineer'},
+  ];
+  COMPANY_SETTINGS={
+    companyName:'Wawas Trading Sdn Bhd',
+    branches:{main:{label:'Main Office',address:'Lot 42, Jalan Tun Razak, 93350 Kuching, Sarawak'},seberang:{label:'Seberang Warehouse',address:''}},
+    phone:'016-782 8223',email:'hello@wawastrading.my',
+    bank:{bankName:'CIMB Bank',accountNo:'8006950596',accountHolder:'Wawas Trading Sdn Bhd'}
+  };
+  CLIENTS=[
+    {id:'c1',name:'Borneo Pacific Resources',attention:'Mr. Tan',phone:'012-345 6789',email:'procurement@borneopacific.my',address:'Kuching Industrial Park'},
+    {id:'c2',name:'Sarawak Energy Berhad',attention:'Ms. Lim',phone:'013-987 6543',email:'',address:''},
+  ];
+  PROJECTS=[
+    mkProject({name:'Steel Canopy — Pending Industrial Lot 9',client:'Borneo Pacific Resources',clientId:'c1',projectNo:'PRJ-2026-014',branch:'main',status:'in_progress',startDate:'2026-04-01',endDate:'2026-07-15',createdAt:Date.now()-86400000*60,quoted:{materials:182000,consumables:9000,transport:6000,crane:14000,manhours:48000,others:4000,subcon:22000,markup:18,finalPrice:325960},actual:{materials:171000,consumables:8200,transport:5600,crane:13500,manhours:51000,others:3800,subcon:21000,revenue:200000}}),
+    mkProject({name:'Conveyor Platform Fabrication',client:'Sarawak Energy Berhad',clientId:'c2',projectNo:'PRJ-2026-011',branch:'seberang',status:'completed',startDate:'2026-01-10',endDate:'2026-03-02',createdAt:Date.now()-86400000*120,quoted:{materials:96000,consumables:4200,transport:3000,crane:5000,manhours:21000,others:1800,subcon:0,markup:15,finalPrice:151730},actual:{materials:91200,consumables:4000,transport:3100,crane:4800,manhours:22400,others:1700,subcon:0,revenue:151730}}),
+    mkProject({name:'Warehouse Roof Truss Replacement',client:'Borneo Pacific Resources',clientId:'c1',projectNo:'PRJ-2026-009',branch:'main',status:'quoted',startDate:'2026-05-01',endDate:'2026-06-20',createdAt:Date.now()-86400000*10,quoted:{materials:54000,consumables:2200,transport:1800,crane:3000,manhours:9600,others:900,subcon:0,markup:20,finalPrice:85800},actual:{materials:0,consumables:0,transport:0,crane:0,manhours:0,others:0,subcon:0,revenue:0}}),
+    mkProject({name:'Site Access Stairs & Handrail',client:'',clientId:'',projectNo:'PRJ-2026-003',branch:'main',status:'cancelled',startDate:'2026-02-01',endDate:'2026-02-20',createdAt:Date.now()-86400000*150,quoted:{materials:12000,consumables:600,transport:500,crane:0,manhours:3200,others:200,subcon:0,markup:15,finalPrice:18860},actual:{materials:0,consumables:0,transport:0,crane:0,manhours:0,others:0,subcon:0,revenue:0}}),
+  ];
+  INVOICES=[
+    {id:'i1',invoiceNo:'INV-2026-031',projectId:PROJECTS[1].id,amount:151730,issueDate:'2026-03-05',dueDate:'2026-04-04',paidDate:'2026-03-28'},
+    {id:'i2',invoiceNo:'INV-2026-040',projectId:PROJECTS[0].id,amount:120000,issueDate:'2026-05-10',dueDate:'2026-06-09',paidDate:null},
+    {id:'i3',invoiceNo:'INV-2026-041',projectId:PROJECTS[0].id,amount:80000,issueDate:'2026-04-20',dueDate:'2026-05-05',paidDate:null},
+  ];
+  TRASH=[]; PENDING_QUOTES=[];
+  ensureBranchDefaults();
+  renderBranchSelects();
+  applyRoleToUI();
+  document.getElementById('hdr-company-name').textContent=COMPANY_SETTINGS.companyName.toUpperCase();
+  document.getElementById('logged-in-as').textContent='Logged in as Wayne (Director)';
+  document.getElementById('cloud-sync-indicator').innerHTML='&#9729; Live Sync: connected';
+  forceAppVisible();
+  renderDashboard();
+  var tries=0,iv=setInterval(function(){ forceAppVisible(); if(++tries>20) clearInterval(iv); },150);
+})();
+</script>
 </body>
 </html>

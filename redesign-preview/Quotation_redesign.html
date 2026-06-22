@@ -1560,5 +1560,35 @@ renderAll();
 })();
 </script>
 </div>
+<script>
+// PREVIEW-ONLY BOOTSTRAP — same purpose as the PMS preview: bypass Firebase login (which never
+// resolves offline) and inject sample data so the redesigned UI can be screenshotted. showApp/
+// showLogin live inside the auth IIFE's closure, not on window, so toggle overlay visibility
+// directly instead of calling them.
+(function(){
+  function forceAppVisible(){
+    var ov=document.getElementById('login-overlay'); if(ov) ov.style.display='none';
+    var nsu=document.getElementById('not-set-up-overlay'); if(nsu) nsu.style.display='none';
+    var app=document.getElementById('app-content'); if(app) app.style.display='';
+  }
+  window.CURRENT_BRANCHES={main:{label:'Main Office'},seberang:{label:'Seberang Warehouse'}};
+  document.getElementById('hdr-company-name') && (document.getElementById('hdr-company-name').textContent='WAWAS TRADING SDN BHD');
+  document.getElementById('proj-name').value='Steel Canopy — Pending Industrial Lot 9';
+  document.getElementById('proj-client').value='Borneo Pacific Resources';
+  document.getElementById('proj-no').value='PRJ-2026-014';
+  document.getElementById('proj-by').value='Wayne';
+  renderProjBranchSelect();
+  S.materials[0]=Object.assign(newStdRow(),{desc:'MS Plate 10mm',qty:12,lenPcs:2.4,kgm:78.5,priceby:'kg',rate:4.2});
+  S.materials[1]=Object.assign(newStdRow(),{desc:'UB 203x133x25',qty:8,lenPcs:6,kgm:25.1,priceby:'kg',rate:4.6});
+  S.manhours[0]=Object.assign(newMhrRow(),{pos:'Welder',pax:4,rate:18,normHrs:8,otHrs:2,days:20});
+  S.subcon[0]=Object.assign(newSubconRow(),{desc:'Hot-dip galvanizing',rate:15000});
+  ['materials','consumables','transport','crane','others'].forEach(function(c){ if(typeof renderStd==='function'&&STD_CATS.indexOf(c)!==-1) renderStd(c); else if(typeof renderSimple==='function') renderSimple(c); });
+  if(typeof renderMhr==='function') renderMhr();
+  if(typeof renderSubcon==='function') renderSubcon();
+  if(typeof recalcSummary==='function') recalcSummary();
+  forceAppVisible();
+  var tries=0,iv=setInterval(function(){ forceAppVisible(); if(++tries>20) clearInterval(iv); },150);
+})();
+</script>
 </body>
 </html>
