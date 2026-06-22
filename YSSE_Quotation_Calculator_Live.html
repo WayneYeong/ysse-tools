@@ -644,13 +644,17 @@ function saveMatDB(){localStorage.setItem(matLsKey(),JSON.stringify(MATDB));if(t
 // Project "Branch" reflects this tenant's own COMPANY_SETTINGS.branches (set during company
 // setup in the Project Management tool) — not a fixed JB/Kuching pair.
 function firstProjBranchKey(){ return Object.keys(window.CURRENT_BRANCHES||{})[0]||''; }
+// Branch names are free text the user types in elsewhere (Project Management > Company Settings),
+// so they must be escaped before going into innerHTML — a name containing "<" could otherwise
+// break the markup or inject script.
+function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function renderProjBranchSelect(){
   const sel=document.getElementById('proj-branch');
   if(!sel) return;
   const cur=sel.value;
   const keys=Object.keys(window.CURRENT_BRANCHES||{});
   sel.innerHTML=keys.length
-    ? keys.map(function(k){return '<option value="'+k+'">'+(window.CURRENT_BRANCHES[k].label||k)+'</option>';}).join('')
+    ? keys.map(function(k){return '<option value="'+escapeHtml(k)+'">'+escapeHtml(window.CURRENT_BRANCHES[k].label||k)+'</option>';}).join('')
     : '<option value="">No branches set up yet</option>';
   if(keys.indexOf(cur)!==-1) sel.value=cur;
 }
@@ -1184,7 +1188,7 @@ function renderQuotesLibrary(){
     const proj=x.project||{};
     const finalPrice=computeQuoteFinalPrice(x);
     const updated=x.updatedAt?new Date(x.updatedAt).toLocaleString('en-MY'):'-';
-    return '<tr><td><strong>'+(proj.name||'Untitled')+'</strong></td><td>'+(proj.client||'-')+'</td><td>'+(qLibBranchLabel[proj.branch]||proj.branch||'-')+'</td><td>'+(proj.by||x.ownerEmail||'-')+'</td><td style="text-align:right">'+fmt(finalPrice)+'</td><td>'+updated+'</td>'+
+    return '<tr><td><strong>'+(proj.name||'Untitled')+'</strong></td><td>'+(proj.client||'-')+'</td><td>'+escapeHtml(qLibBranchLabel[proj.branch]||proj.branch||'-')+'</td><td>'+(proj.by||x.ownerEmail||'-')+'</td><td style="text-align:right">'+fmt(finalPrice)+'</td><td>'+updated+'</td>'+
       '<td style="white-space:nowrap"><button class="pick-btn" onclick="openQuoteFromLibrary(\''+x.id+'\')">Open</button> <button onclick="deleteQuoteFromLibrary(\''+x.id+'\')" style="background:none;border:none;color:#c00;cursor:pointer;font-size:12px;padding:0 6px">Delete</button></td></tr>';
   }).join('');
 }
