@@ -693,6 +693,29 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
 </div>
 </div>
 
+<div class="modal-overlay" id="quote-pdf-modal-overlay">
+<div class="modal" onclick="event.stopPropagation()">
+  <div class="modal-hdr">
+    <h3>Generate Quotation PDF</h3>
+    <button class="modal-close" onclick="closeQuotePdfModal()">x</button>
+  </div>
+  <div class="modal-body">
+    <div class="section-hdr">Pricing Format</div>
+    <div style="display:flex;gap:16px;margin-bottom:16px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="qpdf-mode" value="lumpsum" checked> Lump Sum</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="qpdf-mode" value="itemized"> Itemized by Category</label>
+    </div>
+    <div style="font-size:11px;color:var(--sub);margin-top:-10px;margin-bottom:16px">Lump Sum shows one total price with the scope below. Itemized breaks the price down by category - markup is never shown to the client either way.</div>
+    <div class="section-hdr">Scope of Work</div>
+    <textarea id="qpdf-scope" rows="4" placeholder="Describe what's included - this prints prominently on the quotation." style="width:100%;border:1.5px solid #d1d9e6;border-radius:4px;padding:8px 10px;font-size:12.5px;font-family:Arial,sans-serif;outline:none;resize:vertical"></textarea>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeQuotePdfModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="confirmGenerateQuotationDoc()">Generate PDF</button>
+  </div>
+</div>
+</div>
+
 <div class="modal-overlay" id="quote-detail-overlay">
 <div class="modal" style="width:880px">
   <div class="modal-hdr">
@@ -875,7 +898,9 @@ const BLANK_COMPANY_SETTINGS={
 // once we know which company is signing in — see lsKey() below.
 let COMPANY_SETTINGS=JSON.parse(JSON.stringify(DEFAULT_COMPANY_SETTINGS));
 
-const COMPANY_LOGO_SVG='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="56" height="62"><rect width="200" height="220" fill="#0B5A82"/><polygon points="0,0 100,95 200,0 200,40 122,118 122,220 78,220 78,118 0,40" fill="#ffffff"/></svg>';
+// width/height must keep the viewBox's 200:220 ratio exactly (10:11) - the old 56x62 was off by
+// just enough to visibly stretch/skew the polygon shape on the printed quotation/invoice.
+const COMPANY_LOGO_SVG='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="60" height="66" style="display:block;flex-shrink:0"><rect width="200" height="220" fill="#0B5A82"/><polygon points="0,0 100,95 200,0 200,40 122,118 122,220 78,220 78,118 0,40" fill="#ffffff"/></svg>';
 
 function lsKey(base){ return base+'__'+(window.CURRENT_CUSTOMER_ID||'pending'); }
 function ensureBranchDefaults(){ const fb=firstBranchKey(); if(!fb)return; PROJECTS.forEach(function(p){ if(!p.branch) p.branch=fb; }); }
@@ -1051,7 +1076,7 @@ function openDetail(id){
   document.getElementById('dp-no').textContent=p.projectNo||'';
   document.getElementById('dp-badge').innerHTML=badgeHtml(p.status);
   document.getElementById('dp-edit-btn').onclick=()=>{closeDetail();openEditModal(id);};
-  document.getElementById('dp-quote-pdf-btn').onclick=()=>generateQuotationDoc(id);
+  document.getElementById('dp-quote-pdf-btn').onclick=()=>openQuotePdfModal(id);
   const qdBtn=document.getElementById('dp-quote-detail-btn');
   if(qdBtn){
     if(p.quoteDetail){ qdBtn.style.display=''; qdBtn.onclick=()=>viewProjectQuoteDetails(id); }
@@ -1732,11 +1757,16 @@ function openPrintWindow(title,bodyHtml){
   const w=window.open('','_blank');
   if(!w){alert('Please allow popups to generate the document.');return;}
   w.document.write('<!DOCTYPE html><html><head><title>'+title+'</title><meta charset="UTF-8">'+
-    '<style>body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;padding:40px;max-width:820px;margin:0 auto}'+
-    'table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:8px 10px;border-bottom:1px solid #e0e8f0;font-size:13px;text-align:left}'+
-    'th{background:#f0f4f8;text-transform:uppercase;font-size:11px;letter-spacing:.3px;color:#555}'+
-    '.right{text-align:right}.totalrow td{font-weight:700;font-size:15px;border-top:2px solid #10173A;border-bottom:none}'+
-    '.printbtn{margin-bottom:20px}@media print{.printbtn{display:none}}</style></head><body>'+
+    '<style>'+
+    'body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;padding:48px;max-width:820px;margin:0 auto;line-height:1.5}'+
+    'table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:9px 10px;border-bottom:1px solid #e0e8f0;font-size:13px;text-align:left}'+
+    'th{background:#f0f4f8;text-transform:uppercase;font-size:10.5px;letter-spacing:.4px;color:#555;font-weight:700}'+
+    '.right{text-align:right}.totalrow td{font-weight:700;font-size:15px;border-top:2px solid #10173A;border-bottom:none;padding-top:12px}'+
+    '.scope-box{background:#f7fafd;border-left:4px solid #0B5A82;border-radius:0 6px 6px 0;padding:14px 18px;margin:20px 0}'+
+    '.scope-box .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:#0B5A82;font-weight:700;margin-bottom:6px}'+
+    '.scope-box .txt{font-size:13px;color:#333;white-space:pre-wrap}'+
+    '.printbtn{margin-bottom:24px}@media print{.printbtn{display:none}}'+
+    '</style></head><body>'+
     '<div class="printbtn"><button onclick="window.print()" style="padding:10px 20px;background:#0B5A82;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer">🖨 Print / Save as PDF</button></div>'+
     bodyHtml+'</body></html>');
   w.document.close();
@@ -1752,29 +1782,61 @@ function billToHtml(p,labelText){
     '<div style="font-size:13px;margin-top:4px">'+escapeHtml(p.name||'-')+'</div></div>';
 }
 
-function generateQuotationDoc(projectId){
+let quotePdfProjectId=null;
+function openQuotePdfModal(projectId){
   const p=PROJECTS.find(function(x){return x.id===projectId;});
   if(!p){alert('Project not found.');return;}
-  const rows=CATS.map(function(c){
-    const amt=n(p.quoted[c]);
-    return amt>0?'<tr><td>'+CAT_LABELS[c]+'</td><td class="right">'+fmtRM(amt)+'</td></tr>':'';
-  }).join('');
+  quotePdfProjectId=projectId;
+  document.getElementById('qpdf-scope').value=p.notes||'';
+  document.querySelector('input[name="qpdf-mode"][value="lumpsum"]').checked=true;
+  document.getElementById('quote-pdf-modal-overlay').classList.add('open');
+}
+function closeQuotePdfModal(){
+  document.getElementById('quote-pdf-modal-overlay').classList.remove('open');
+  quotePdfProjectId=null;
+}
+function confirmGenerateQuotationDoc(){
+  if(!quotePdfProjectId) return;
+  const mode=document.querySelector('input[name="qpdf-mode"]:checked').value;
+  const scope=document.getElementById('qpdf-scope').value.trim();
+  generateQuotationDoc(quotePdfProjectId,mode,scope);
+  closeQuotePdfModal();
+}
+// mode: 'lumpsum' (one total line, scope carries the detail) or 'itemized' (per-category lines).
+// Markup is never shown as its own line either way - in itemized mode each category's displayed
+// amount already has markup folded in proportionally, so the rows sum exactly to the total
+// without ever printing a "Markup (X%)" figure a client shouldn't see.
+function generateQuotationDoc(projectId,mode,scope){
+  const p=PROJECTS.find(function(x){return x.id===projectId;});
+  if(!p){alert('Project not found.');return;}
   const subtotal=CATS.reduce(function(s,c){return s+n(p.quoted[c]);},0);
   const markup=n(p.quoted.markup);
-  const markupAmt=subtotal*markup/100;
+  const markupMult=1+markup/100;
+  const finalPrice=n(p.quoted.finalPrice)||(subtotal*markupMult);
   const today=new Date().toLocaleDateString('en-MY');
+  let priceSection;
+  if(mode==='itemized'){
+    const rows=CATS.map(function(c){
+      const amt=n(p.quoted[c])*markupMult;
+      return amt>0?'<tr><td>'+CAT_LABELS[c]+'</td><td class="right">'+fmtRM(amt)+'</td></tr>':'';
+    }).join('');
+    priceSection='<table><thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+rows+
+      '<tr class="totalrow"><td>Total Quotation Price</td><td class="right">'+fmtRM(finalPrice)+'</td></tr>'+
+      '</tbody></table>';
+  } else {
+    priceSection='<table><thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+
+      '<tr><td>Lump sum - fabrication, supply &amp; installation as per Scope of Work below</td><td class="right">'+fmtRM(finalPrice)+'</td></tr>'+
+      '<tr class="totalrow"><td>Total Quotation Price</td><td class="right">'+fmtRM(finalPrice)+'</td></tr>'+
+      '</tbody></table>';
+  }
   const body=letterheadHtml(p.branch)+
     '<div style="display:flex;justify-content:space-between;margin-bottom:20px">'+
     '<div><div style="font-size:22px;font-weight:700;color:#0B5A82">QUOTATION</div>'+
     '<div style="font-size:12px;color:#555;margin-top:4px">Date: '+today+'</div></div>'+
     '<div style="text-align:right"><div style="font-size:11px;color:#888;text-transform:uppercase">Project No.</div><div style="font-weight:700">'+escapeHtml(p.projectNo||'-')+'</div></div></div>'+
     billToHtml(p,'Client')+
-    '<table><thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+rows+
-    '<tr><td>Subtotal</td><td class="right">'+fmtRM(subtotal)+'</td></tr>'+
-    '<tr><td>Markup ('+markup+'%)</td><td class="right">'+fmtRM(markupAmt)+'</td></tr>'+
-    '<tr class="totalrow"><td>Total Quotation Price</td><td class="right">'+fmtRM(subtotal+markupAmt)+'</td></tr>'+
-    '</tbody></table>'+
-    (p.notes?('<div style="margin-top:20px;font-size:12px;color:#555"><strong>Notes:</strong> '+escapeHtml(p.notes)+'</div>'):'')+
+    (scope?('<div class="scope-box"><div class="lbl">Scope of Work</div><div class="txt">'+escapeHtml(scope)+'</div></div>'):'')+
+    priceSection+
     '<div style="margin-top:40px;font-size:11px;color:#888">This quotation is valid for 30 days from the date of issue.</div>';
   openPrintWindow('Quotation - '+escapeHtml(p.name||'Project'),body);
 }
@@ -1793,8 +1855,9 @@ function generateInvoiceDoc(invoiceId){
     '<div style="font-size:11px;color:#888;text-transform:uppercase">Issue Date</div><div style="font-weight:700">'+(inv.issueDate?new Date(inv.issueDate).toLocaleDateString('en-MY'):'-')+'</div>'+
     '<div style="font-size:11px;color:#888;text-transform:uppercase;margin-top:6px">Due Date</div><div style="font-weight:700">'+(inv.dueDate?new Date(inv.dueDate).toLocaleDateString('en-MY'):'-')+'</div></div></div>'+
     billToHtml(p,'Bill To')+
+    (p.notes?('<div class="scope-box"><div class="lbl">Scope of Work</div><div class="txt">'+escapeHtml(p.notes)+'</div></div>'):'')+
     '<table><thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+
-    '<tr><td>'+escapeHtml(p.name||'Project')+(inv.notes?(' &mdash; '+escapeHtml(inv.notes)):'')+'</td><td class="right">'+fmtRM(n(inv.amount))+'</td></tr>'+
+    '<tr><td>'+escapeHtml(p.name||'Project')+(inv.notes?(' - '+escapeHtml(inv.notes)):'')+'</td><td class="right">'+fmtRM(n(inv.amount))+'</td></tr>'+
     '<tr class="totalrow"><td>Total Due</td><td class="right">'+fmtRM(n(inv.amount))+'</td></tr>'+
     '</tbody></table>'+
     '<div style="margin-top:8px;font-size:12px;color:'+(st.status==='overdue'?'#C0392B':'#555')+';font-weight:'+(st.status==='overdue'?'700':'400')+'">Status: '+st.label+(st.status==='overdue'?(' ('+st.daysOverdue+' days overdue)'):'')+'</div>'+
