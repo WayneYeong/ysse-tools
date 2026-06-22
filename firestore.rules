@@ -86,7 +86,11 @@ service cloud.firestore {
     }
 
     match /ysse_settings/{docId} {
-      allow read: if isManagement() && docId == settingsDocId();
+      // Read must be available to every signed-in role (owner, management, AND qs) - the
+      // Quotation Calculator is the qs role's primary tool, and it needs the company name and
+      // branch list from here. Restricting read to isManagement() left qs accounts stuck on
+      // "Loading..." with no branches to pick from.
+      allow read: if isSignedIn() && docId == settingsDocId();
       allow write: if canUseSettings() && docId == settingsDocId();
     }
 
