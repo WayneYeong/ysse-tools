@@ -83,12 +83,12 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
 .modal-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1}
 .modal-body{padding:20px 24px}
 .modal-footer{padding:12px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;margin-bottom:16px}
-.form-grid.three{grid-template-columns:1fr 1fr 1fr}
-.form-group{display:flex;flex-direction:column;gap:4px}
+.form-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px 16px;margin-bottom:16px}
+.form-grid.three{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}
+.form-group{display:flex;flex-direction:column;gap:4px;min-width:0}
 .form-group.span2{grid-column:span 2}
 .form-group label{font-size:11px;font-weight:700;color:var(--dark);text-transform:uppercase;letter-spacing:.3px}
-.form-group input,.form-group select,.form-group textarea{border:1.5px solid #d1d9e6;border-radius:4px;padding:6px 8px;font-size:12px;font-family:Arial,sans-serif;outline:none}
+.form-group input,.form-group select,.form-group textarea{width:100%;min-width:0;border:1.5px solid #d1d9e6;border-radius:4px;padding:6px 8px;font-size:12px;font-family:Arial,sans-serif;outline:none}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--mid);background:#f0f6ff}
 .section-hdr{background:var(--mid);color:#fff;padding:6px 10px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin:14px 0 10px}
 .section-hdr.green{background:var(--green)}
@@ -1638,12 +1638,19 @@ function saveClient(){
   if(editClientId){
     const idx=CLIENTS.findIndex(function(x){return x.id===editClientId;});
     if(idx>=0) CLIENTS[idx]=client;
+    // Projects store a copy of the client name for display/search (p.client), not just the
+    // clientId — without this, renaming a client here leaves every project that's linked to
+    // them still showing the old name everywhere (tables, PDFs, search), since nothing else
+    // ever re-reads the client record after the link was made.
+    PROJECTS.forEach(function(p){ if(p.clientId===editClientId) p.client=name; });
   } else {
     CLIENTS.push(client);
   }
   save();
   closeClientModal();
   if(document.getElementById('page-clients').classList.contains('active')) renderClients();
+  if(document.getElementById('page-projects').classList.contains('active')) renderProjects();
+  if(document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
   const projSel=document.getElementById('f-client-link');
   if(projSel) populateClientDropdown(projSel,projSel.value);
 }
