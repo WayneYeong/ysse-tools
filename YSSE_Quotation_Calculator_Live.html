@@ -186,13 +186,6 @@ td.num input{text-align:right}
   <div><label>Branch</label><select id="proj-branch"></select></div>
 </div>
 
-<div class="ot-bar">
-  <span>⚙ Manhour Assumptions:</span>
-  <label>Normal Hours Multiplier: <input type="number" id="ot-norm" value="1.0" min="0" step="0.1"></label>
-  <label>OT Hours Multiplier (weekday after 8hrs): <input type="number" id="ot-mult" value="1.5" min="1" step="0.1"></label>
-  <label>Sun / Public Holiday OT Multiplier: <input type="number" id="ot-sun" value="2.0" min="1" step="0.1"></label>
-</div>
-
 <div class="main">
   <div class="toolbar">
     <button class="btn-submit" onclick="submitToManagement()">📤 Submit to Management</button>
@@ -334,6 +327,12 @@ td.num input{text-align:right}
       <div class="btns"><button onclick="addMhrRow()">+ Add Row</button></div>
     </div>
     <div class="card-body">
+    <div class="ot-bar" style="margin:-1px -1px 12px;border-radius:0">
+      <span>⚙ Manhour Assumptions:</span>
+      <label>Normal Hours Multiplier: <input type="number" id="ot-norm" value="1.0" min="0" step="0.1"></label>
+      <label>OT Hours Multiplier (weekday after 8hrs): <input type="number" id="ot-mult" value="1.5" min="1" step="0.1"></label>
+      <label>Sun / Public Holiday OT Multiplier: <input type="number" id="ot-sun" value="2.0" min="1" step="0.1"></label>
+    </div>
     <div class="tbl-wrap"><table id="tbl-manhours">
       <thead><tr>
         <th style="width:30px">#</th><th style="width:165px">Position / Role</th>
@@ -1513,6 +1512,7 @@ renderAll();
         window.CURRENT_CUSTOMER_ID=customerId;
         window.CURRENT_USER_NAME=v.name||'';
         window.CURRENT_USER_POSITION=v.position||'';
+        window.CURRENT_USER_BRANCH=v.branch||'';
         // Reload MATDB from THIS tenant's own cache now that we know who's signing in — never leave
         // whatever a previously logged-in company on this browser left behind in memory. A tenant
         // with no cache yet (brand-new customer, no Firestore doc either) starts fully empty rather
@@ -1526,6 +1526,14 @@ renderAll();
           if(hdr) hdr.textContent=(data&&data.companyName)?data.companyName.toUpperCase():'COMPANY';
           window.CURRENT_BRANCHES=(data&&data.branches)||{};
           renderProjBranchSelect();
+          // If this user has an assigned home branch (set when they were added under Manage
+          // Users), default the project branch to it - the materials picker's "This Branch"
+          // filter reads proj-branch's value, so this also defaults her materials view.
+          var pb=document.getElementById('proj-branch');
+          if(pb&&window.CURRENT_USER_BRANCH&&window.CURRENT_BRANCHES[window.CURRENT_USER_BRANCH]&&!pb.dataset.branchDefaulted){
+            pb.value=window.CURRENT_USER_BRANCH;
+            pb.dataset.branchDefaulted='1';
+          }
         },function(err){});
         showApp();
         var who=document.getElementById('logged-in-as');

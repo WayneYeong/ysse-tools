@@ -514,14 +514,15 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
         <option value="management">Management</option>
         <option value="owner">Owner</option>
       </select>
+      <select id="nu-branch"></select>
       <button class="btn btn-primary btn-sm" onclick="addUser()">+ Add User</button>
     </div>
-    <div style="padding:0 14px 14px;font-size:11px;color:var(--mid)">Management users start with no feature access ticked below — enable Financial Dashboard, Quotation Calculator, and/or Company Settings per person after adding them.</div>
+    <div style="padding:0 14px 14px;font-size:11px;color:var(--mid)">Management users start with no feature access ticked below — enable Financial Dashboard, Quotation Calculator, and/or Company Settings per person after adding them. Branch is optional - set it if this person should default to one branch's materials and data (e.g. a QS Engineer based at one location).</div>
   </div>
   <div class="tbl-card">
     <div class="tbl-card-hdr"><h3>Users &amp; Roles</h3></div>
     <table class="projects"><thead><tr>
-      <th>Name</th><th>Position</th><th>Email</th><th>Role</th><th>Dashboard</th><th>Quotation</th><th>Settings</th><th>Added On</th><th>Actions</th>
+      <th>Name</th><th>Position</th><th>Email</th><th>Role</th><th>Branch</th><th>Dashboard</th><th>Quotation</th><th>Settings</th><th>Added On</th><th>Actions</th>
     </tr></thead><tbody id="body-users"></tbody></table>
     <div id="users-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No users added yet.</div>
   </div>
@@ -923,6 +924,12 @@ function renderBranchSelects(){
     fb.innerHTML=opts||'<option value="">No branches set up yet</option>';
     if(keys.indexOf(cur)!==-1) fb.value=cur;
   }
+  const nb=document.getElementById('nu-branch');
+  if(nb){
+    const cur=nb.value;
+    nb.innerHTML='<option value="">No specific branch</option>'+opts;
+    if(keys.indexOf(cur)!==-1) nb.value=cur;
+  }
 }
 
 let PROJECTS=[];
@@ -1313,6 +1320,10 @@ function renderUsers(){
       '<option value="qs"'+(u.role==='qs'?' selected':'')+'>QS / Engineer</option>'+
       '<option value="management"'+(u.role==='management'?' selected':'')+'>Management</option>'+
       '<option value="owner"'+(u.role==='owner'?' selected':'')+'>Owner</option></select></td>'+
+      '<td><select onchange="updateUserBranch(\''+jsAttr(u.email)+'\',this.value)" style="font-size:12px;padding:3px">'+
+      '<option value="">No specific branch</option>'+
+      branchKeys().map(function(k){ return '<option value="'+escapeHtml(k)+'"'+(u.branch===k?' selected':'')+'>'+escapeHtml(branchLabel(k))+'</option>'; }).join('')+
+      '</select></td>'+
       '<td style="text-align:center">'+permCell('dashboard')+'</td>'+
       '<td style="text-align:center">'+permCell('quotation')+'</td>'+
       '<td style="text-align:center">'+permCell('settings')+'</td>'+
@@ -1327,13 +1338,15 @@ function addUser(){
   const posEl=document.getElementById('nu-position');
   const emailEl=document.getElementById('nu-email');
   const roleEl=document.getElementById('nu-role');
+  const branchEl=document.getElementById('nu-branch');
   const name=nameEl.value.trim();
   const position=posEl.value.trim();
   const email=emailEl.value.trim().toLowerCase();
   const role=roleEl.value;
+  const branch=branchEl?branchEl.value:'';
   if(!email||!email.includes('@')){alert('Please enter a valid email.');return;}
   if(ALL_USERS.some(u=>u.email===email)){alert('That user already exists. Edit their details from the list below instead.');return;}
-  if(typeof window.addUserToFirestore==='function') window.addUserToFirestore(email,role,name,position,window.CURRENT_CUSTOMER_ID||'ysse',{dashboard:false,quotation:false,settings:false});
+  if(typeof window.addUserToFirestore==='function') window.addUserToFirestore(email,role,name,position,window.CURRENT_CUSTOMER_ID||'ysse',{dashboard:false,quotation:false,settings:false},branch);
   nameEl.value='';posEl.value='';emailEl.value='';
 }
 
@@ -1345,6 +1358,10 @@ function updateUserProfile(email,field,value){
 function updateUserPermission(email,key,checked){
   if(!requireOwner('change user permissions'))return;
   if(typeof window.updateUserPermissionInFirestore==='function') window.updateUserPermissionInFirestore(email,key,checked);
+}
+function updateUserBranch(email,branch){
+  if(!requireOwner('change a user\'s branch'))return;
+  if(typeof window.updateUserBranchInFirestore==='function') window.updateUserBranchInFirestore(email,branch);
 }
 
 function userLabel(email){
@@ -3043,9 +3060,9 @@ function delActualSubconRow(i){
     if(!settingsRef){ if(callback) callback(new Error('not ready')); return; }
     settingsRef.set(settings).then(function(){ if(callback) callback(null); }).catch(function(err){ if(callback) callback(err); });
   };
-  window.addUserToFirestore=function(email,role,name,position,customerId,permissions){
+  window.addUserToFirestore=function(email,role,name,position,customerId,permissions,branch){
     if(!usersCol) return;
-    usersCol.doc(email).set({email:email,role:role,name:name||'',position:position||'',customerId:customerId||'ysse',permissions:permissions||{},addedAt:Date.now(),addedBy:window.CURRENT_USER_EMAIL||''}).catch(function(err){ alert('Could not add user: '+(err&&err.message?err.message:'unknown error')); });
+    usersCol.doc(email).set({email:email,role:role,name:name||'',position:position||'',customerId:customerId||'ysse',permissions:permissions||{},branch:branch||'',addedAt:Date.now(),addedBy:window.CURRENT_USER_EMAIL||''}).catch(function(err){ alert('Could not add user: '+(err&&err.message?err.message:'unknown error')); });
   };
   window.updateUserRole=function(email,role){
     if(!usersCol) return;
@@ -3056,6 +3073,10 @@ function delActualSubconRow(i){
     var patch={};
     patch['permissions.'+key]=!!checked;
     usersCol.doc(email).update(patch).catch(function(err){ alert('Could not update permission: '+(err&&err.message?err.message:'unknown error')); });
+  };
+  window.updateUserBranchInFirestore=function(email,branch){
+    if(!usersCol) return;
+    usersCol.doc(email).update({branch:branch||''}).catch(function(err){ alert('Could not update branch: '+(err&&err.message?err.message:'unknown error')); });
   };
   window.updateUserField=function(email,field,value){
     if(!usersCol) return;
