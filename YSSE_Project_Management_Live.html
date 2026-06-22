@@ -786,6 +786,13 @@ function branchLabel(key){ const b=COMPANY_SETTINGS&&COMPANY_SETTINGS.branches&&
 // "Kuching" literals) — anywhere one is interpolated into innerHTML it must be escaped, or a
 // branch name containing "<" or "\"" could break the markup or inject script.
 function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+// For free-text values (e.g. emails) interpolated inside an inline onclick/onchange JS string
+// delimited by single quotes — a stray "'" in the value would otherwise close the JS string early
+// and break (or let someone tamper with) the handler. Escapes backslash/quote for the JS-string
+// context (note: NOT routed through escapeHtml, which would re-encode the backslash-quote pair
+// we just produced and corrupt it); separately escapes "&"/"<"/'"' since this still sits inside an
+// HTML attribute, where a literal backslash-quote pair is otherwise harmless.
+function jsAttr(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function firstBranchKey(){ return branchKeys()[0]||''; }
 function slugifyBranchName(name){ return (name||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'branch'; }
 
@@ -1219,13 +1226,13 @@ function renderUsers(){
       if(u.role==='owner') return '<span title="Owners always have full access" style="color:#1A6640;font-weight:700">✓</span>';
       if(u.role==='qs') return key==='quotation'?'<span title="QS/Engineer always has Quotation access" style="color:#1A6640;font-weight:700">✓</span>':'<span style="color:#ccc">—</span>';
       const checked=perms[key]!==undefined?!!perms[key]:true; // legacy management docs default to full access
-      return '<input type="checkbox" '+(checked?'checked':'')+' onchange="updateUserPermission(\''+u.email+'\',\''+key+'\',this.checked)">';
+      return '<input type="checkbox" '+(checked?'checked':'')+' onchange="updateUserPermission(\''+jsAttr(u.email)+'\',\''+key+'\',this.checked)">';
     };
     return '<tr>'+
-      '<td><input value="'+escapeHtml(u.name||'')+'" placeholder="-" onchange="updateUserProfile(\''+u.email+'\',\'name\',this.value)" style="width:120px;border:1px solid #ddd;border-radius:3px;padding:3px 5px;font-size:12px"></td>'+
-      '<td><input value="'+escapeHtml(u.position||'')+'" placeholder="-" onchange="updateUserProfile(\''+u.email+'\',\'position\',this.value)" style="width:140px;border:1px solid #ddd;border-radius:3px;padding:3px 5px;font-size:12px"></td>'+
+      '<td><input value="'+escapeHtml(u.name||'')+'" placeholder="-" onchange="updateUserProfile(\''+jsAttr(u.email)+'\',\'name\',this.value)" style="width:120px;border:1px solid #ddd;border-radius:3px;padding:3px 5px;font-size:12px"></td>'+
+      '<td><input value="'+escapeHtml(u.position||'')+'" placeholder="-" onchange="updateUserProfile(\''+jsAttr(u.email)+'\',\'position\',this.value)" style="width:140px;border:1px solid #ddd;border-radius:3px;padding:3px 5px;font-size:12px"></td>'+
       '<td>'+escapeHtml(u.email)+(u.email===window.CURRENT_USER_EMAIL?' <span style="color:#888;font-size:10px">(you)</span>':'')+'</td>'+
-      '<td><select onchange="changeUserRole(\''+u.email+'\',this.value)" '+(isLastOwner?'disabled title="Cannot change the last Owner"':'')+' style="font-size:12px;padding:3px">'+
+      '<td><select onchange="changeUserRole(\''+jsAttr(u.email)+'\',this.value)" '+(isLastOwner?'disabled title="Cannot change the last Owner"':'')+' style="font-size:12px;padding:3px">'+
       '<option value="qs"'+(u.role==='qs'?' selected':'')+'>QS / Engineer</option>'+
       '<option value="management"'+(u.role==='management'?' selected':'')+'>Management</option>'+
       '<option value="owner"'+(u.role==='owner'?' selected':'')+'>Owner</option></select></td>'+
@@ -1233,7 +1240,7 @@ function renderUsers(){
       '<td style="text-align:center">'+permCell('quotation')+'</td>'+
       '<td style="text-align:center">'+permCell('settings')+'</td>'+
       '<td>'+addedOn+'</td>'+
-      '<td><button class="btn btn-danger btn-sm" '+(isLastOwner?'disabled title="Cannot remove the last Owner"':'')+' onclick="removeUser(\''+u.email+'\')">Remove</button></td></tr>';
+      '<td><button class="btn btn-danger btn-sm" '+(isLastOwner?'disabled title="Cannot remove the last Owner"':'')+' onclick="removeUser(\''+jsAttr(u.email)+'\')">Remove</button></td></tr>';
   }).join('');
 }
 

@@ -648,6 +648,10 @@ function firstProjBranchKey(){ return Object.keys(window.CURRENT_BRANCHES||{})[0
 // so they must be escaped before going into innerHTML — a name containing "<" could otherwise
 // break the markup or inject script.
 function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+// For free-text values interpolated inside an inline onclick/onchange JS string delimited by
+// single quotes — see the matching helper in YSSE_Project_Management_Live.html for why this is
+// kept separate from escapeHtml rather than composed with it.
+function jsAttr(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function renderProjBranchSelect(){
   const sel=document.getElementById('proj-branch');
   if(!sel) return;
