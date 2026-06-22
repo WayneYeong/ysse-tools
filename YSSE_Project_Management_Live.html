@@ -947,7 +947,7 @@ function renderDashboard(){
   document.getElementById('kpi-margin').textContent=avgMargin.toFixed(1)+'%';
   document.getElementById('kpi-margin-card').className='kpi '+(avgMargin>=0?'green':'red');
   const recent=[...PLIST].sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);
-  document.getElementById('body-recent').innerHTML=recent.length?recent.map(p=>{const c=calcProject(p);return'<tr onclick="openDetail(\''+p.id+'\')" style="cursor:pointer"><td><strong>'+p.name+'</strong></td><td>'+(p.client||'-')+'</td><td>'+badgeHtml(p.status)+'</td><td>'+(c.duration!=null?c.duration+' days':'-')+'</td><td style="text-align:right">'+fmt(n(p.quoted.finalPrice))+'</td><td style="text-align:right">'+fmt(c.aTotal)+'</td><td style="text-align:right">'+fmt(c.revenue)+'</td><td style="text-align:right;'+(c.profit>=0?'color:#065f46':'color:#991b1b')+'">'+(c.profit>=0?'':'(')+fmt(Math.abs(c.profit))+(c.profit>=0?'':')')+'</td><td>'+marginPill(c.margin)+'</td></tr>';}).join(''):'<tr><td colspan="9" style="text-align:center;padding:30px;color:#888">No projects yet. Click + New Project to start.</td></tr>';
+  document.getElementById('body-recent').innerHTML=recent.length?recent.map(p=>{const c=calcProject(p);return'<tr onclick="openDetail(\''+p.id+'\')" style="cursor:pointer"><td><strong>'+escapeHtml(p.name)+'</strong></td><td>'+escapeHtml(p.client||'-')+'</td><td>'+badgeHtml(p.status)+'</td><td>'+(c.duration!=null?c.duration+' days':'-')+'</td><td style="text-align:right">'+fmt(n(p.quoted.finalPrice))+'</td><td style="text-align:right">'+fmt(c.aTotal)+'</td><td style="text-align:right">'+fmt(c.revenue)+'</td><td style="text-align:right;'+(c.profit>=0?'color:#065f46':'color:#991b1b')+'">'+(c.profit>=0?'':'(')+fmt(Math.abs(c.profit))+(c.profit>=0?'':')')+'</td><td>'+marginPill(c.margin)+'</td></tr>';}).join(''):'<tr><td colspan="9" style="text-align:center;padding:30px;color:#888">No projects yet. Click + New Project to start.</td></tr>';
   const sorted=[...PLIST].sort((a,b)=>b.createdAt-a.createdAt).slice(0,10).reverse();
   const labels=sorted.map(p=>p.name.length>15?p.name.slice(0,15)+'...':p.name);
   if(chartRev){chartRev.destroy();chartRev=null;}
@@ -968,7 +968,7 @@ function renderProjects(){
   const empty=document.getElementById('empty-projects');
   if(!list.length){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  tbody.innerHTML=list.map((p,i)=>{const c=calcProject(p);return'<tr><td style="color:#888;font-size:11px">'+(p.projectNo||i+1)+'</td><td><a href="#" onclick="openDetail(\''+p.id+'\');return false" style="color:var(--dark);font-weight:600;text-decoration:none">'+p.name+'</a></td><td>'+(p.client||'-')+'</td><td>'+branchBadge(p.branch)+'</td><td>'+badgeHtml(p.status)+'</td><td>'+(p.startDate||'-')+'</td><td>'+(p.endDate||'-')+'</td><td style="text-align:center">'+(c.duration!=null?c.duration:'-')+'</td><td style="text-align:right">'+fmt(n(p.quoted.finalPrice))+'</td><td style="text-align:right">'+fmt(c.aTotal)+'</td><td style="text-align:right">'+fmt(c.revenue)+'</td><td style="text-align:right;'+(c.profit>=0?'color:#065f46':'color:#991b1b')+';font-weight:700">'+(c.profit>=0?'':'(')+fmt(Math.abs(c.profit))+(c.profit>=0?'':')')+'</td><td>'+marginPill(c.margin)+'</td><td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="openDetail(\''+p.id+'\')">View</button> <button class="btn btn-ghost btn-sm" onclick="openEditModal(\''+p.id+'\')">Edit</button> <button class="btn btn-danger btn-sm mgmt-only" onclick="deleteProject(\''+p.id+'\')">Del</button></td></tr>';}).join('');
+  tbody.innerHTML=list.map((p,i)=>{const c=calcProject(p);return'<tr><td style="color:#888;font-size:11px">'+escapeHtml(p.projectNo||(i+1)+'')+'</td><td><a href="#" onclick="openDetail(\''+p.id+'\');return false" style="color:var(--dark);font-weight:600;text-decoration:none">'+escapeHtml(p.name)+'</a></td><td>'+escapeHtml(p.client||'-')+'</td><td>'+branchBadge(p.branch)+'</td><td>'+badgeHtml(p.status)+'</td><td>'+(p.startDate||'-')+'</td><td>'+(p.endDate||'-')+'</td><td style="text-align:center">'+(c.duration!=null?c.duration:'-')+'</td><td style="text-align:right">'+fmt(n(p.quoted.finalPrice))+'</td><td style="text-align:right">'+fmt(c.aTotal)+'</td><td style="text-align:right">'+fmt(c.revenue)+'</td><td style="text-align:right;'+(c.profit>=0?'color:#065f46':'color:#991b1b')+';font-weight:700">'+(c.profit>=0?'':'(')+fmt(Math.abs(c.profit))+(c.profit>=0?'':')')+'</td><td>'+marginPill(c.margin)+'</td><td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="openDetail(\''+p.id+'\')">View</button> <button class="btn btn-ghost btn-sm" onclick="openEditModal(\''+p.id+'\')">Edit</button> <button class="btn btn-danger btn-sm mgmt-only" onclick="deleteProject(\''+p.id+'\')">Del</button></td></tr>';}).join('');
 }
 
 let chartBA=null,chartCat2=null;
@@ -998,11 +998,11 @@ function openDetail(id){
     if(p.quoteDetail){ qdBtn.style.display=''; qdBtn.onclick=()=>viewProjectQuoteDetails(id); }
     else { qdBtn.style.display='none'; }
   }
-  const chips=[p.branch?'<span class="chip">Branch: <strong>'+escapeHtml(branchLabel(p.branch))+'</strong></span>':'',p.client?'<span class="chip">Client: <strong>'+p.client+'</strong></span>':'',p.startDate?'<span class="chip">Start: <strong>'+p.startDate+'</strong></span>':'',p.endDate?'<span class="chip">End: <strong>'+p.endDate+'</strong></span>':'',c.duration!=null?'<span class="chip">Duration: <strong>'+c.duration+' days</strong></span>':''].filter(Boolean).join('');
+  const chips=[p.branch?'<span class="chip">Branch: <strong>'+escapeHtml(branchLabel(p.branch))+'</strong></span>':'',p.client?'<span class="chip">Client: <strong>'+escapeHtml(p.client)+'</strong></span>':'',p.startDate?'<span class="chip">Start: <strong>'+escapeHtml(p.startDate)+'</strong></span>':'',p.endDate?'<span class="chip">End: <strong>'+escapeHtml(p.endDate)+'</strong></span>':'',c.duration!=null?'<span class="chip">Duration: <strong>'+c.duration+' days</strong></span>':''].filter(Boolean).join('');
   const profClass=c.profit>=0?'profit':'loss';
   let catRows='';
   CATS.forEach((cat,i)=>{const q=n(p.quoted[cat]),a=n(p.actual[cat]),max=Math.max(q,a,1);catRows+='<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:3px"><span style="font-weight:700">'+CAT_LABELS[cat]+'</span><span>Budget: <strong>RM '+fmt(q)+'</strong> | Actual: <strong>RM '+fmt(a)+'</strong></span></div><div style="position:relative;height:16px;background:#e5e7eb;border-radius:4px;overflow:hidden"><div style="position:absolute;left:0;top:0;height:100%;width:'+(q/max*100).toFixed(1)+'%;background:rgba(46,109,164,.5);border-radius:4px"></div><div style="position:absolute;left:0;top:0;height:100%;width:'+(a/max*100).toFixed(1)+'%;background:'+(a>q?'rgba(192,57,43,.7)':'rgba(26,102,64,.7)')+';border-radius:4px"></div></div>'+(a>q?'<div style="font-size:10px;color:#991b1b;margin-top:1px">Over budget by RM '+fmt(a-q)+'</div>':(a>0&&a<q?'<div style="font-size:10px;color:#065f46;margin-top:1px">Under budget by RM '+fmt(q-a)+'</div>':''))+'</div>';});
-  document.getElementById('dp-body').innerHTML='<div class="info-chips">'+chips+'</div>'+(p.notes?'<div style="background:#f8fafc;border-radius:5px;padding:8px 12px;font-size:12px;color:#555;margin-bottom:14px">'+p.notes+'</div>':'')+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><div style="background:#f0f6ff;border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#2E6DA4;font-weight:700;margin-bottom:6px">Quotation / Budget</div>'+CATS.map(cat=>'<div class="stat-row"><span>'+CAT_LABELS[cat]+'</span><span>RM '+fmt(n(p.quoted[cat]))+'</span></div>').join('')+'<div class="stat-row bold"><span>Total Cost</span><span>RM '+fmt(CATS.reduce((s,c)=>s+n(p.quoted[c]),0))+'</span></div><div class="stat-row"><span>Markup ('+n(p.quoted.markup)+'%)</span><span>RM '+fmt(CATS.reduce((s,c)=>s+n(p.quoted[c]),0)*n(p.quoted.markup)/100)+'</span></div><div class="stat-row bold" style="color:#2E6DA4"><span>Final Quote Price</span><span>RM '+fmt(n(p.quoted.finalPrice))+'</span></div></div><div style="background:#f0faf4;border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#1A6640;font-weight:700;margin-bottom:6px">Actual / P&L</div>'+CATS.map(cat=>'<div class="stat-row"><span>'+CAT_LABELS[cat]+'</span><span>RM '+fmt(n(p.actual[cat]))+'</span></div>').join('')+'<div class="stat-row bold"><span>Total Actual Cost</span><span>RM '+fmt(c.aTotal)+'</span></div><div class="stat-row bold"><span>Revenue (Invoiced)</span><span>RM '+fmt(c.revenue)+'</span></div><div class="stat-row '+profClass+'"><span>'+(c.profit>=0?'Gross Profit':'Gross Loss')+'</span><span>RM '+fmt(Math.abs(c.profit))+'</span></div><div class="stat-row '+profClass+'"><span>Margin</span><span>'+c.margin.toFixed(1)+'%</span></div></div></div><div style="background:#fafafa;border-radius:6px;padding:12px;border:1px solid #e5e7eb"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#555;font-weight:700;margin-bottom:10px">Budget vs Actual by Category</div>'+catRows+'</div>';
+  document.getElementById('dp-body').innerHTML='<div class="info-chips">'+chips+'</div>'+(p.notes?'<div style="background:#f8fafc;border-radius:5px;padding:8px 12px;font-size:12px;color:#555;margin-bottom:14px">'+escapeHtml(p.notes)+'</div>':'')+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><div style="background:#f0f6ff;border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#2E6DA4;font-weight:700;margin-bottom:6px">Quotation / Budget</div>'+CATS.map(cat=>'<div class="stat-row"><span>'+CAT_LABELS[cat]+'</span><span>RM '+fmt(n(p.quoted[cat]))+'</span></div>').join('')+'<div class="stat-row bold"><span>Total Cost</span><span>RM '+fmt(CATS.reduce((s,c)=>s+n(p.quoted[c]),0))+'</span></div><div class="stat-row"><span>Markup ('+n(p.quoted.markup)+'%)</span><span>RM '+fmt(CATS.reduce((s,c)=>s+n(p.quoted[c]),0)*n(p.quoted.markup)/100)+'</span></div><div class="stat-row bold" style="color:#2E6DA4"><span>Final Quote Price</span><span>RM '+fmt(n(p.quoted.finalPrice))+'</span></div></div><div style="background:#f0faf4;border-radius:6px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#1A6640;font-weight:700;margin-bottom:6px">Actual / P&L</div>'+CATS.map(cat=>'<div class="stat-row"><span>'+CAT_LABELS[cat]+'</span><span>RM '+fmt(n(p.actual[cat]))+'</span></div>').join('')+'<div class="stat-row bold"><span>Total Actual Cost</span><span>RM '+fmt(c.aTotal)+'</span></div><div class="stat-row bold"><span>Revenue (Invoiced)</span><span>RM '+fmt(c.revenue)+'</span></div><div class="stat-row '+profClass+'"><span>'+(c.profit>=0?'Gross Profit':'Gross Loss')+'</span><span>RM '+fmt(Math.abs(c.profit))+'</span></div><div class="stat-row '+profClass+'"><span>Margin</span><span>'+c.margin.toFixed(1)+'%</span></div></div></div><div style="background:#fafafa;border-radius:6px;padding:12px;border:1px solid #e5e7eb"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#555;font-weight:700;margin-bottom:10px">Budget vs Actual by Category</div>'+catRows+'</div>';
   document.getElementById('detail-overlay').classList.add('open');
   document.getElementById('detail-panel').classList.add('open');
 }
@@ -1183,7 +1183,7 @@ function renderTrash(){
   tbody.innerHTML=TRASH.map(p=>{
     const delDate=p.deletedAt?new Date(p.deletedAt).toLocaleDateString('en-MY'):'-';
     const daysLeft=p.deletedAt?Math.max(0,30-Math.floor((Date.now()-p.deletedAt)/86400000)):30;
-    return '<tr><td>'+delDate+'</td><td><strong>'+p.name+'</strong></td><td>'+(p.client||'-')+'</td><td>'+branchBadge(p.branch)+'</td><td>'+userLabel(p.deletedBy)+'</td><td>'+daysLeft+' days</td>'+
+    return '<tr><td>'+delDate+'</td><td><strong>'+escapeHtml(p.name)+'</strong></td><td>'+escapeHtml(p.client||'-')+'</td><td>'+branchBadge(p.branch)+'</td><td>'+escapeHtml(userLabel(p.deletedBy))+'</td><td>'+daysLeft+' days</td>'+
       '<td style="white-space:nowrap"><button class="btn btn-accent btn-sm mgmt-only" onclick="restoreProject(\''+p.id+'\')">Restore</button> <button class="btn btn-danger btn-sm mgmt-only" onclick="permanentlyDeleteProject(\''+p.id+'\')">Delete Forever</button></td></tr>';
   }).join('');
   updateTrashBadge();
@@ -1222,9 +1222,9 @@ function renderUsers(){
       return '<input type="checkbox" '+(checked?'checked':'')+' onchange="updateUserPermission(\''+u.email+'\',\''+key+'\',this.checked)">';
     };
     return '<tr>'+
-      '<td><input value="'+(u.name?u.name.replace(/"/g,'&quot;'):'')+'" placeholder="-" onchange="updateUserProfile(\''+u.email+'\',\'name\',this.value)" style="width:120px;border:1px solid #ddd;border-radius:3px;padding:3px 5px;font-size:12px"></td>'+
-      '<td><input value="'+(u.position?u.position.replace(/"/g,'&quot;'):'')+'" placeholder="-" onchange="updateUserProfile(\''+u.email+'\',\'position\',this.value)" style="width:140px;border:1px solid #ddd;border-radius:3px;padding:3px 5px;font-size:12px"></td>'+
-      '<td>'+u.email+(u.email===window.CURRENT_USER_EMAIL?' <span style="color:#888;font-size:10px">(you)</span>':'')+'</td>'+
+      '<td><input value="'+escapeHtml(u.name||'')+'" placeholder="-" onchange="updateUserProfile(\''+u.email+'\',\'name\',this.value)" style="width:120px;border:1px solid #ddd;border-radius:3px;padding:3px 5px;font-size:12px"></td>'+
+      '<td><input value="'+escapeHtml(u.position||'')+'" placeholder="-" onchange="updateUserProfile(\''+u.email+'\',\'position\',this.value)" style="width:140px;border:1px solid #ddd;border-radius:3px;padding:3px 5px;font-size:12px"></td>'+
+      '<td>'+escapeHtml(u.email)+(u.email===window.CURRENT_USER_EMAIL?' <span style="color:#888;font-size:10px">(you)</span>':'')+'</td>'+
       '<td><select onchange="changeUserRole(\''+u.email+'\',this.value)" '+(isLastOwner?'disabled title="Cannot change the last Owner"':'')+' style="font-size:12px;padding:3px">'+
       '<option value="qs"'+(u.role==='qs'?' selected':'')+'>QS / Engineer</option>'+
       '<option value="management"'+(u.role==='management'?' selected':'')+'>Management</option>'+
@@ -1357,7 +1357,7 @@ function renderPending(){
     const calc=calcPendingQuoteCats(q);
     const submitted=q.submittedAt?new Date(q.submittedAt).toLocaleDateString('en-MY'):'-';
     const proj=q.project||{};
-    return '<tr><td>'+submitted+'</td><td>'+(proj.name||'-')+'</td><td>'+(proj.client||'-')+'</td><td>'+(proj.no||'-')+'</td><td>'+escapeHtml(branchLabel(proj.branch)||'-')+'</td><td>'+(proj.by||'-')+'</td><td>'+fmt(calc.finalPrice)+'</td><td><span class="badge badge-quoted">Pending</span></td>'+
+    return '<tr><td>'+submitted+'</td><td>'+escapeHtml(proj.name||'-')+'</td><td>'+escapeHtml(proj.client||'-')+'</td><td>'+escapeHtml(proj.no||'-')+'</td><td>'+escapeHtml(branchLabel(proj.branch)||'-')+'</td><td>'+escapeHtml(proj.by||'-')+'</td><td>'+fmt(calc.finalPrice)+'</td><td><span class="badge badge-quoted">Pending</span></td>'+
       '<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="viewQuoteDetails(\''+q.id+'\')">View Details</button> <button class="btn btn-accent btn-sm mgmt-only" onclick="convertPendingQuote(\''+q.id+'\')">Convert to Project</button> <button class="btn btn-ghost btn-sm mgmt-only" onclick="dismissPendingQuoteUI(\''+q.id+'\')">Dismiss</button></td></tr>';
   }).join('');
   const badge=document.getElementById('pending-badge');
@@ -1390,7 +1390,7 @@ function populateInvoiceProjectDropdown(){
   const sel=document.getElementById('inv-project');
   if(!sel) return;
   sel.innerHTML='<option value="">Select a project...</option>'+PROJECTS.map(function(p){
-    return '<option value="'+p.id+'">'+(p.name||'Untitled')+' &mdash; '+(p.client||'No client')+'</option>';
+    return '<option value="'+p.id+'">'+escapeHtml(p.name||'Untitled')+' &mdash; '+escapeHtml(p.client||'No client')+'</option>';
   }).join('');
 }
 
@@ -1413,7 +1413,7 @@ function renderInvoices(){
     const statusClass=inv._status==='paid'?'badge-completed':(inv._status==='overdue'?'badge-overdue':'badge-progress');
     const overdueCell=inv._status==='overdue'?('<span style="color:#C0392B;font-weight:700">'+inv._daysOverdue+' days</span>'):'-';
     const paidCell=inv.paidDate?new Date(inv.paidDate).toLocaleDateString('en-MY'):'-';
-    return '<tr><td>'+(inv.invoiceNo||'-')+'</td><td>'+inv._projName+'</td><td>'+inv._client+'</td>'+
+    return '<tr><td>'+escapeHtml(inv.invoiceNo||'-')+'</td><td>'+escapeHtml(inv._projName)+'</td><td>'+escapeHtml(inv._client)+'</td>'+
       '<td>'+(inv.issueDate?new Date(inv.issueDate).toLocaleDateString('en-MY'):'-')+'</td>'+
       '<td>'+(inv.dueDate?new Date(inv.dueDate).toLocaleDateString('en-MY'):'-')+'</td>'+
       '<td style="text-align:right;font-weight:700">'+fmt(n(inv.amount))+'</td>'+
@@ -1585,7 +1585,7 @@ function renderClients(){
   const tbody=document.getElementById('body-clients');
   document.getElementById('clients-empty').style.display=CLIENTS.length?'none':'block';
   tbody.innerHTML=CLIENTS.map(function(c){
-    return '<tr><td style="font-weight:700">'+(c.name||'-')+'</td><td>'+(c.attention||'-')+'</td><td>'+(c.phone||'-')+'</td><td>'+(c.email||'-')+'</td><td style="font-size:11.5px;color:#555;max-width:240px">'+(c.address||'-')+'</td>'+
+    return '<tr><td style="font-weight:700">'+escapeHtml(c.name||'-')+'</td><td>'+escapeHtml(c.attention||'-')+'</td><td>'+escapeHtml(c.phone||'-')+'</td><td>'+escapeHtml(c.email||'-')+'</td><td style="font-size:11.5px;color:#555;max-width:240px">'+escapeHtml(c.address||'-')+'</td>'+
       '<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="openClientModal(\''+c.id+'\')">Edit</button> '+
       '<button class="btn btn-danger btn-sm mgmt-only" onclick="deleteClient(\''+c.id+'\')">Delete</button></td></tr>';
   }).join('');
@@ -1594,7 +1594,7 @@ function renderClients(){
 function populateClientDropdown(selectEl,selectedId){
   if(!selectEl) return;
   selectEl.innerHTML='<option value="">No linked client record (free text below)</option>'+CLIENTS.map(function(c){
-    return '<option value="'+c.id+'"'+(c.id===selectedId?' selected':'')+'>'+(c.name||'Untitled')+'</option>';
+    return '<option value="'+c.id+'"'+(c.id===selectedId?' selected':'')+'>'+escapeHtml(c.name||'Untitled')+'</option>';
   }).join('');
 }
 
@@ -1679,11 +1679,11 @@ function openPrintWindow(title,bodyHtml){
 function billToHtml(p,labelText){
   const client=p.clientId?CLIENTS.find(function(x){return x.id===p.clientId;}):
     CLIENTS.find(function(x){return x.name&&p.client&&x.name.toLowerCase()===p.client.toLowerCase();});
-  return '<div style="margin-bottom:20px"><div style="font-size:11px;color:#888;text-transform:uppercase">'+(labelText||'Client')+'</div>'+
-    '<div style="font-weight:700;font-size:15px">'+(p.client||'-')+'</div>'+
-    (client&&client.attention?('<div style="font-size:12.5px;margin-top:2px">Attn: '+client.attention+'</div>'):'')+
-    (client&&client.address?('<div style="font-size:12px;color:#555;margin-top:2px;max-width:340px;line-height:1.5">'+client.address+'</div>'):'')+
-    '<div style="font-size:13px;margin-top:4px">'+(p.name||'-')+'</div></div>';
+  return '<div style="margin-bottom:20px"><div style="font-size:11px;color:#888;text-transform:uppercase">'+escapeHtml(labelText||'Client')+'</div>'+
+    '<div style="font-weight:700;font-size:15px">'+escapeHtml(p.client||'-')+'</div>'+
+    (client&&client.attention?('<div style="font-size:12.5px;margin-top:2px">Attn: '+escapeHtml(client.attention)+'</div>'):'')+
+    (client&&client.address?('<div style="font-size:12px;color:#555;margin-top:2px;max-width:340px;line-height:1.5">'+escapeHtml(client.address)+'</div>'):'')+
+    '<div style="font-size:13px;margin-top:4px">'+escapeHtml(p.name||'-')+'</div></div>';
 }
 
 function generateQuotationDoc(projectId){
@@ -1701,16 +1701,16 @@ function generateQuotationDoc(projectId){
     '<div style="display:flex;justify-content:space-between;margin-bottom:20px">'+
     '<div><div style="font-size:22px;font-weight:700;color:#0B5A82">QUOTATION</div>'+
     '<div style="font-size:12px;color:#555;margin-top:4px">Date: '+today+'</div></div>'+
-    '<div style="text-align:right"><div style="font-size:11px;color:#888;text-transform:uppercase">Project No.</div><div style="font-weight:700">'+(p.projectNo||'-')+'</div></div></div>'+
+    '<div style="text-align:right"><div style="font-size:11px;color:#888;text-transform:uppercase">Project No.</div><div style="font-weight:700">'+escapeHtml(p.projectNo||'-')+'</div></div></div>'+
     billToHtml(p,'Client')+
     '<table><thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+rows+
     '<tr><td>Subtotal</td><td class="right">'+fmtRM(subtotal)+'</td></tr>'+
     '<tr><td>Markup ('+markup+'%)</td><td class="right">'+fmtRM(markupAmt)+'</td></tr>'+
     '<tr class="totalrow"><td>Total Quotation Price</td><td class="right">'+fmtRM(subtotal+markupAmt)+'</td></tr>'+
     '</tbody></table>'+
-    (p.notes?('<div style="margin-top:20px;font-size:12px;color:#555"><strong>Notes:</strong> '+p.notes+'</div>'):'')+
+    (p.notes?('<div style="margin-top:20px;font-size:12px;color:#555"><strong>Notes:</strong> '+escapeHtml(p.notes)+'</div>'):'')+
     '<div style="margin-top:40px;font-size:11px;color:#888">This quotation is valid for 30 days from the date of issue.</div>';
-  openPrintWindow('Quotation - '+(p.name||'Project'),body);
+  openPrintWindow('Quotation - '+escapeHtml(p.name||'Project'),body);
 }
 
 function generateInvoiceDoc(invoiceId){
@@ -1722,20 +1722,20 @@ function generateInvoiceDoc(invoiceId){
   const body=letterheadHtml(p.branch)+
     '<div style="display:flex;justify-content:space-between;margin-bottom:20px">'+
     '<div><div style="font-size:22px;font-weight:700;color:#0B5A82">INVOICE</div>'+
-    '<div style="font-size:12px;color:#555;margin-top:4px">Invoice No: '+(inv.invoiceNo||'-')+'</div></div>'+
+    '<div style="font-size:12px;color:#555;margin-top:4px">Invoice No: '+escapeHtml(inv.invoiceNo||'-')+'</div></div>'+
     '<div style="text-align:right">'+
     '<div style="font-size:11px;color:#888;text-transform:uppercase">Issue Date</div><div style="font-weight:700">'+(inv.issueDate?new Date(inv.issueDate).toLocaleDateString('en-MY'):'-')+'</div>'+
     '<div style="font-size:11px;color:#888;text-transform:uppercase;margin-top:6px">Due Date</div><div style="font-weight:700">'+(inv.dueDate?new Date(inv.dueDate).toLocaleDateString('en-MY'):'-')+'</div></div></div>'+
     billToHtml(p,'Bill To')+
     '<table><thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+
-    '<tr><td>'+(p.name||'Project')+(inv.notes?(' &mdash; '+inv.notes):'')+'</td><td class="right">'+fmtRM(n(inv.amount))+'</td></tr>'+
+    '<tr><td>'+escapeHtml(p.name||'Project')+(inv.notes?(' &mdash; '+escapeHtml(inv.notes)):'')+'</td><td class="right">'+fmtRM(n(inv.amount))+'</td></tr>'+
     '<tr class="totalrow"><td>Total Due</td><td class="right">'+fmtRM(n(inv.amount))+'</td></tr>'+
     '</tbody></table>'+
     '<div style="margin-top:8px;font-size:12px;color:'+(st.status==='overdue'?'#C0392B':'#555')+';font-weight:'+(st.status==='overdue'?'700':'400')+'">Status: '+st.label+(st.status==='overdue'?(' ('+st.daysOverdue+' days overdue)'):'')+'</div>'+
     '<div style="margin-top:28px;padding:16px;background:#f0f4f8;border-radius:6px"><div style="font-size:12px;font-weight:700;margin-bottom:6px">Payment Details</div>'+
-    '<div style="font-size:12px;color:#444">Bank: '+(bank.bankName||'-')+'<br>Account No: '+(bank.accountNo||'-')+'<br>Account Holder: '+(bank.accountHolder||'-')+'</div></div>'+
+    '<div style="font-size:12px;color:#444">Bank: '+escapeHtml(bank.bankName||'-')+'<br>Account No: '+escapeHtml(bank.accountNo||'-')+'<br>Account Holder: '+escapeHtml(bank.accountHolder||'-')+'</div></div>'+
     '<div style="margin-top:30px;font-size:11px;color:#888">Please make payment by the due date above. Contact us if you have any questions regarding this invoice.</div>';
-  openPrintWindow('Invoice - '+(inv.invoiceNo||'Invoice'),body);
+  openPrintWindow('Invoice - '+escapeHtml(inv.invoiceNo||'Invoice'),body);
 }
 
 function renderCatTable(cat,data){
@@ -1744,16 +1744,16 @@ function renderCatTable(cat,data){
   let head='',body='';
   if(cat==='materials'){
     head='<tr><th>Description</th><th style="text-align:right">Qty</th><th style="text-align:right">Len/Pcs</th><th style="text-align:right">Kg/m</th><th>Price By</th><th style="text-align:right">Rate (RM)</th><th style="text-align:right">Amount (RM)</th></tr>';
-    body=rows.map(function(r){return '<tr><td>'+(r.desc||'-')+'</td><td style="text-align:right">'+(r.qty||0)+'</td><td style="text-align:right">'+(r.lenPcs||0)+'</td><td style="text-align:right">'+(r.kgm||0)+'</td><td>'+(r.priceby||'-')+'</td><td style="text-align:right">'+fmt(n(r.rate))+'</td><td style="text-align:right;font-weight:700">'+fmt(r.amt)+'</td></tr>';}).join('');
+    body=rows.map(function(r){return '<tr><td>'+escapeHtml(r.desc||'-')+'</td><td style="text-align:right">'+(r.qty||0)+'</td><td style="text-align:right">'+(r.lenPcs||0)+'</td><td style="text-align:right">'+(r.kgm||0)+'</td><td>'+escapeHtml(r.priceby||'-')+'</td><td style="text-align:right">'+fmt(n(r.rate))+'</td><td style="text-align:right;font-weight:700">'+fmt(r.amt)+'</td></tr>';}).join('');
   } else if(cat==='manhours'){
     head='<tr><th>Position</th><th style="text-align:right">Pax</th><th style="text-align:right">Rate/hr</th><th style="text-align:right">Normal Hrs</th><th style="text-align:right">OT Hrs</th><th style="text-align:right">Sun/PH Hrs</th><th style="text-align:right">Days</th><th style="text-align:right">Amount (RM)</th></tr>';
-    body=rows.map(function(r){return '<tr><td>'+(r.pos||'-')+'</td><td style="text-align:right">'+(r.pax||0)+'</td><td style="text-align:right">'+fmt(n(r.rate))+'</td><td style="text-align:right">'+(r.normHrs||0)+'</td><td style="text-align:right">'+(r.otHrs||0)+'</td><td style="text-align:right">'+(r.sunHrs||0)+'</td><td style="text-align:right">'+(r.days||0)+'</td><td style="text-align:right;font-weight:700">'+fmt(r.amt)+'</td></tr>';}).join('');
+    body=rows.map(function(r){return '<tr><td>'+escapeHtml(r.pos||'-')+'</td><td style="text-align:right">'+(r.pax||0)+'</td><td style="text-align:right">'+fmt(n(r.rate))+'</td><td style="text-align:right">'+(r.normHrs||0)+'</td><td style="text-align:right">'+(r.otHrs||0)+'</td><td style="text-align:right">'+(r.sunHrs||0)+'</td><td style="text-align:right">'+(r.days||0)+'</td><td style="text-align:right;font-weight:700">'+fmt(r.amt)+'</td></tr>';}).join('');
   } else if(cat==='subcon'){
     head='<tr><th>Subcontractor</th><th style="text-align:right">Amount (RM)</th></tr>';
-    body=rows.map(function(r){return '<tr><td>'+(r.desc||'-')+'</td><td style="text-align:right;font-weight:700">'+fmt(r.amt)+'</td></tr>';}).join('');
+    body=rows.map(function(r){return '<tr><td>'+escapeHtml(r.desc||'-')+'</td><td style="text-align:right;font-weight:700">'+fmt(r.amt)+'</td></tr>';}).join('');
   } else {
     head='<tr><th>Description</th><th style="text-align:right">Qty</th><th>Unit</th><th style="text-align:right">Rate (RM)</th><th style="text-align:right">Amount (RM)</th></tr>';
-    body=rows.map(function(r){return '<tr><td>'+(r.desc||'-')+'</td><td style="text-align:right">'+(r.qty||0)+'</td><td>'+(r.unit||'-')+'</td><td style="text-align:right">'+fmt(n(r.rate))+'</td><td style="text-align:right;font-weight:700">'+fmt(r.amt)+'</td></tr>';}).join('');
+    body=rows.map(function(r){return '<tr><td>'+escapeHtml(r.desc||'-')+'</td><td style="text-align:right">'+(r.qty||0)+'</td><td>'+escapeHtml(r.unit||'-')+'</td><td style="text-align:right">'+fmt(n(r.rate))+'</td><td style="text-align:right;font-weight:700">'+fmt(r.amt)+'</td></tr>';}).join('');
   }
   return '<div style="margin-bottom:18px"><div style="font-weight:700;font-size:13px;color:var(--dark);margin-bottom:6px">'+CAT_LABELS[cat]+' <span style="color:#888;font-weight:400">&mdash; Subtotal: RM '+fmt(data.sub)+'</span></div><table class="projects" style="font-size:12px;width:100%"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
 }
@@ -1763,11 +1763,11 @@ function buildQuoteDetailHtml(q){
   const proj=q.project||{};
   const submitted=q.submittedAt?new Date(q.submittedAt).toLocaleString('en-MY'):'-';
   let html='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;font-size:12px">'+
-    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Project Name</div><div style="font-weight:700">'+(proj.name||'-')+'</div></div>'+
-    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Client</div><div style="font-weight:700">'+(proj.client||'-')+'</div></div>'+
-    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Project No.</div><div style="font-weight:700">'+(proj.no||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Project Name</div><div style="font-weight:700">'+escapeHtml(proj.name||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Client</div><div style="font-weight:700">'+escapeHtml(proj.client||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Project No.</div><div style="font-weight:700">'+escapeHtml(proj.no||'-')+'</div></div>'+
     '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Branch</div><div style="font-weight:700">'+escapeHtml(branchLabel(proj.branch))+'</div></div>'+
-    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Prepared By</div><div style="font-weight:700">'+(proj.by||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Prepared By</div><div style="font-weight:700">'+escapeHtml(proj.by||'-')+'</div></div>'+
     '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Submitted</div><div style="font-weight:700">'+submitted+'</div></div>'+
   '</div>';
   CATS.forEach(function(c){ html+=renderCatTable(c,calc.cats[c]); });
@@ -1983,11 +1983,11 @@ function buildEditableQuoteDetailHtml(detail){
   const calc=calcPendingQuoteCats(detail);
   const proj=detail.project||{};
   let html='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;font-size:12px">'+
-    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Project Name</div><div style="font-weight:700">'+(proj.name||'-')+'</div></div>'+
-    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Client</div><div style="font-weight:700">'+(proj.client||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Project Name</div><div style="font-weight:700">'+escapeHtml(proj.name||'-')+'</div></div>'+
+    '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Client</div><div style="font-weight:700">'+escapeHtml(proj.client||'-')+'</div></div>'+
     '<div><div style="color:#888;font-size:10px;text-transform:uppercase">Branch</div><div style="font-weight:700">'+escapeHtml(branchLabel(proj.branch))+'</div></div>'+
   '</div>'+
-  '<div style="background:#fff7e6;border:1px solid #f0d9a0;border-radius:6px;padding:8px 12px;font-size:11px;color:#7a5c00;margin-bottom:14px">✎ Editing mode &mdash; changes here only affect this project\'s adjusted copy. The engineer\'s original submission is preserved under "Original Submission."'+(detail.editedAt?(' Last adjusted by '+userLabel(detail.editedBy)+' on '+new Date(detail.editedAt).toLocaleString('en-MY')+'.'):'')+'</div>';
+  '<div style="background:#fff7e6;border:1px solid #f0d9a0;border-radius:6px;padding:8px 12px;font-size:11px;color:#7a5c00;margin-bottom:14px">✎ Editing mode &mdash; changes here only affect this project\'s adjusted copy. The engineer\'s original submission is preserved under "Original Submission."'+(detail.editedAt?(' Last adjusted by '+escapeHtml(userLabel(detail.editedBy))+' on '+new Date(detail.editedAt).toLocaleString('en-MY')+'.'):'')+'</div>';
   CATS.forEach(function(c){ html+=renderEditableCatTable(c,calc.cats[c],detail); });
   html+='<div style="border-top:2px solid #eee;margin-top:10px;padding-top:12px;max-width:360px;margin-left:auto;font-size:13px">'+
     '<div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:700"><span>TOTAL COST</span><span>RM '+fmt(calc.total)+'</span></div>'+

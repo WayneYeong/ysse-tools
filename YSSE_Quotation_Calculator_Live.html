@@ -703,7 +703,7 @@ function renderPicker(){
   const empty=document.getElementById('picker-empty');
   if(!list.length){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  tbody.innerHTML=list.map(m=>`<tr><td>${m.category}</td><td><strong>${m.name}</strong></td><td>${m.size}</td><td style="text-align:right">${m.kgm>0?m.kgm.toFixed(3):'-'}</td><td style="text-align:right;font-weight:700;color:#10173A">${m.price>0?fmt(m.price):'-'}</td><td>${m.priceby}</td><td>${m.supplier||'-'}</td><td>${branchLabel[m.branch||'kuching']}</td><td><button class="pick-btn" onclick="selectMaterial('${m.id}')">Select</button></td></tr>`).join('');
+  tbody.innerHTML=list.map(m=>`<tr><td>${escapeHtml(m.category)}</td><td><strong>${escapeHtml(m.name)}</strong></td><td>${escapeHtml(m.size)}</td><td style="text-align:right">${m.kgm>0?m.kgm.toFixed(3):'-'}</td><td style="text-align:right;font-weight:700;color:#10173A">${m.price>0?fmt(m.price):'-'}</td><td>${escapeHtml(m.priceby)}</td><td>${escapeHtml(m.supplier||'-')}</td><td>${escapeHtml(branchLabel[m.branch||'kuching'])}</td><td><button class="pick-btn" onclick="selectMaterial('${m.id}')">Select</button></td></tr>`).join('');
 }
 
 function selectMaterial(id){
@@ -734,9 +734,9 @@ function closeMatDB(){document.getElementById('matdb-overlay').classList.remove(
 function populateMatDBFilters(){
   const cats=[...new Set(MATDB.map(m=>m.category))].sort();
   const sups=[...new Set(MATDB.map(m=>m.supplier).filter(Boolean))].sort();
-  document.getElementById('matdb-cat-filter').innerHTML='<option value="">All Categories</option>'+cats.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
-  document.getElementById('cat-list').innerHTML=cats.map(c=>'<option value="'+c+'">').join('');
-  document.getElementById('sup-list').innerHTML=sups.map(s=>'<option value="'+s+'">').join('');
+  document.getElementById('matdb-cat-filter').innerHTML='<option value="">All Categories</option>'+cats.map(c=>'<option value="'+escapeHtml(c)+'">'+escapeHtml(c)+'</option>').join('');
+  document.getElementById('cat-list').innerHTML=cats.map(c=>'<option value="'+escapeHtml(c)+'">').join('');
+  document.getElementById('sup-list').innerHTML=sups.map(s=>'<option value="'+escapeHtml(s)+'">').join('');
 }
 
 function renderMatTable(){
@@ -755,7 +755,7 @@ function renderMatTable(){
   if(!list.length){tbody.innerHTML='';empty.style.display='block';}
   else{
     empty.style.display='none';
-    tbody.innerHTML=list.map((m,i)=>`<tr><td style="color:#888;font-size:10px">${i+1}</td><td>${m.category}</td><td><strong>${m.name}</strong></td><td>${m.size}</td><td style="text-align:right">${m.kgm>0?m.kgm.toFixed(3):'-'}</td><td style="text-align:right;font-weight:700;color:#10173A">${fmt(m.price)}</td><td>${m.priceby}</td><td>${m.supplier||'-'}</td><td>${branchLabel[m.branch||'kuching']}</td><td><button class="pick-btn" onclick="startEditMat('${m.id}')">Edit</button></td><td><button style="background:none;border:none;color:#c00;cursor:pointer;font-size:15px;line-height:1" onclick="deleteMat('${m.id}')">&#xd7;</button></td></tr>`).join('');
+    tbody.innerHTML=list.map((m,i)=>`<tr><td style="color:#888;font-size:10px">${i+1}</td><td>${escapeHtml(m.category)}</td><td><strong>${escapeHtml(m.name)}</strong></td><td>${escapeHtml(m.size)}</td><td style="text-align:right">${m.kgm>0?m.kgm.toFixed(3):'-'}</td><td style="text-align:right;font-weight:700;color:#10173A">${fmt(m.price)}</td><td>${escapeHtml(m.priceby)}</td><td>${escapeHtml(m.supplier||'-')}</td><td>${escapeHtml(branchLabel[m.branch||'kuching'])}</td><td><button class="pick-btn" onclick="startEditMat('${m.id}')">Edit</button></td><td><button style="background:none;border:none;color:#c00;cursor:pointer;font-size:15px;line-height:1" onclick="deleteMat('${m.id}')">&#xd7;</button></td></tr>`).join('');
   }
   document.getElementById('matdb-count').textContent='Showing '+list.length+' of '+MATDB.length+' materials';
 }
@@ -865,7 +865,7 @@ function renderStd(cat){
     const unitOpts=UNITS.map(o=>`<option value="${o}"${row.unit===o?' selected':''}>${o||'-'}</option>`).join('');
     tr.innerHTML=`
       <td style="text-align:center;color:#888">${i+1}</td>
-      <td><div style="display:flex;gap:3px;align-items:center">${pickBtn}<input value="${row.desc}" placeholder="Description…" onchange="upd('${cat}',${i},'desc',this.value)" style="width:auto;flex:1;min-width:0;border:none;background:transparent;font-size:12px;padding:2px 3px;outline:none;font-family:Arial"></div></td>
+      <td><div style="display:flex;gap:3px;align-items:center">${pickBtn}<input value="${escapeHtml(row.desc)}" placeholder="Description…" onchange="upd('${cat}',${i},'desc',this.value)" style="width:auto;flex:1;min-width:0;border:none;background:transparent;font-size:12px;padding:2px 3px;outline:none;font-family:Arial"></div></td>
       <td class="num"><input type="number" value="${row.qty}" min="0" onchange="upd('${cat}',${i},'qty',this.value)"></td>
       <td><select onchange="upd('${cat}',${i},'unit',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 0;outline:none;font-family:Arial;cursor:pointer">${unitOpts}</select></td>
       <td class="num"><input type="number" value="${row.lenPcs}" min="0" step="0.01" onchange="upd('${cat}',${i},'lenPcs',this.value)"></td>
@@ -916,7 +916,7 @@ function renderSimple(cat){
     const unitOpts=UNITS.map(o=>`<option value="${o}"${row.unit===o?' selected':''}>${o||'-'}</option>`).join('');
     tr.innerHTML=`
       <td style="text-align:center;color:#888">${i+1}</td>
-      <td><input value="${row.desc}" placeholder="Description…" onchange="updS('${cat}',${i},'desc',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 3px;outline:none;font-family:Arial"></td>
+      <td><input value="${escapeHtml(row.desc)}" placeholder="Description…" onchange="updS('${cat}',${i},'desc',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 3px;outline:none;font-family:Arial"></td>
       <td class="num"><input type="number" value="${row.qty}" min="0" onchange="updS('${cat}',${i},'qty',this.value)"></td>
       <td><select onchange="updS('${cat}',${i},'unit',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 0;outline:none;font-family:Arial;cursor:pointer">${unitOpts}</select></td>
       <td class="num"><input type="number" value="${row.rate}" min="0" step="0.01" onchange="updS('${cat}',${i},'rate',this.value)"></td>
@@ -960,7 +960,7 @@ function renderMhr(){
     const tr=document.createElement('tr');
     tr.innerHTML=`
       <td style="text-align:center;color:#888">${i+1}</td>
-      <td><input value="${row.pos}" placeholder="e.g. Welder, Fitter…" onchange="updM(${i},'pos',this.value)"></td>
+      <td><input value="${escapeHtml(row.pos)}" placeholder="e.g. Welder, Fitter…" onchange="updM(${i},'pos',this.value)"></td>
       <td class="num"><input type="number" value="${row.pax}" min="0" onchange="updM(${i},'pax',this.value)"></td>
       <td class="num"><input type="number" value="${row.rate}" min="0" step="0.01" onchange="updM(${i},'rate',this.value)"></td>
       <td class="num"><input type="number" value="${row.normHrs}" min="0" step="0.5" onchange="updM(${i},'normHrs',this.value)"></td>
@@ -993,7 +993,7 @@ function renderSubcon(){
     const tr=document.createElement('tr');
     tr.innerHTML=`
       <td style="text-align:center;color:#888">${i+1}</td>
-      <td><input value="${row.desc}" placeholder="Subcontractor name…" onchange="updSubcon(${i},'desc',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 3px;outline:none;font-family:Arial"></td>
+      <td><input value="${escapeHtml(row.desc)}" placeholder="Subcontractor name…" onchange="updSubcon(${i},'desc',this.value)" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 3px;outline:none;font-family:Arial"></td>
       <td class="num"><input type="number" value="${row.rate}" min="0" step="0.01" onchange="updSubcon(${i},'rate',this.value)"></td>
       <td style="text-align:center"><button onclick="delSubconRow(${i})" style="background:none;border:none;color:#c00;cursor:pointer;font-size:14px">×</button></td>`;
     tbody.appendChild(tr);
@@ -1188,7 +1188,7 @@ function renderQuotesLibrary(){
     const proj=x.project||{};
     const finalPrice=computeQuoteFinalPrice(x);
     const updated=x.updatedAt?new Date(x.updatedAt).toLocaleString('en-MY'):'-';
-    return '<tr><td><strong>'+(proj.name||'Untitled')+'</strong></td><td>'+(proj.client||'-')+'</td><td>'+escapeHtml(qLibBranchLabel[proj.branch]||proj.branch||'-')+'</td><td>'+(proj.by||x.ownerEmail||'-')+'</td><td style="text-align:right">'+fmt(finalPrice)+'</td><td>'+updated+'</td>'+
+    return '<tr><td><strong>'+escapeHtml(proj.name||'Untitled')+'</strong></td><td>'+escapeHtml(proj.client||'-')+'</td><td>'+escapeHtml(qLibBranchLabel[proj.branch]||proj.branch||'-')+'</td><td>'+escapeHtml(proj.by||x.ownerEmail||'-')+'</td><td style="text-align:right">'+fmt(finalPrice)+'</td><td>'+updated+'</td>'+
       '<td style="white-space:nowrap"><button class="pick-btn" onclick="openQuoteFromLibrary(\''+x.id+'\')">Open</button> <button onclick="deleteQuoteFromLibrary(\''+x.id+'\')" style="background:none;border:none;color:#c00;cursor:pointer;font-size:12px;padding:0 6px">Delete</button></td></tr>';
   }).join('');
 }
