@@ -122,10 +122,29 @@ td.num input{text-align:right}
     <input type="password" id="login-password" placeholder="********" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:6px;outline:none" onkeydown="if(event.key==='Enter')doLogin()">
     <div id="login-error" style="color:#c00;font-size:11px;min-height:14px;margin-bottom:10px"></div>
     <button onclick="doLogin()" style="width:100%;padding:10px;background:linear-gradient(120deg,#46618F,#6E6296);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(70,97,143,.35)">Sign In</button>
-    <div style="text-align:center;margin-top:12px">
+    <div style="text-align:center;margin-top:12px;display:flex;justify-content:center;gap:14px">
       <a href="javascript:void(0)" onclick="forgotPassword()" style="font-size:11px;color:#888;text-decoration:none">Forgot password?</a>
+      <a href="javascript:void(0)" onclick="toggleSetPassword(true)" style="font-size:11px;color:#46618F;text-decoration:none;font-weight:700">First time? Set password</a>
     </div>
     <div id="login-status" style="text-align:center;font-size:10px;color:#aaa;margin-top:10px">Connecting...</div>
+  </div>
+  <div id="setpw-panel" style="display:none;background:#fff;border-radius:14px;padding:36px 40px;width:340px;box-shadow:0 25px 70px rgba(0,0,0,.45)">
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:18px;font-weight:700;color:#10173A;font-family:'Space Grotesk',Arial,sans-serif">RAUL TECH</div>
+      <div style="font-size:11px;color:#888;letter-spacing:.5px;margin-top:2px">SET YOUR PASSWORD</div>
+    </div>
+    <div style="font-size:11px;color:#888;margin-bottom:14px;line-height:1.5">Use this once, the first time you log in - only works if your Management/Owner has already added your email under "Manage Users" in the Project Management System.</div>
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px">Email</div>
+    <input type="email" id="setpw-email" placeholder="you@company.com" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:12px;outline:none">
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px">Choose a Password</div>
+    <input type="password" id="setpw-password" placeholder="At least 6 characters" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:12px;outline:none">
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:4px">Confirm Password</div>
+    <input type="password" id="setpw-confirm" placeholder="Re-enter password" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;margin-bottom:6px;outline:none" onkeydown="if(event.key==='Enter')doCreateAccount()">
+    <div id="setpw-error" style="color:#c00;font-size:11px;min-height:14px;margin-bottom:10px"></div>
+    <button onclick="doCreateAccount()" style="width:100%;padding:10px;background:linear-gradient(120deg,#46618F,#6E6296);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(70,97,143,.35)">Create My Login</button>
+    <div style="text-align:center;margin-top:12px">
+      <a href="javascript:void(0)" onclick="toggleSetPassword(false)" style="font-size:11px;color:#888;text-decoration:none">Back to Sign In</a>
+    </div>
   </div>
 </div>
 <div id="not-set-up-overlay" style="display:none;position:fixed;inset:0;background:radial-gradient(ellipse 90% 70% at 50% -10%,#1c2a6e 0%,#101a42 45%,#070d24 100%);align-items:center;justify-content:center;z-index:9999;font-family:Arial">
@@ -1375,6 +1394,33 @@ renderAll();
     if(!email||!pass){ if(errEl) errEl.textContent='Please enter email and password.'; return; }
     firebase.auth().signInWithEmailAndPassword(email,pass).catch(function(err){
       if(errEl) errEl.textContent=err&&err.message?err.message:'Sign in failed.';
+    });
+  };
+  window.toggleSetPassword=function(show){
+    var login=document.getElementById('login-overlay');
+    var panel=document.getElementById('setpw-panel');
+    if(!login||!panel) return;
+    var card=login.children[0];
+    if(card) card.style.display=show?'none':'';
+    panel.style.display=show?'':'none';
+    var errEl=document.getElementById('setpw-error'); if(errEl) errEl.textContent='';
+  };
+  window.doCreateAccount=function(){
+    var emailEl=document.getElementById('setpw-email');
+    var passEl=document.getElementById('setpw-password');
+    var confEl=document.getElementById('setpw-confirm');
+    var errEl=document.getElementById('setpw-error');
+    var email=emailEl?emailEl.value.trim():'';
+    var pass=passEl?passEl.value:'';
+    var conf=confEl?confEl.value:'';
+    if(errEl) errEl.textContent='';
+    if(!email||!pass||!conf){ if(errEl) errEl.textContent='Please fill in every field.'; return; }
+    if(pass.length<6){ if(errEl) errEl.textContent='Password must be at least 6 characters.'; return; }
+    if(pass!==conf){ if(errEl) errEl.textContent='Passwords do not match.'; return; }
+    firebase.auth().createUserWithEmailAndPassword(email,pass).catch(function(err){
+      if(!errEl) return;
+      if(err&&err.code==='auth/email-already-in-use') errEl.textContent='An account already exists for this email - use Sign In instead, or Forgot Password if you don\'t remember it.';
+      else errEl.textContent=err&&err.message?err.message:'Could not create your login.';
     });
   };
   window.doLogout=function(){
