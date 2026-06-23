@@ -1861,12 +1861,16 @@ function openPrintWindow(title,bodyHtml){
   w.document.write('<!DOCTYPE html><html><head><title>'+title+'</title><meta charset="UTF-8">'+
     '<style>'+
     'body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;padding:48px;max-width:820px;margin:0 auto;line-height:1.5}'+
-    'table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:9px 10px;border-bottom:1px solid #e0e8f0;font-size:13px;text-align:left}'+
+    'table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:10px 12px;border-bottom:1px solid #e0e8f0;font-size:13px;text-align:left}'+
     'th{background:#f0f4f8;text-transform:uppercase;font-size:10.5px;letter-spacing:.4px;color:#555;font-weight:700}'+
-    '.right{text-align:right}.totalrow td{font-weight:700;font-size:15px;border-top:2px solid #10173A;border-bottom:none;padding-top:12px}'+
-    '.scope-box{background:#f7fafd;border-left:4px solid #0B5A82;border-radius:0 6px 6px 0;padding:14px 18px;margin:20px 0}'+
+    '.right{text-align:right}.totalrow td{font-weight:700;font-size:16px;color:#10173A;border-top:2px solid #10173A;border-bottom:none;padding-top:14px}'+
+    '.scope-box{background:#f7fafd;border-left:4px solid #0B5A82;border-radius:0 6px 6px 0;padding:14px 18px;margin:24px 0}'+
     '.scope-box .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:#0B5A82;font-weight:700;margin-bottom:6px}'+
     '.scope-box .txt{font-size:13px;color:#333;white-space:pre-wrap}'+
+    '.doc-footer{margin-top:40px;padding-top:16px;border-top:1px solid #e0e8f0;font-size:10.5px;color:#999}'+
+    '.sign-row{display:flex;justify-content:space-between;margin-top:56px}'+
+    '.sign-row .sign-block{width:220px;text-align:center}'+
+    '.sign-row .sign-line{border-top:1px solid #999;padding-top:6px;font-size:10.5px;color:#888}'+
     '.printbtn{margin-bottom:24px}@media print{.printbtn{display:none}}'+
     '</style></head><body>'+
     '<div class="printbtn"><button onclick="window.print()" style="padding:10px 20px;background:#0B5A82;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer">🖨 Print / Save as PDF</button></div>'+
@@ -1939,7 +1943,7 @@ function generateQuotationDoc(projectId,mode,scope){
       '</tbody></table>';
   }
   const body=letterheadHtml(p.branch)+
-    '<div style="display:flex;justify-content:space-between;margin-bottom:20px">'+
+    '<div style="display:flex;justify-content:space-between;margin-bottom:24px">'+
     '<div><div style="font-size:22px;font-weight:700;color:#0B5A82">QUOTATION</div>'+
     '<div style="font-size:12px;color:#555;margin-top:4px">Date: '+today+'</div></div>'+
     '<div style="text-align:right">'+
@@ -1948,7 +1952,11 @@ function generateQuotationDoc(projectId,mode,scope){
     billToHtml(p,'Client')+
     (scope?('<div class="scope-box"><div class="lbl">Scope of Work</div><div class="txt">'+escapeHtml(scope)+'</div></div>'):'')+
     priceSection+
-    '<div style="margin-top:40px;font-size:11px;color:#888">This quotation is valid for 30 days from the date of issue.</div>';
+    '<div class="sign-row">'+
+    '<div class="sign-block"><div class="sign-line">Authorized by ('+escapeHtml(COMPANY_SETTINGS.companyName||'-')+')</div></div>'+
+    '<div class="sign-block"><div class="sign-line">Accepted by (Client)</div></div>'+
+    '</div>'+
+    '<div class="doc-footer">This quotation is valid for 30 days from the date of issue.</div>';
   openPrintWindow('Quotation - '+escapeHtml(p.name||'Project'),body);
 }
 
@@ -1959,7 +1967,7 @@ function generateInvoiceDoc(invoiceId){
   const st=computeInvoiceStatus(inv);
   const bank=COMPANY_SETTINGS.bank||{};
   const body=letterheadHtml(p.branch)+
-    '<div style="display:flex;justify-content:space-between;margin-bottom:20px">'+
+    '<div style="display:flex;justify-content:space-between;margin-bottom:24px">'+
     '<div><div style="font-size:22px;font-weight:700;color:#0B5A82">INVOICE</div>'+
     '<div style="font-size:12px;color:#555;margin-top:4px">Invoice No: '+escapeHtml(inv.invoiceNo||'-')+'</div></div>'+
     '<div style="text-align:right">'+
@@ -1971,10 +1979,10 @@ function generateInvoiceDoc(invoiceId){
     '<tr><td>'+escapeHtml(p.name||'Project')+(inv.notes?(' - '+escapeHtml(inv.notes)):'')+'</td><td class="right">'+fmtRM(n(inv.amount))+'</td></tr>'+
     '<tr class="totalrow"><td>Total Due</td><td class="right">'+fmtRM(n(inv.amount))+'</td></tr>'+
     '</tbody></table>'+
-    '<div style="margin-top:8px;font-size:12px;color:'+(st.status==='overdue'?'#C0392B':'#555')+';font-weight:'+(st.status==='overdue'?'700':'400')+'">Status: '+st.label+(st.status==='overdue'?(' ('+st.daysOverdue+' days overdue)'):'')+'</div>'+
-    '<div style="margin-top:28px;padding:16px;background:#f0f4f8;border-radius:6px"><div style="font-size:12px;font-weight:700;margin-bottom:6px">Payment Details</div>'+
-    '<div style="font-size:12px;color:#444">Bank: '+escapeHtml(bank.bankName||'-')+'<br>Account No: '+escapeHtml(bank.accountNo||'-')+'<br>Account Holder: '+escapeHtml(bank.accountHolder||'-')+'</div></div>'+
-    '<div style="margin-top:30px;font-size:11px;color:#888">Please make payment by the due date above. Contact us if you have any questions regarding this invoice.</div>';
+    '<div style="margin-top:10px;font-size:12px;color:'+(st.status==='overdue'?'#C0392B':'#555')+';font-weight:'+(st.status==='overdue'?'700':'400')+'">Status: '+st.label+(st.status==='overdue'?(' ('+st.daysOverdue+' days overdue)'):'')+'</div>'+
+    '<div style="margin-top:24px;padding:16px 18px;background:#f7fafd;border-left:4px solid #0B5A82;border-radius:0 6px 6px 0"><div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:#0B5A82;font-weight:700;margin-bottom:6px">Payment Details</div>'+
+    '<div style="font-size:12.5px;color:#333;line-height:1.6">Bank: '+escapeHtml(bank.bankName||'-')+'<br>Account No: '+escapeHtml(bank.accountNo||'-')+'<br>Account Holder: '+escapeHtml(bank.accountHolder||'-')+'</div></div>'+
+    '<div class="doc-footer">Please make payment by the due date above. Contact us if you have any questions regarding this invoice.</div>';
   openPrintWindow('Invoice - '+escapeHtml(inv.invoiceNo||'Invoice'),body);
 }
 
