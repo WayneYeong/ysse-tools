@@ -23,6 +23,11 @@
 body{font-family:'Inter',Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);font-size:13px;-webkit-font-smoothing:antialiased}
 h1,h2,h3,h4,.brand,.kpi-val{font-family:'Space Grotesk',Arial,sans-serif}
 table.projects td[style*="text-align:right"],.kpi-val,.margin-pill,.badge,.mock-amt{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+/* A single bad/oversized numeric value (typo, paste, bad data) must never be able to force the
+   whole table - and with it the surrounding .tbl-card - wider than the page. Without this, one
+   corrupted amount pushes every other column (Status, Actions, etc) off-screen on every row. */
+table.projects td[style*="text-align:right"]{max-width:260px;word-break:break-all;overflow-wrap:break-word}
+.tbl-card{max-width:100%}
 
 /* ===== App shell: sidebar + topbar ===== */
 .app-shell{display:flex;min-height:100vh}
@@ -797,10 +802,12 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
     </div>
     <div class="section-hdr">Company Information</div>
     <div class="form-grid three">
-      <div class="form-group span2"><label>Company Name *</label><input id="cs-name" placeholder="e.g. YSSE Fabricator Sdn Bhd"></div>
+      <div class="form-group span2"><label>Company Name *</label><input id="cs-name" placeholder="e.g. YSSE Fabricator Sdn Bhd" oninput="suggestCsDocPrefix()"></div>
       <div class="form-group"><label>Phone</label><input id="cs-phone" placeholder="e.g. 016-782 8223 (Wayne)"></div>
       <div class="form-group span2"><label>Email</label><input id="cs-email" placeholder="e.g. weiwen@ysse.com.my"></div>
+      <div class="form-group"><label>Document Prefix</label><input id="cs-doc-prefix" placeholder="e.g. WT" style="text-transform:uppercase"></div>
     </div>
+    <div style="font-size:10.5px;color:var(--sub);margin-top:-10px;margin-bottom:14px">Shown at the front of every Quotation/Invoice number for this company, e.g. <b>WT</b>-INV-0001. Auto-suggested from the company name above - edit it if you'd rather use something else.</div>
     <div class="section-hdr">Branches</div>
     <div style="font-size:11px;color:var(--sub);margin-bottom:8px">Each branch's name appears throughout the system (project dropdown, comparisons, etc). Address is optional and shown on quotation/invoice letterheads.</div>
     <div id="cs-branches-list"></div>
@@ -893,6 +900,7 @@ const DEFAULT_COMPANY_SETTINGS={
   email:'weiwen@ysse.com.my',
   bank:{bankName:'CIMB Bank',accountNo:'8006950596',accountHolder:'YSSE Fabricator Sdn Bhd'},
   logo:null,
+  docPrefix:'YSSE',
   docCounters:{quotation:0,invoice:0}
 };
 // A brand-new company starts with NO branches pre-filled — they're entered once during
@@ -904,6 +912,7 @@ const BLANK_COMPANY_SETTINGS={
   email:'',
   bank:{bankName:'',accountNo:'',accountHolder:''},
   logo:null,
+  docPrefix:'',
   docCounters:{quotation:0,invoice:0}
 };
 // IMPORTANT: nothing here is seeded from localStorage at load time. Tenant identity (customerId)
@@ -929,8 +938,25 @@ function persistCompanySettings(){
   localStorage.setItem(lsKey('ysse_company_settings'),JSON.stringify(COMPANY_SETTINGS));
   if(typeof window.syncCompanySettings==='function') window.syncCompanySettings(COMPANY_SETTINGS,function(){});
 }
+// Suggests a short company code from its registered name, e.g. "Wawas Trading Sdn Bhd" -> "WT".
+// If the first word is already a short all-caps brand/acronym (e.g. "YSSE"), use that as-is
+// instead of computing initials - it's already the shortform the company actually goes by.
+const LEGAL_SUFFIXES=['SDN','SDN.','BHD','BHD.','BERHAD','SENDIRIAN','LTD','LTD.','LLC','INC','INC.','CORP','CORP.','PLT'];
+function deriveDocPrefix(companyName){
+  const words=(companyName||'').trim().split(/\s+/).filter(function(w){return w && LEGAL_SUFFIXES.indexOf(w.toUpperCase().replace(/[(),]/g,''))===-1;});
+  if(!words.length) return '';
+  const first=words[0].replace(/[^A-Za-z]/g,'');
+  if(first.length>=2 && first.length<=6 && first===first.toUpperCase()) return first;
+  return words.slice(0,3).map(function(w){return (w.charAt(0)||'').toUpperCase();}).join('');
+}
 function formatDocNumber(kind,seq){
-  return (kind==='invoice'?'INV':'QUO')+'-'+new Date().getFullYear()+'-'+String(seq).padStart(4,'0');
+  // docPrefix===undefined means this tenant predates the field entirely (signed up before this
+  // feature existed) - derive it on the fly so they get it immediately, with no need to open
+  // Company Settings first. docPrefix==='' is different: the user opened Settings and explicitly
+  // cleared it, meaning they don't want a prefix - that choice must be respected, not overridden.
+  const rawPrefix=COMPANY_SETTINGS.docPrefix!=null?COMPANY_SETTINGS.docPrefix:deriveDocPrefix(COMPANY_SETTINGS.companyName);
+  const prefix=rawPrefix?rawPrefix.toUpperCase()+'-':'';
+  return prefix+(kind==='invoice'?'INV':'QUO')+'-'+String(seq).padStart(4,'0');
 }
 // "Preview" never mutates the counter - used so opening/cancelling a modal doesn't burn a number.
 // "Commit" is the only thing that actually advances and persists the counter, called once, the
@@ -1608,17 +1634,23 @@ function closeInvoiceModal(){
 
 function saveInvoice(){
   const projectId=document.getElementById('inv-project').value;
-  // New invoices get their number minted here (the field only ever showed a non-committing
-  // preview) - editing an existing invoice keeps its already-committed number.
-  const invoiceNo=editInvoiceId
-    ? (INVOICES.find(function(x){return x.id===editInvoiceId;})||{}).invoiceNo
-    : commitDocNumber('invoice');
   const amount=n(document.getElementById('inv-amount').value);
   const issueDate=document.getElementById('inv-issue-date').value;
   const dueDate=document.getElementById('inv-due-date').value;
   if(!projectId){alert('Please select a project.');return;}
   if(!issueDate||!dueDate){alert('Issue Date and Due Date are required.');return;}
   if(amount<=0){alert('Amount must be greater than 0.');return;}
+  // A typo, stray paste, or autofill glitch can produce an absurd value (extra zeros, scientific
+  // notation, etc) - nothing previously stopped that from being saved, and a number that large
+  // breaks the Invoices table layout for every row, not just this one. RM100 million per invoice
+  // is already far beyond anything this system is used for.
+  if(amount>100000000){alert('That amount (RM '+amount.toLocaleString('en-MY')+') looks too large - please check for a typo.');return;}
+  // New invoices get their number minted here (the field only ever showed a non-committing
+  // preview) - editing an existing invoice keeps its already-committed number. Done only after
+  // every validation above passes, so a rejected save never burns a number.
+  const invoiceNo=editInvoiceId
+    ? (INVOICES.find(function(x){return x.id===editInvoiceId;})||{}).invoiceNo
+    : commitDocNumber('invoice');
   const inv={
     id:editInvoiceId||uid(),
     projectId:projectId,
@@ -1715,6 +1747,7 @@ function openCompanySettings(){
   document.getElementById('cs-name').value=s.companyName||'';
   document.getElementById('cs-phone').value=s.phone||'';
   document.getElementById('cs-email').value=s.email||'';
+  document.getElementById('cs-doc-prefix').value=s.docPrefix!=null?s.docPrefix:deriveDocPrefix(s.companyName);
   const keys=Object.keys(s.branches||{});
   document.getElementById('cs-branches-list').innerHTML=keys.length
     ? keys.map(function(k){return csBranchRowHtml(k,s.branches[k].label,s.branches[k].address);}).join('')
@@ -1723,6 +1756,12 @@ function openCompanySettings(){
   document.getElementById('cs-bank-acc').value=(s.bank&&s.bank.accountNo)||'';
   document.getElementById('cs-bank-holder').value=(s.bank&&s.bank.accountHolder)||'';
   document.getElementById('settings-modal-overlay').classList.add('open');
+}
+function suggestCsDocPrefix(){
+  const field=document.getElementById('cs-doc-prefix');
+  // Only auto-fill while the field is still blank - once it holds any value (auto-suggested or
+  // typed by hand) further edits to the company name must not silently overwrite it.
+  if(!field.value.trim()) field.value=deriveDocPrefix(document.getElementById('cs-name').value);
 }
 function closeCompanySettings(){
   document.getElementById('settings-modal-overlay').classList.remove('open');
@@ -1751,6 +1790,7 @@ function saveCompanySettingsForm(){
       accountHolder:document.getElementById('cs-bank-holder').value.trim()
     },
     logo:csLogoDataUrl,
+    docPrefix:document.getElementById('cs-doc-prefix').value.trim().toUpperCase(),
     docCounters:COMPANY_SETTINGS.docCounters||{quotation:0,invoice:0}
   };
   ensureBranchDefaults();
@@ -3130,7 +3170,7 @@ function delActualSubconRow(i){
       ALL_USERS=[{email:email,role:'owner',customerId:customerId}];
       window.CURRENT_COMPANY_NAME=name;
       applyCustomerScope(customerId);
-      COMPANY_SETTINGS={companyName:name,phone:'',email:'',branches:branches,bank:{bankName:'',accountNo:'',accountHolder:''},logo:null,docCounters:{quotation:0,invoice:0}};
+      COMPANY_SETTINGS={companyName:name,phone:'',email:'',branches:branches,bank:{bankName:'',accountNo:'',accountHolder:''},logo:null,docPrefix:deriveDocPrefix(name),docCounters:{quotation:0,invoice:0}};
       ensureBranchDefaults();
       renderBranchSelects();
       localStorage.setItem(lsKey('ysse_company_settings'),JSON.stringify(COMPANY_SETTINGS));
