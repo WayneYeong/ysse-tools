@@ -808,6 +808,11 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
       <div class="form-group"><label>Document Prefix</label><input id="cs-doc-prefix" placeholder="e.g. WT" style="text-transform:uppercase"></div>
     </div>
     <div style="font-size:10.5px;color:var(--sub);margin-top:-10px;margin-bottom:14px">Shown at the front of every Quotation/Invoice number for this company, e.g. <b>WT</b>-INV-0001. Auto-suggested from the company name above - edit it if you'd rather use something else.</div>
+    <div class="form-grid three">
+      <div class="form-group"><label>Next Quotation No.</label><input type="number" id="cs-next-quote-no" min="1" step="1"></div>
+      <div class="form-group"><label>Next Invoice No.</label><input type="number" id="cs-next-invoice-no" min="1" step="1"></div>
+    </div>
+    <div style="font-size:10.5px;color:var(--sub);margin-top:-10px;margin-bottom:14px">The number the <i>next</i> quotation/invoice you generate will use - numbers always count up from here and are never reused, even after deleting one. Change this only if you need to skip ahead or correct a one-off mistake.</div>
     <div class="section-hdr">Branches</div>
     <div style="font-size:11px;color:var(--sub);margin-bottom:8px">Each branch's name appears throughout the system (project dropdown, comparisons, etc). Address is optional and shown on quotation/invoice letterheads.</div>
     <div id="cs-branches-list"></div>
@@ -1748,6 +1753,9 @@ function openCompanySettings(){
   document.getElementById('cs-phone').value=s.phone||'';
   document.getElementById('cs-email').value=s.email||'';
   document.getElementById('cs-doc-prefix').value=s.docPrefix!=null?s.docPrefix:deriveDocPrefix(s.companyName);
+  ensureDocCounters();
+  document.getElementById('cs-next-quote-no').value=(s.docCounters.quotation||0)+1;
+  document.getElementById('cs-next-invoice-no').value=(s.docCounters.invoice||0)+1;
   const keys=Object.keys(s.branches||{});
   document.getElementById('cs-branches-list').innerHTML=keys.length
     ? keys.map(function(k){return csBranchRowHtml(k,s.branches[k].label,s.branches[k].address);}).join('')
@@ -1779,6 +1787,8 @@ function saveCompanySettingsForm(){
     branches[key]={label:label,address:row.querySelector('.cs-branch-addr').value.trim()};
   });
   if(!Object.keys(branches).length){alert('Add at least one branch.');return;}
+  const nextQuoteNo=Math.max(1,Math.round(n(document.getElementById('cs-next-quote-no').value))||1);
+  const nextInvoiceNo=Math.max(1,Math.round(n(document.getElementById('cs-next-invoice-no').value))||1);
   COMPANY_SETTINGS={
     companyName:name,
     phone:document.getElementById('cs-phone').value.trim(),
@@ -1791,7 +1801,9 @@ function saveCompanySettingsForm(){
     },
     logo:csLogoDataUrl,
     docPrefix:document.getElementById('cs-doc-prefix').value.trim().toUpperCase(),
-    docCounters:COMPANY_SETTINGS.docCounters||{quotation:0,invoice:0}
+    // Stored as "the last number used" - the field shown to the user is "the next number to be
+    // used", one higher, so it reads naturally ("Next Invoice No.") instead of off-by-one.
+    docCounters:{quotation:nextQuoteNo-1,invoice:nextInvoiceNo-1}
   };
   ensureBranchDefaults();
   renderBranchSelects();
