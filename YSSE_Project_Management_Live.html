@@ -3134,11 +3134,30 @@ function delActualSubconRow(i){
       window.CURRENT_USER_ROLE=role;
       window.CURRENT_USER_PERMISSIONS=mine.data().permissions||{};
       applyCustomerScope(customerId);
+      backfillLegacyCustomerIds(snap,role,customerId);
       var canEnter=role==='owner'||(role==='management'&&(isEffectiveOwner()||hasPermission('dashboard')));
       if(canEnter){ grantAccess(user); }
       else { showAccessDenied(role==='management'?'Your account does not have Financial Dashboard access enabled. Ask your Owner to grant it, or use the Quotation Calculator instead.':undefined); }
     }).catch(function(err){
       showAccessDenied('Could not verify your access level. Please check your connection and refresh, or contact Management.');
+    });
+  }
+
+  // One-time, self-healing, owner/management-only: every account created before the multi-tenant
+  // customerId field existed (the original YSSE owner account, ysseoffice, etc) is missing it
+  // entirely. That gap is what's currently forcing the ysse_users read rule to stay wide open
+  // (allow read: if isSignedIn()) - a customerId-scoped query can't match documents that don't
+  // have the field at all. This silently backfills it under TODAY's still-permissive rules so a
+  // later change can switch every ysse_users read to a tenant-scoped query and tighten the rule
+  // for real. Idempotent - once a doc has customerId, it's never touched again.
+  function backfillLegacyCustomerIds(snap,role,customerId){
+    if(role!=='owner' && role!=='management') return;
+    snap.docs.forEach(function(d){
+      var data=d.data();
+      var belongsToMyTenant=data.customerId===customerId||(data.customerId===undefined&&customerId==='ysse');
+      if(belongsToMyTenant && data.customerId===undefined){
+        usersCol.doc(d.id).update({customerId:customerId}).catch(function(){});
+      }
     });
   }
 
