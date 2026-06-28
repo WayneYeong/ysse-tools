@@ -360,9 +360,9 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
       <h3>Recent Projects</h3>
       <button class="btn btn-ghost btn-sm" onclick="showPage('projects',document.querySelectorAll('.nav-tab')[1])">View All</button>
     </div>
-    <table class="projects"><thead><tr>
+    <div style="overflow-x:auto"><table class="projects"><thead><tr>
       <th>Project</th><th>Client</th><th>Status</th><th>Duration</th><th>Quoted (RM)</th><th>Actual Cost (RM)</th><th>Revenue (RM)</th><th>Profit (RM)</th><th>Margin</th>
-    </tr></thead><tbody id="body-recent"></tbody></table>
+    </tr></thead><tbody id="body-recent"></tbody></table></div>
   </div>
 </div>
 
@@ -390,10 +390,10 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
     <button class="btn btn-primary" onclick="openAddModal()">+ New Project</button>
   </div>
   <div class="tbl-card">
-    <table class="projects"><thead><tr>
+    <div style="overflow-x:auto"><table class="projects"><thead><tr>
       <th>No.</th><th>Project Name</th><th>Client</th><th>Branch</th><th>Status</th><th>Start</th><th>End</th><th>Days</th>
       <th>Quoted (RM)</th><th>Actual Cost (RM)</th><th>Revenue (RM)</th><th>Profit (RM)</th><th>Margin</th><th>Actions</th>
-    </tr></thead><tbody id="body-all"></tbody></table>
+    </tr></thead><tbody id="body-all"></tbody></table></div>
     <div id="empty-projects" class="empty" style="display:none">
       <h3>No projects yet</h3><p>Click + New Project to add your first project.</p>
     </div>
@@ -413,18 +413,18 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
   </div>
   <div class="tbl-card">
     <div class="tbl-card-hdr"><h3>Category Breakdown - All Projects</h3></div>
-    <table class="projects"><thead><tr>
+    <div style="overflow-x:auto"><table class="projects"><thead><tr>
       <th>Category</th><th>Total Budget (RM)</th><th>Total Actual (RM)</th><th>Variance (RM)</th><th>Variance %</th><th>% of Total Actual Spend</th>
-    </tr></thead><tbody id="body-analysis"></tbody></table>
+    </tr></thead><tbody id="body-analysis"></tbody></table></div>
   </div>
 </div>
 
 <div class="page" id="page-compare">
   <div class="tbl-card" style="margin-bottom:16px">
     <div class="tbl-card-hdr"><h3>Branch Comparison &mdash; Financial &amp; P&amp;L</h3></div>
-    <table class="projects"><thead><tr id="compare-hdr-row">
+    <div style="overflow-x:auto"><table class="projects"><thead><tr id="compare-hdr-row">
       <th>Metric</th>
-    </tr></thead><tbody id="body-compare"></tbody></table>
+    </tr></thead><tbody id="body-compare"></tbody></table></div>
   </div>
   <div class="charts-row">
     <div class="chart-card"><h4>Revenue, Cost &amp; Profit by Branch</h4><canvas id="chart-compare-fin" height="200"></canvas></div>
@@ -432,9 +432,9 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
   </div>
   <div class="tbl-card">
     <div class="tbl-card-hdr"><h3>Category Spend &mdash; Branch Comparison</h3></div>
-    <table class="projects"><thead><tr id="compare-cat-hdr-row">
+    <div style="overflow-x:auto"><table class="projects"><thead><tr id="compare-cat-hdr-row">
       <th>Category</th>
-    </tr></thead><tbody id="body-compare-cat"></tbody></table>
+    </tr></thead><tbody id="body-compare-cat"></tbody></table></div>
   </div>
 </div>
 
@@ -447,9 +447,9 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
         <button class="btn btn-green btn-sm" onclick="window.open('YSSE_Quotation_Calculator_Live.html?view=library','_blank')">📚 Quotes Library</button>
       </div>
     </div>
-    <table class="projects"><thead><tr>
+    <div style="overflow-x:auto"><table class="projects"><thead><tr>
       <th>Submitted</th><th>Project Name</th><th>Client</th><th>Project No.</th><th>Branch</th><th>Prepared By</th><th>Quote Total (RM)</th><th>Status</th><th>Actions</th>
-    </tr></thead><tbody id="body-pending"></tbody></table>
+    </tr></thead><tbody id="body-pending"></tbody></table></div>
     <div id="pending-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No pending quotes right now. New submissions from the Quotation Calculator will appear here automatically.</div>
   </div>
 </div>
@@ -474,9 +474,9 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
         <button class="btn btn-primary btn-sm" onclick="openInvoiceModal()">+ New Invoice</button>
       </div>
     </div>
-    <table class="projects"><thead><tr>
+    <div style="overflow-x:auto"><table class="projects"><thead><tr>
       <th>Invoice No.</th><th>Project</th><th>Client</th><th>Issue Date</th><th>Due Date</th><th>Amount (RM)</th><th>Status</th><th>Days Overdue</th><th>Paid Date</th><th>Actions</th>
-    </tr></thead><tbody id="body-invoices"></tbody></table>
+    </tr></thead><tbody id="body-invoices"></tbody></table></div>
     <div id="invoices-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No invoices yet. Click "+ New Invoice" to issue one against a project.</div>
   </div>
 </div>
@@ -487,9 +487,9 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
       <h3>Clients &mdash; Contact &amp; Billing Details</h3>
       <button class="btn btn-primary btn-sm mgmt-only" onclick="openClientModal()">+ Add Client</button>
     </div>
-    <table class="projects"><thead><tr>
+    <div style="overflow-x:auto"><table class="projects"><thead><tr>
       <th>Client / Company Name</th><th>Attention (Contact Person)</th><th>Phone</th><th>Email</th><th>Address</th><th>Actions</th>
-    </tr></thead><tbody id="body-clients"></tbody></table>
+    </tr></thead><tbody id="body-clients"></tbody></table></div>
     <div id="clients-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No clients added yet. Add one so quotations and invoices can include their address and attention line automatically.</div>
   </div>
 </div>
@@ -500,9 +500,9 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
       <h3>Trash &mdash; Deleted Projects</h3>
       <button class="btn btn-danger btn-sm mgmt-only" onclick="emptyTrash()">Empty Trash</button>
     </div>
-    <table class="projects"><thead><tr>
+    <div style="overflow-x:auto"><table class="projects"><thead><tr>
       <th>Deleted On</th><th>Project Name</th><th>Client</th><th>Branch</th><th>Deleted By</th><th>Auto-Purge In</th><th>Actions</th>
-    </tr></thead><tbody id="body-trash"></tbody></table>
+    </tr></thead><tbody id="body-trash"></tbody></table></div>
     <div id="trash-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">Trash is empty. Deleted projects stay here for 30 days and can be restored, or you can empty it anytime.</div>
   </div>
 </div>
@@ -526,9 +526,9 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
   </div>
   <div class="tbl-card">
     <div class="tbl-card-hdr"><h3>Users &amp; Roles</h3></div>
-    <table class="projects"><thead><tr>
+    <div style="overflow-x:auto"><table class="projects"><thead><tr>
       <th>Name</th><th>Position</th><th>Email</th><th>Role</th><th>Branch</th><th>Dashboard</th><th>Quotation</th><th>Settings</th><th>Added On</th><th>Actions</th>
-    </tr></thead><tbody id="body-users"></tbody></table>
+    </tr></thead><tbody id="body-users"></tbody></table></div>
     <div id="users-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No users added yet.</div>
   </div>
 </div>
@@ -598,7 +598,7 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
         <button class="btn btn-ghost btn-sm" type="button" onclick="addActualCatRow('materials')">+ Add Row</button>
       </div>
       <div style="overflow-x:auto">
-        <table class="acat-tbl">
+        <div style="overflow-x:auto"><table class="acat-tbl">
           <thead><tr>
             <th>#</th>
             <th style="text-align:left;min-width:120px">Description</th>
@@ -609,7 +609,7 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
             <th></th>
           </tr></thead>
           <tbody id="amat-tbody"></tbody>
-        </table>
+        </table></div>
       </div>
       <div class="acat-total-row">
         <span>Total Actual Materials Cost</span>
@@ -623,7 +623,7 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
         <button class="btn btn-ghost btn-sm" type="button" onclick="addActualCatRow('consumables')">+ Add Row</button>
       </div>
       <div style="overflow-x:auto">
-        <table class="acat-tbl">
+        <div style="overflow-x:auto"><table class="acat-tbl">
           <thead><tr>
             <th>#</th>
             <th style="text-align:left;min-width:120px">Description</th>
@@ -634,7 +634,7 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
             <th></th>
           </tr></thead>
           <tbody id="acon-tbody"></tbody>
-        </table>
+        </table></div>
       </div>
       <div class="acat-total-row">
         <span>Total Actual Consumables Cost</span>
@@ -648,7 +648,7 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
         <button class="btn btn-ghost btn-sm" type="button" onclick="addActualMhrRow()">+ Add Row</button>
       </div>
       <div style="overflow-x:auto">
-        <table class="amhr-tbl">
+        <div style="overflow-x:auto"><table class="amhr-tbl">
           <thead><tr>
             <th>#</th><th style="text-align:left;min-width:110px">Position / Role</th>
             <th>Pax</th><th>RM/hr</th>
@@ -658,7 +658,7 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
             <th>Days</th><th>Total RM</th><th></th>
           </tr></thead>
           <tbody id="amhr-tbody"></tbody>
-        </table>
+        </table></div>
       </div>
       <div class="amhr-total-row">
         <span>Total Actual Manhours Cost</span>
@@ -672,7 +672,7 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
         <button class="btn btn-ghost btn-sm" type="button" onclick="addActualSubconRow()">+ Add Row</button>
       </div>
       <div style="overflow-x:auto">
-        <table class="acat-tbl">
+        <div style="overflow-x:auto"><table class="acat-tbl">
           <thead><tr>
             <th>#</th>
             <th style="text-align:left;min-width:140px">Subcon Name</th>
@@ -680,7 +680,7 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
             <th></th>
           </tr></thead>
           <tbody id="asub-tbody"></tbody>
-        </table>
+        </table></div>
       </div>
       <div class="acat-total-row">
         <span>Total Actual Subcontractor Cost</span>
@@ -745,9 +745,9 @@ body.no-settings-perm .needs-settings-perm{display:none!important}
   </div>
   <div class="modal-body">
     <div style="font-size:11.5px;color:var(--sub);margin-bottom:14px">A snapshot of all projects is saved automatically once per day, kept for the last 30 days. Restoring will replace the current live data for everyone — use carefully.</div>
-    <table class="projects"><thead><tr>
+    <div style="overflow-x:auto"><table class="projects"><thead><tr>
       <th>Date</th><th>Saved At</th><th style="text-align:right">Projects</th><th></th>
-    </tr></thead><tbody id="backup-history-body"></tbody></table>
+    </tr></thead><tbody id="backup-history-body"></tbody></table></div>
     <div id="backup-history-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No backups yet — one will be created automatically next time you log in.</div>
   </div>
   <div class="modal-footer">
@@ -1985,14 +1985,14 @@ function generateQuotationDoc(projectId,mode,scope){
       const amt=n(p.quoted[c])*markupMult;
       return amt>0?'<tr><td>'+CAT_LABELS[c]+'</td><td class="right">'+fmtRM(amt)+'</td></tr>':'';
     }).join('');
-    priceSection='<table><thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+rows+
+    priceSection='<div style="overflow-x:auto"><table><thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+rows+
       '<tr class="totalrow"><td>Total Quotation Price</td><td class="right">'+fmtRM(finalPrice)+'</td></tr>'+
-      '</tbody></table>';
+      '</tbody></table></div>';
   } else {
-    priceSection='<table><thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+
+    priceSection='<div style="overflow-x:auto"><table><thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+
       '<tr><td>Lump sum - fabrication, supply &amp; installation as per Scope of Work below</td><td class="right">'+fmtRM(finalPrice)+'</td></tr>'+
       '<tr class="totalrow"><td>Total Quotation Price</td><td class="right">'+fmtRM(finalPrice)+'</td></tr>'+
-      '</tbody></table>';
+      '</tbody></table></div>';
   }
   const body=letterheadHtml(p.branch)+
     '<div style="display:flex;justify-content:space-between;margin-bottom:24px">'+
@@ -2027,10 +2027,10 @@ function generateInvoiceDoc(invoiceId){
     '<div style="font-size:11px;color:#888;text-transform:uppercase;margin-top:6px">Due Date</div><div style="font-weight:700">'+(inv.dueDate?new Date(inv.dueDate).toLocaleDateString('en-MY'):'-')+'</div></div></div>'+
     billToHtml(p,'Bill To')+
     (p.notes?('<div class="scope-box"><div class="lbl">Scope of Work</div><div class="txt">'+escapeHtml(p.notes)+'</div></div>'):'')+
-    '<table><thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+
+    '<div style="overflow-x:auto"><table><thead><tr><th>Description</th><th class="right">Amount (RM)</th></tr></thead><tbody>'+
     '<tr><td>'+escapeHtml(p.name||'Project')+(inv.notes?(' - '+escapeHtml(inv.notes)):'')+'</td><td class="right">'+fmtRM(n(inv.amount))+'</td></tr>'+
     '<tr class="totalrow"><td>Total Due</td><td class="right">'+fmtRM(n(inv.amount))+'</td></tr>'+
-    '</tbody></table>'+
+    '</tbody></table></div>'+
     '<div style="margin-top:10px;font-size:12px;color:'+(st.status==='overdue'?'#C0392B':'#555')+';font-weight:'+(st.status==='overdue'?'700':'400')+'">Status: '+st.label+(st.status==='overdue'?(' ('+st.daysOverdue+' days overdue)'):'')+'</div>'+
     '<div style="margin-top:24px;padding:16px 18px;background:#f7fafd;border-left:4px solid #0B5A82;border-radius:0 6px 6px 0"><div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:#0B5A82;font-weight:700;margin-bottom:6px">Payment Details</div>'+
     '<div style="font-size:12.5px;color:#333;line-height:1.6">Bank: '+escapeHtml(bank.bankName||'-')+'<br>Account No: '+escapeHtml(bank.accountNo||'-')+'<br>Account Holder: '+escapeHtml(bank.accountHolder||'-')+'</div></div>'+
@@ -2055,7 +2055,7 @@ function renderCatTable(cat,data){
     head='<tr><th>Description</th><th style="text-align:right">Qty</th><th>Unit</th><th style="text-align:right">Rate (RM)</th><th style="text-align:right">Amount (RM)</th></tr>';
     body=rows.map(function(r){return '<tr><td>'+escapeHtml(r.desc||'-')+'</td><td style="text-align:right">'+(r.qty||0)+'</td><td>'+escapeHtml(r.unit||'-')+'</td><td style="text-align:right">'+fmt(n(r.rate))+'</td><td style="text-align:right;font-weight:700">'+fmt(r.amt)+'</td></tr>';}).join('');
   }
-  return '<div style="margin-bottom:18px"><div style="font-weight:700;font-size:13px;color:var(--dark);margin-bottom:6px">'+CAT_LABELS[cat]+' <span style="color:#888;font-weight:400">&mdash; Subtotal: RM '+fmt(data.sub)+'</span></div><table class="projects" style="font-size:12px;width:100%"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
+  return '<div style="margin-bottom:18px"><div style="font-weight:700;font-size:13px;color:var(--dark);margin-bottom:6px">'+CAT_LABELS[cat]+' <span style="color:#888;font-weight:400">&mdash; Subtotal: RM '+fmt(data.sub)+'</span></div><div style="overflow-x:auto"><table class="projects" style="font-size:12px;width:100%"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div></div>';
 }
 
 function buildQuoteDetailHtml(q){
@@ -2276,7 +2276,7 @@ function renderEditableCatTable(cat,calcData,detail){
         '<td style="text-align:right;font-weight:700">'+fmt(amt)+'</td></tr>';
     }).join('');
   }
-  return '<div style="margin-bottom:18px"><div style="font-weight:700;font-size:13px;color:var(--dark);margin-bottom:6px">'+CAT_LABELS[cat]+' <span style="color:#888;font-weight:400">&mdash; Subtotal: RM '+fmt(calcData.sub)+'</span></div><table class="projects" style="font-size:12px;width:100%"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
+  return '<div style="margin-bottom:18px"><div style="font-weight:700;font-size:13px;color:var(--dark);margin-bottom:6px">'+CAT_LABELS[cat]+' <span style="color:#888;font-weight:400">&mdash; Subtotal: RM '+fmt(calcData.sub)+'</span></div><div style="overflow-x:auto"><table class="projects" style="font-size:12px;width:100%"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div></div>';
 }
 
 function buildEditableQuoteDetailHtml(detail){
