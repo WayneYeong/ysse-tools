@@ -81,9 +81,15 @@ service cloud.firestore {
     }
 
     match /ysse_users/{userId} {
-      // Reading the whole collection is still required client-side to detect "first ever
-      // login" and to compute per-tenant owner/permission state from a live listener.
-      allow read: if isSignedIn();
+      // Reading your OWN doc by ID must always work, even before your customerId is known - this
+      // is exactly how checkAccessAndProceed first discovers it, and how a brand-new/unrecognized
+      // email gets routed to company setup. Listing the collection, by contrast, must always be
+      // scoped to one tenant: the client only ever queries with .where('customerId','==',
+      // myCustomerId()), and only documents that already carry that exact field can be proven
+      // safe to return - an unscoped list (or one scoped to someone else's customerId) is denied
+      // outright, since at least one potential result would fail this check.
+      allow get: if isSignedIn() && (userId == myEmail() || resource.data.customerId == myCustomerId());
+      allow list: if isSignedIn() && resource.data.customerId == myCustomerId();
       allow create: if (isManagement() && request.resource.data.customerId == myCustomerId())
                     || (isSignedIn() && userId == myEmail() && !exists(/databases/$(database)/documents/ysse_users/$(userId)));
       allow update, delete: if isManagement() && docCustomerId(resource.data) == myCustomerId();

@@ -83,6 +83,18 @@ async function main() {
   await check("qs role reads ysse_settings/company (was broken)", sitiQs.firestore().collection("ysse_settings").doc("company").get().then(d => { if (!d.exists) throw new Error("missing"); }));
   await check("qs role write to ysse_settings (must stay DENY - settings is mgmt-only)", sitiQs.firestore().collection("ysse_settings").doc("company").set({ companyName: "should fail" }, { merge: true }));
 
+  // Phase 2 of the ysse_users cross-tenant read leak fix: listing the collection must now be
+  // scoped to exactly one tenant via .where('customerId','==', X) - both Wayne's tenant query
+  // and Siti's tenant query should succeed and return only their own docs, an unscoped list
+  // must be denied outright, and Siti must not be able to read YSSE's user list by spoofing
+  // the where() filter to someone else's customerId.
+  console.log("--- ysse_users list scoping (phase 2) ---");
+  await check("wayne lists ysse_users scoped to his own tenant (ysse)", db.collection("ysse_users").where("customerId", "==", "ysse").get().then(s => { if (s.empty) throw new Error("expected docs"); }));
+  await check("wayne lists ysse_users UNSCOPED - no where() clause (must be DENY)", db.collection("ysse_users").get());
+  await check("siti lists her own tenant's users (wawas-trading)", dbSiti.collection("ysse_users").where("customerId", "==", "wawas-trading").get().then(s => { if (s.empty) throw new Error("expected docs"); }));
+  await check("siti tries to list YSSE's users by spoofing the where() filter (must be DENY)", dbSiti.collection("ysse_users").where("customerId", "==", "ysse").get());
+  await check("wayne still reads his OWN doc by id directly (must stay ALLOW)", db.collection("ysse_users").doc("yeongww77@gmail.com").get().then(d => { if (!d.exists) throw new Error("missing"); }));
+
   await testEnv.cleanup();
 }
 

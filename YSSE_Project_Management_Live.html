@@ -3017,7 +3017,7 @@ function delActualSubconRow(i){
     },function(err){
       // Pending quotes are additive; failure here never blocks project sync or local data.
     });
-    usersCol.onSnapshot(function(snap){
+    usersCol.where('customerId','==',window.CURRENT_CUSTOMER_ID||'ysse').onSnapshot(function(snap){
       ALL_USERS=snap.docs.map(function(doc){ return doc.data(); });
       var me2=(window.CURRENT_USER_EMAIL||'').toLowerCase();
       var mine=ALL_USERS.find(function(u){ return u.email===me2; });
@@ -3104,60 +3104,38 @@ function delActualSubconRow(i){
     settingsRef=db.collection('ysse_settings').doc(customerId==='ysse'?'company':customerId);
   }
 
+  // Phase 2 of closing the ysse_users cross-tenant read leak: every legacy account that was
+  // missing customerId has now been backfilled (phase 1, shipped and confirmed in Firestore
+  // Console), so it's safe to stop reading the WHOLE collection and switch to a tenant-scoped
+  // query - which is what lets firestore.rules actually deny cross-tenant reads instead of
+  // leaving ysse_users readable by any signed-in user from any company.
   function checkAccessAndProceed(user){
     var me=(user.email||user.uid||'').toLowerCase();
-    usersCol.get().then(function(snap){
-      if(snap.empty){
-        // First-ever login across the whole system bootstraps as Owner of YSSE.
-        usersCol.doc(me).set({email:me,role:'owner',customerId:'ysse',addedAt:Date.now(),addedBy:'bootstrap'}).then(function(){
-          window.CURRENT_USER_ROLE='owner';
-          window.CURRENT_USER_PERMISSIONS={};
-          ALL_USERS=[{email:me,role:'owner',customerId:'ysse'}];
-          applyCustomerScope('ysse');
-          grantAccess(user);
-        }).catch(function(err){
-          showAccessDenied('Could not verify access \u2014 please refresh and try again.');
-        });
-        return;
-      }
-      // Populate ALL_USERS immediately from this fetch so owner-detection (hasOwnerInTenant) is correct
-      // right away, without waiting for the live usersCol.onSnapshot listener to attach later.
-      ALL_USERS=snap.docs.map(function(d){ return d.data(); });
-      var mine=snap.docs.find(function(d){ return d.id===me; });
-      if(!mine){
-        // Unrecognized email, but other companies already exist on this system \u2014 offer self-service company setup.
+    usersCol.doc(me).get().then(function(doc){
+      if(!doc.exists){
+        // Unrecognized email - either a brand-new company's first signup, or someone nobody has
+        // added yet. The system has had real users for a long time now, so there's no remaining
+        // "literally the first login ever" case to special-case here.
         showCompanySetup(user);
         return;
       }
-      var role=mine.data().role;
-      var customerId=mine.data().customerId||'ysse';
+      var role=doc.data().role;
+      var customerId=doc.data().customerId||'ysse';
       window.CURRENT_USER_ROLE=role;
-      window.CURRENT_USER_PERMISSIONS=mine.data().permissions||{};
+      window.CURRENT_USER_PERMISSIONS=doc.data().permissions||{};
       applyCustomerScope(customerId);
-      backfillLegacyCustomerIds(snap,role,customerId);
-      var canEnter=role==='owner'||(role==='management'&&(isEffectiveOwner()||hasPermission('dashboard')));
-      if(canEnter){ grantAccess(user); }
-      else { showAccessDenied(role==='management'?'Your account does not have Financial Dashboard access enabled. Ask your Owner to grant it, or use the Quotation Calculator instead.':undefined); }
+      usersCol.where('customerId','==',customerId).get().then(function(snap){
+        // Populate ALL_USERS immediately from this fetch so owner-detection (hasOwnerInTenant) is
+        // correct right away, without waiting for the live usersCol listener to attach later.
+        ALL_USERS=snap.docs.map(function(d){ return d.data(); });
+        var canEnter=role==='owner'||(role==='management'&&(isEffectiveOwner()||hasPermission('dashboard')));
+        if(canEnter){ grantAccess(user); }
+        else { showAccessDenied(role==='management'?'Your account does not have Financial Dashboard access enabled. Ask your Owner to grant it, or use the Quotation Calculator instead.':undefined); }
+      }).catch(function(err){
+        showAccessDenied('Could not verify your access level. Please check your connection and refresh, or contact Management.');
+      });
     }).catch(function(err){
       showAccessDenied('Could not verify your access level. Please check your connection and refresh, or contact Management.');
-    });
-  }
-
-  // One-time, self-healing, owner/management-only: every account created before the multi-tenant
-  // customerId field existed (the original YSSE owner account, ysseoffice, etc) is missing it
-  // entirely. That gap is what's currently forcing the ysse_users read rule to stay wide open
-  // (allow read: if isSignedIn()) - a customerId-scoped query can't match documents that don't
-  // have the field at all. This silently backfills it under TODAY's still-permissive rules so a
-  // later change can switch every ysse_users read to a tenant-scoped query and tighten the rule
-  // for real. Idempotent - once a doc has customerId, it's never touched again.
-  function backfillLegacyCustomerIds(snap,role,customerId){
-    if(role!=='owner' && role!=='management') return;
-    snap.docs.forEach(function(d){
-      var data=d.data();
-      var belongsToMyTenant=data.customerId===customerId||(data.customerId===undefined&&customerId==='ysse');
-      if(belongsToMyTenant && data.customerId===undefined){
-        usersCol.doc(d.id).update({customerId:customerId}).catch(function(){});
-      }
     });
   }
 
