@@ -112,13 +112,24 @@ service cloud.firestore {
       allow read, write: if canUseQuotation() && docId == quotationDocId();
     }
 
+    // get vs list are split deliberately: a combined "allow read" that depends on resource.data
+    // does NOT filter a list() query the way it filters a get() - confirmed by direct testing,
+    // an unscoped list against that combined form actually returns every tenant's documents, not
+    // just the caller's. list must compare resource.data.customerId directly (not through the
+    // get(key,default) safe-accessor) so Firestore can verify it against the query's own
+    // .where('customerId','==', ...) clause - every doc in these two collections has carried the
+    // field since the feature was built, well after the customerId field existed.
     match /ysse_pending_quotes/{quoteId} {
-      allow read, update, delete: if canUseDashboard() && docCustomerId(resource.data) == myCustomerId();
+      allow get: if canUseDashboard() && docCustomerId(resource.data) == myCustomerId();
+      allow list: if canUseDashboard() && resource.data.customerId == myCustomerId();
+      allow update, delete: if canUseDashboard() && docCustomerId(resource.data) == myCustomerId();
       allow create: if isSignedIn() && request.resource.data.customerId == myCustomerId();
     }
 
     match /ysse_quotes/{quoteId} {
-      allow read, update, delete: if canUseQuotation() && docCustomerId(resource.data) == myCustomerId();
+      allow get: if canUseQuotation() && docCustomerId(resource.data) == myCustomerId();
+      allow list: if canUseQuotation() && resource.data.customerId == myCustomerId();
+      allow update, delete: if canUseQuotation() && docCustomerId(resource.data) == myCustomerId();
       allow create: if canUseQuotation() && request.resource.data.customerId == myCustomerId();
     }
 

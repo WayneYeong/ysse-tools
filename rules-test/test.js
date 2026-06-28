@@ -95,6 +95,26 @@ async function main() {
   await check("siti tries to list YSSE's users by spoofing the where() filter (must be DENY)", dbSiti.collection("ysse_users").where("customerId", "==", "ysse").get());
   await check("wayne still reads his OWN doc by id directly (must stay ALLOW)", db.collection("ysse_users").doc("yeongww77@gmail.com").get().then(d => { if (!d.exists) throw new Error("missing"); }));
 
+  // Item 3: ysse_pending_quotes and ysse_quotes both had a combined "allow read" depending on
+  // resource.data, which does NOT filter a list() query the way it filters a get() - an unscoped
+  // listener actually returned every tenant's documents. get/list are now split, with list
+  // requiring a direct resource.data.customerId match the query can be verified against.
+  console.log("--- ysse_pending_quotes / ysse_quotes list scoping (item 3) ---");
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await context.firestore().collection("ysse_pending_quotes").doc("q1").set({ customerId: "ysse", project: { name: "MineA" } });
+    await context.firestore().collection("ysse_pending_quotes").doc("q2").set({ customerId: "wawas-trading", project: { name: "NotMineB" } });
+    await context.firestore().collection("ysse_quotes").doc("qq1").set({ customerId: "ysse", name: "MyQuote" });
+    await context.firestore().collection("ysse_quotes").doc("qq2").set({ customerId: "wawas-trading", name: "NotMyQuote" });
+  });
+  await check("wayne: UNSCOPED pendingCol.get() (must now be DENY)", db.collection("ysse_pending_quotes").get());
+  await check("wayne: SCOPED pendingCol query returns only his own tenant's doc", db.collection("ysse_pending_quotes").where("customerId", "==", "ysse").get().then(s => {
+    if (s.docs.length !== 1 || s.docs[0].id !== "q1") throw new Error("expected exactly q1, got " + s.docs.map(d => d.id).join(","));
+  }));
+  await check("wayne: UNSCOPED quotesCol.get() (must now be DENY)", db.collection("ysse_quotes").get());
+  await check("wayne: SCOPED quotesCol query returns only his own tenant's doc", db.collection("ysse_quotes").where("customerId", "==", "ysse").get().then(s => {
+    if (s.docs.length !== 1 || s.docs[0].id !== "qq1") throw new Error("expected exactly qq1, got " + s.docs.map(d => d.id).join(","));
+  }));
+
   await testEnv.cleanup();
 }
 

@@ -2995,12 +2995,11 @@ function delActualSubconRow(i){
     },function(err){
       setIndicator('\u2601 Live Sync: error \u2014 using local data only','#fca5a5');
     });
-    pendingCol.onSnapshot(function(snap){
-      var myCustomerId=window.CURRENT_CUSTOMER_ID||'ysse';
-      PENDING_QUOTES=snap.docs.filter(function(doc){
-        var cid=doc.data().customerId||'ysse';
-        return cid===myCustomerId;
-      }).map(function(doc){
+    // Scoped server-side via .where() - confirmed by direct testing that an unscoped listener
+    // here would return every tenant's pending quotes, not just this one's (the rule alone
+    // doesn't filter a list query; the query itself has to ask for only the matching tenant).
+    pendingCol.where('customerId','==',window.CURRENT_CUSTOMER_ID||'ysse').onSnapshot(function(snap){
+      PENDING_QUOTES=snap.docs.map(function(doc){
         var d=doc.data();
         var submittedAt=null;
         try{ submittedAt = d.submittedAt && d.submittedAt.toMillis ? d.submittedAt.toMillis() : null; }catch(e2){}
