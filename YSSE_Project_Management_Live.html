@@ -666,7 +666,7 @@ let PENDING_QUOTES=[];
 let ALL_USERS=[];
 window.CURRENT_USER_ROLE='qs';
 const ROLE_LABELS={management:'Management',qs:'QS / Engineer'};
-function isManagement(){ return window.CURRENT_USER_ROLE==='management'; }
+function isManagement(){ return window.CURRENT_USER_ROLE==='management'||window.CURRENT_USER_ROLE==='owner'; }
 function requireManagement(actionLabel){
   if(isManagement()) return true;
   alert('Only Management can '+(actionLabel||'do this')+'.');
@@ -970,17 +970,23 @@ function renderUsers(){
   if(!tbody) return;
   if(!ALL_USERS.length){ tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
   if(empty) empty.style.display='none';
-  const mgmtCount=ALL_USERS.filter(u=>u.role==='management').length;
+  const mgmtCount=ALL_USERS.filter(u=>u.role==='management'||u.role==='owner').length;
   tbody.innerHTML=ALL_USERS.map(u=>{
     const addedOn=u.addedAt?new Date(u.addedAt).toLocaleDateString('en-MY'):'-';
-    const isLastMgmt=u.role==='management'&&mgmtCount<=1;
+    const isLastMgmt=(u.role==='management'||u.role==='owner')&&mgmtCount<=1;
+    const isOwnerRow=u.role==='owner';
+    const canEditRole=!isLastMgmt&&!(isOwnerRow&&window.CURRENT_USER_ROLE!=='owner');
+    const roleDisabledAttr=isLastMgmt?'disabled title="Cannot change the last owner/management user"':(isOwnerRow&&window.CURRENT_USER_ROLE!=='owner'?'disabled title="Only the Owner can reassign the Owner role"':'');
     return '<tr>'+
       '<td><input value="'+(u.name?u.name.replace(/"/g,'&quot;'):'')+'" placeholder="-" onchange="updateUserProfile(\''+u.email+'\',\'name\',this.value)" style="width:120px;border:1px solid #ddd;border-radius:3px;padding:3px 5px;font-size:12px"></td>'+
       '<td><input value="'+(u.position?u.position.replace(/"/g,'&quot;'):'')+'" placeholder="-" onchange="updateUserProfile(\''+u.email+'\',\'position\',this.value)" style="width:140px;border:1px solid #ddd;border-radius:3px;padding:3px 5px;font-size:12px"></td>'+
       '<td>'+u.email+(u.email===window.CURRENT_USER_EMAIL?' <span style="color:#888;font-size:10px">(you)</span>':'')+'</td>'+
-      '<td><select onchange="changeUserRole(\''+u.email+'\',this.value)" '+(isLastMgmt?'disabled title="Cannot change the last Management user"':'')+' style="font-size:12px;padding:3px">'+
+      '<td><select onchange="changeUserRole(\''+u.email+'\',this.value)" '+roleDisabledAttr+' style="font-size:12px;padding:3px">'+
       '<option value="qs"'+(u.role==='qs'?' selected':'')+'>QS / Engineer</option>'+
-      '<option value="management"'+(u.role==='management'?' selected':'')+'>Management</option></select></td>'+
+      '<option value="management"'+(u.role==='management'?' selected':'')+'>Management</option>'+
+      (window.CURRENT_USER_ROLE==='owner'?'<option value="owner"'+(u.role==='owner'?' selected':'')+'>Owner</option>':
+        (u.role==='owner'?'<option value="owner" selected>Owner</option>':''))+
+      '</select></td>'+
       '<td>'+addedOn+'</td>'+
       '<td><button class="btn btn-danger btn-sm" '+(isLastMgmt?'disabled title="Cannot remove the last Management user"':'')+' onclick="removeUser(\''+u.email+'\')">Remove</button></td></tr>';
   }).join('');
@@ -1017,9 +1023,9 @@ function userLabel(email){
 function changeUserRole(email,role){
   if(!requireManagement('change user roles'))return;
   const u=ALL_USERS.find(x=>x.email===email);
-  if(u&&u.role==='management'&&role!=='management'){
-    const mgmtCount=ALL_USERS.filter(x=>x.role==='management').length;
-    if(mgmtCount<=1){alert('Cannot demote the last Management user — promote someone else first.');renderUsers();return;}
+  if(u&&(u.role==='management'||u.role==='owner')&&role!=='management'&&role!=='owner'){
+    const mgmtCount=ALL_USERS.filter(x=>x.role==='management'||x.role==='owner').length;
+    if(mgmtCount<=1){alert('Cannot demote the last owner/management user — promote someone else first.');renderUsers();return;}
   }
   if(typeof window.updateUserRole==='function') window.updateUserRole(email,role);
 }
@@ -1027,7 +1033,8 @@ function changeUserRole(email,role){
 function removeUser(email){
   const u=ALL_USERS.find(x=>x.email===email);if(!u)return;
   if(!requireManagement('remove users'))return;
-  if(u.role==='management'&&ALL_USERS.filter(x=>x.role==='management').length<=1){alert('Cannot remove the last Management user.');return;}
+  if((u.role==='management'||u.role==='owner')&&ALL_USERS.filter(x=>x.role==='management'||x.role==='owner').length<=1){alert('Cannot remove the last owner/management user.');return;}
+  if(u.role==='owner'&&window.CURRENT_USER_ROLE!=='owner'){alert('Only the Owner can remove another Owner account.');return;}
   if(!confirm('Remove '+email+'? They will lose access to this system (their Firebase login still works elsewhere unless you also delete it in Firebase Console).'))return;
   if(typeof window.removeUserFromFirestore==='function') window.removeUserFromFirestore(email);
 }
@@ -2126,7 +2133,7 @@ function buildPaymentSectionHtml(projectId,records){
       var mine=snap.docs.find(function(d){ return d.id===me; });
       var role=mine?mine.data().role:'qs';
       window.CURRENT_USER_ROLE=role;
-      if(role==='management'){ grantAccess(user); }
+      if(role==='management'||role==='owner'){ grantAccess(user); }
       else { showAccessDenied(); }
     }).catch(function(err){
       showAccessDenied('Could not verify your access level. Please check your connection and refresh, or contact Management.');
