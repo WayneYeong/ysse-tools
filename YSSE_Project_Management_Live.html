@@ -2075,7 +2075,9 @@ function buildPaymentSectionHtml(projectId,records){
       // Pending quotes are additive; failure here never blocks project sync or local data.
     });
     usersCol.onSnapshot(function(snap){
-      ALL_USERS=snap.docs.map(function(doc){ return doc.data(); });
+      var cid=window.CURRENT_CUSTOMER_ID||'ysse';
+      ALL_USERS=snap.docs.map(function(doc){ return doc.data(); })
+        .filter(function(u){ return !u.customerId||u.customerId===cid; });
       var me2=(window.CURRENT_USER_EMAIL||'').toLowerCase();
       var mine=ALL_USERS.find(function(u){ return u.email===me2; });
       window.CURRENT_USER_ROLE = mine ? mine.role : 'qs';
@@ -2119,20 +2121,32 @@ function buildPaymentSectionHtml(projectId,records){
 
   function checkAccessAndProceed(user){
     var me=(user.email||user.uid||'').toLowerCase();
-    usersCol.get().then(function(snap){
-      if(snap.empty){
-        // First-ever login bootstraps as Management.
-        usersCol.doc(me).set({email:me,role:'management',addedAt:Date.now(),addedBy:'bootstrap'}).then(function(){
-          window.CURRENT_USER_ROLE='management';
-          grantAccess(user);
+    // Read only THIS user's own document \u2014 never the whole collection (prevents cross-tenant data reads)
+    usersCol.doc(me).get().then(function(myDoc){
+      if(!myDoc.exists){
+        // User not in system \u2014 check if first-ever user (bootstrap) or just not authorised
+        usersCol.limit(1).get().then(function(anySnap){
+          if(anySnap.empty){
+            // Truly first user ever \u2014 bootstrap as owner
+            usersCol.doc(me).set({email:me,role:'management',customerId:'ysse',addedAt:Date.now(),addedBy:'bootstrap'}).then(function(){
+              window.CURRENT_USER_ROLE='management';
+              window.CURRENT_CUSTOMER_ID='ysse';
+              grantAccess(user);
+            }).catch(function(err){
+              showAccessDenied('Could not verify access \u2014 please refresh and try again.');
+            });
+          } else {
+            showAccessDenied();
+          }
         }).catch(function(err){
-          showAccessDenied('Could not verify access \u2014 please refresh and try again.');
+          showAccessDenied('Could not verify your access level. Please check your connection and refresh, or contact Management.');
         });
         return;
       }
-      var mine=snap.docs.find(function(d){ return d.id===me; });
-      var role=mine?mine.data().role:'qs';
+      var data=myDoc.data();
+      var role=data.role||'qs';
       window.CURRENT_USER_ROLE=role;
+      window.CURRENT_CUSTOMER_ID=data.customerId||'ysse';
       if(role==='management'||role==='owner'){ grantAccess(user); }
       else { showAccessDenied(); }
     }).catch(function(err){
@@ -2158,7 +2172,7 @@ function buildPaymentSectionHtml(projectId,records){
   };
   window.addUserToFirestore=function(email,role,name,position){
     if(!usersCol) return;
-    usersCol.doc(email).set({email:email,role:role,name:name||'',position:position||'',addedAt:Date.now(),addedBy:window.CURRENT_USER_EMAIL||''}).catch(function(err){ alert('Could not add user: '+(err&&err.message?err.message:'unknown error')); });
+    usersCol.doc(email).set({email:email,role:role,name:name||'',position:position||'',customerId:window.CURRENT_CUSTOMER_ID||'ysse',addedAt:Date.now(),addedBy:window.CURRENT_USER_EMAIL||''}).catch(function(err){ alert('Could not add user: '+(err&&err.message?err.message:'unknown error')); });
   };
   window.updateUserRole=function(email,role){
     if(!usersCol) return;
