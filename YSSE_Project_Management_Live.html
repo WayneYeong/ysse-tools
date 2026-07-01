@@ -205,6 +205,46 @@ body.role-qs .mgmt-only{display:none!important}
 .receipt-link:hover{text-decoration:underline;}
 .pay-upload-lbl{display:inline-block;cursor:pointer;font-size:10px;color:#2E6DA4;padding:2px 6px;border:1px solid #2E6DA4;border-radius:3px;white-space:nowrap;}
 .pay-upload-lbl:hover{background:#e8f0fa;}
+/* ===== Clients / Invoices / Settings ===== */
+.badge-inv-pending{background:#fef3c7;color:#92400e}
+.badge-inv-paid{background:#d1fae5;color:#065f46}
+.badge-inv-overdue{background:#fee2e2;color:#991b1b}
+.settings-grid{display:grid;grid-template-columns:3fr 2fr;gap:16px}
+.settings-section{background:var(--card);border-radius:7px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.1);margin-bottom:16px}
+.settings-section h4{font-size:12px;font-weight:700;color:var(--dark);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.sf{margin-bottom:10px}
+.sf label{display:block;font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
+.sf input,.sf textarea,.sf select{width:100%;border:1.5px solid #d1d9e6;border-radius:4px;padding:6px 8px;font-size:12px;font-family:Arial,sans-serif;outline:none;box-sizing:border-box}
+.sf input:focus,.sf textarea:focus,.sf select:focus{border-color:var(--mid)}
+.doc-num-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.doc-num-row label{font-size:11px;color:var(--sub);min-width:130px}
+.doc-num-row input{width:80px;border:1.5px solid #d1d9e6;border-radius:4px;padding:4px 8px;font-size:12px;font-family:'JetBrains Mono',monospace}
+.doc-preview-lbl{font-size:11px;color:var(--mid);font-family:'JetBrains Mono',monospace;padding:3px 8px;background:#eef1ff;border-radius:4px}
+.inv-num-col{font-family:'JetBrains Mono',monospace;font-size:12px}
+/* Print: only show .printable-inv, hide everything else */
+@media print{
+  .hdr,.nav,.page,.modal-overlay,.detail-overlay,.detail-panel,#login-screen{display:none!important}
+  body{background:#fff}
+  .printable-inv{display:block!important;padding:32px;font-family:Arial,sans-serif;font-size:12px;max-width:820px;margin:0 auto}
+  .pi-hdr{display:flex;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #10173A}
+  .pi-company{font-size:11px;line-height:1.6;color:#444}
+  .pi-title{font-size:28px;font-weight:700;color:#10173A;text-align:right}
+  .pi-inv-no{font-size:14px;color:#3D5BFF;font-family:'JetBrains Mono',monospace;text-align:right}
+  .pi-meta{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:20px}
+  .pi-meta-block{font-size:11px;line-height:1.7}
+  .pi-meta-block strong{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:2px}
+  .pi-tbl{width:100%;border-collapse:collapse;margin-bottom:20px}
+  .pi-tbl th{background:#10173A;color:#fff;padding:8px 10px;font-size:11px;text-align:left}
+  .pi-tbl td{padding:8px 10px;border-bottom:1px solid #eee;font-size:12px}
+  .pi-tbl .r{text-align:right}
+  .pi-total-row td{font-weight:700;font-size:13px;background:#f0f4f8}
+  .pi-footer{font-size:10px;color:#888;text-align:center;margin-top:32px;border-top:1px solid #eee;padding-top:10px}
+  .pi-status-badge{display:inline-block;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:700}
+  .pi-status-badge.paid{background:#d1fae5;color:#065f46}
+  .pi-status-badge.pending{background:#fef3c7;color:#92400e}
+  .pi-status-badge.overdue{background:#fee2e2;color:#991b1b}
+}
+.printable-inv{display:none}
 </style>
 </head>
 <body>
@@ -272,6 +312,9 @@ body.role-qs .mgmt-only{display:none!important}
   <div class="nav-tab" onclick="showPage('pending',this)">Pending Quotes <span id="pending-badge" style="display:none;background:var(--accent);color:#10173A;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;font-weight:700">0</span></div>
   <div class="nav-tab mgmt-only" onclick="showPage('trash',this)">Trash <span id="trash-badge" style="display:none;background:#999;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;font-weight:700">0</span></div>
   <div class="nav-tab mgmt-only" onclick="showPage('users',this)">Manage Users</div>
+  <div class="nav-tab mgmt-only" onclick="showPage('clients',this)">Clients</div>
+  <div class="nav-tab mgmt-only" onclick="showPage('invoices',this)">Invoices</div>
+  <div class="nav-tab mgmt-only" onclick="showPage('settings',this)">&#9881; Settings</div>
 </div>
 
 <div class="page active" id="page-dashboard">
@@ -432,6 +475,150 @@ body.role-qs .mgmt-only{display:none!important}
     <div id="users-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No users added yet.</div>
   </div>
 </div>
+
+<!-- === Clients Page === -->
+<div class="page" id="page-clients">
+  <div class="tbl-card">
+    <div class="tbl-card-hdr">
+      <h3>Clients</h3>
+      <button class="btn btn-primary btn-sm mgmt-only" onclick="openClientModal()">+ Add Client</button>
+    </div>
+    <div style="overflow-x:auto"><table class="projects"><thead><tr>
+      <th>Client Name</th><th>Contact Person</th><th>Phone</th><th>Email</th><th>Projects</th><th class="mgmt-only">Actions</th>
+    </tr></thead><tbody id="body-clients"></tbody></table></div>
+    <div id="clients-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No clients yet. Add your first client.</div>
+  </div>
+</div>
+
+<!-- === Invoices Page === -->
+<div class="page" id="page-invoices">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px">
+    <div class="kpi"><div class="kpi-label">Total Invoiced</div><div class="kpi-val" id="inv-kpi-total">RM 0</div></div>
+    <div class="kpi green"><div class="kpi-label">Collected</div><div class="kpi-val" id="inv-kpi-paid">RM 0</div></div>
+    <div class="kpi red"><div class="kpi-label">Outstanding</div><div class="kpi-val" id="inv-kpi-outstanding">RM 0</div></div>
+    <div class="kpi accent"><div class="kpi-label">Overdue</div><div class="kpi-val" id="inv-kpi-overdue">RM 0</div></div>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-card-hdr">
+      <h3>Invoices</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="inv-filter-status" onchange="renderInvoices()" style="font-size:11px;padding:4px 8px;border:1.5px solid #d1d9e6;border-radius:4px">
+          <option value="">All Status</option><option value="Pending">Pending</option><option value="Paid">Paid</option><option value="Overdue">Overdue</option>
+        </select>
+        <button class="btn btn-primary btn-sm mgmt-only" onclick="openInvoiceModal()">+ Add Invoice</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto"><table class="projects"><thead><tr>
+      <th>Invoice No.</th><th>Project</th><th>Client</th><th>Amount (RM)</th><th>Issue Date</th><th>Due Date</th><th>Status</th><th class="mgmt-only">Actions</th>
+    </tr></thead><tbody id="body-invoices"></tbody></table></div>
+    <div id="invoices-empty" style="display:none;padding:30px;text-align:center;color:var(--mid)">No invoices yet.</div>
+  </div>
+</div>
+
+<!-- === Settings Page === -->
+<div class="page" id="page-settings">
+  <div class="settings-grid">
+    <div>
+      <div class="settings-section">
+        <h4>Company Details</h4>
+        <div class="sf"><label>Company Name</label><input id="s-name" placeholder="e.g. YSSE Fabricator Sdn Bhd" oninput="updateDocPreviews()"></div>
+        <div class="sf"><label>Registration No.</label><input id="s-reg" placeholder="e.g. SA0123456-X"></div>
+        <div class="sf"><label>Address</label><textarea id="s-addr" rows="3" placeholder="Full company address"></textarea></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="sf"><label>Phone</label><input id="s-phone" placeholder="+6082-123456"></div>
+          <div class="sf"><label>Email</label><input id="s-email" placeholder="office@company.com"></div>
+        </div>
+        <button class="btn btn-primary btn-sm mgmt-only" onclick="saveCompanyDetails()" style="margin-top:6px">Save Details</button>
+      </div>
+    </div>
+    <div>
+      <div class="settings-section">
+        <h4>Document Numbering</h4>
+        <div class="sf"><label>Document Prefix (auto from company name, or set manually)</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="s-prefix" placeholder="e.g. YSSE" style="max-width:100px" oninput="updateDocPreviews()">
+            <span class="doc-preview-lbl" id="s-prefix-eg">YSSE-INV-0001</span>
+          </div>
+        </div>
+        <div class="doc-num-row"><label>Next Invoice No.</label><input id="s-inv-next" type="number" min="1" value="1" oninput="updateDocPreviews()"><span class="doc-preview-lbl" id="s-inv-preview">YSSE-INV-0001</span></div>
+        <button class="btn btn-primary btn-sm mgmt-only" onclick="saveDocSettings()" style="margin-top:6px">Save</button>
+      </div>
+      <div class="settings-section">
+        <h4>Backup &amp; Restore</h4>
+        <p style="font-size:11px;color:var(--sub);margin-bottom:10px">Daily auto-backups kept for 30 days.</p>
+        <button class="btn btn-ghost btn-sm" onclick="showBackupListInSettings()">View Backups</button>
+        <div id="settings-backup-list" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- === Client Modal === -->
+<div class="modal-overlay" id="modal-client-overlay" onclick="if(event.target===this)closeClientModal()">
+<div class="modal" onclick="event.stopPropagation()">
+  <div class="modal-hdr">
+    <h3 id="client-modal-title">Add Client</h3>
+    <button class="modal-close" onclick="closeClientModal()">&#x2715;</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-grid">
+      <div class="form-group span2"><label>Client / Company Name *</label><input id="c-name" placeholder="Client company name"></div>
+      <div class="form-group"><label>Contact Person</label><input id="c-contact" placeholder="Full name"></div>
+      <div class="form-group"><label>Phone</label><input id="c-phone" placeholder="+6012-3456789"></div>
+      <div class="form-group span2"><label>Email</label><input id="c-email" placeholder="contact@client.com"></div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeClientModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveClient()">Save Client</button>
+  </div>
+</div>
+</div>
+
+<!-- === Invoice Modal === -->
+<div class="modal-overlay" id="modal-invoice-overlay" onclick="if(event.target===this)closeInvoiceModal()">
+<div class="modal" onclick="event.stopPropagation()">
+  <div class="modal-hdr">
+    <h3 id="invoice-modal-title">Add Invoice</h3>
+    <button class="modal-close" onclick="closeInvoiceModal()">&#x2715;</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Invoice No. *</label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input id="i-no" placeholder="Auto-generate" style="flex:1">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="autoSetInvNo()" title="Generate next number">Auto</button>
+        </div>
+      </div>
+      <div class="form-group"><label>Status</label>
+        <select id="i-status">
+          <option value="Pending">Pending</option>
+          <option value="Paid">Paid</option>
+          <option value="Overdue">Overdue</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Project</label>
+        <select id="i-project" onchange="fillInvoiceClientFromProject()">
+          <option value="">— Select Project (optional) —</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Client Name</label><input id="i-client" placeholder="Client name"></div>
+      <div class="form-group"><label>Amount (RM) *</label><input id="i-amount" type="number" min="0" step="0.01" placeholder="0.00"></div>
+      <div class="form-group"><label>Issue Date</label><input id="i-issue" type="date"></div>
+      <div class="form-group"><label>Due Date</label><input id="i-due" type="date"></div>
+      <div class="form-group span2"><label>Notes / Scope</label><textarea id="i-notes" rows="2" placeholder="Invoice description or scope of work…"></textarea></div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="closeInvoiceModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveInvoice()">Save Invoice</button>
+  </div>
+</div>
+</div>
+
+<!-- === Printable Invoice (hidden, shown only on print) === -->
+<div class="printable-inv" id="printable-inv"></div>
 
 <div class="modal-overlay" id="modal-overlay">
 <div class="modal" onclick="event.stopPropagation()">
@@ -664,6 +851,11 @@ let convertingPendingId=null;
 let importedQuoteDetail=null;
 let PENDING_QUOTES=[];
 let ALL_USERS=[];
+let CLIENTS=[];
+let INVOICES=[];
+let COMPANY_SETTINGS={};
+let clientEditId=null;
+let invoiceEditId=null;
 window.CURRENT_USER_ROLE='qs';
 const ROLE_LABELS={management:'Management',qs:'QS / Engineer'};
 function isManagement(){ return window.CURRENT_USER_ROLE==='management'||window.CURRENT_USER_ROLE==='owner'; }
@@ -710,6 +902,9 @@ function showPage(id,tab){
   if(id==='pending')   renderPending();
   if(id==='trash')     renderTrash();
   if(id==='users')     renderUsers();
+  if(id==='clients')   renderClients();
+  if(id==='invoices')  renderInvoices();
+  if(id==='settings')  renderSettings();
 }
 
 let chartRev=null,chartCat=null;
@@ -1934,6 +2129,9 @@ function buildPaymentSectionHtml(projectId,records){
   var backupsCol=null;
   var paymentsCol=null;
   var storage=null;
+  var clientsCol=null;
+  var invoicesCol=null;
+  var settingsCol=null;
 
   function setIndicator(text,color){
     var el=document.getElementById('cloud-sync-indicator');
@@ -2093,6 +2291,26 @@ function buildPaymentSectionHtml(projectId,records){
     },function(err){
       // User roles are additive; failure here defaults everyone to the safer 'qs' role.
     });
+
+    // Clients listener
+    var cid2=window.CURRENT_CUSTOMER_ID||'ysse';
+    clientsCol.where('customerId','==',cid2).onSnapshot(function(snap){
+      CLIENTS=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+      if(document.getElementById('page-clients').classList.contains('active')) renderClients();
+    },function(err){});
+
+    // Invoices listener
+    invoicesCol.where('customerId','==',cid2).onSnapshot(function(snap){
+      INVOICES=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+      INVOICES.sort(function(a,b){ return (b.issueDate||'').localeCompare(a.issueDate||''); });
+      if(document.getElementById('page-invoices').classList.contains('active')) renderInvoices();
+    },function(err){});
+
+    // Settings listener (per-customer document)
+    settingsCol.doc(cid2).onSnapshot(function(snap){
+      COMPANY_SETTINGS=snap.exists?snap.data():{};
+      if(document.getElementById('page-settings').classList.contains('active')) renderSettings();
+    },function(err){});
   }
 
   try{
@@ -2103,44 +2321,42 @@ function buildPaymentSectionHtml(projectId,records){
     usersCol=db.collection('ysse_users');
     backupsCol=db.collection('ysse_backups');
     paymentsCol=db.collection('ysse_payments');
+    clientsCol=db.collection('ysse_clients');
+    invoicesCol=db.collection('ysse_invoices');
+    settingsCol=db.collection('ysse_settings');
     storage=firebase.storage();
     firebase.auth().onAuthStateChanged(function(user){
       if(user){
         window.CURRENT_USER_EMAIL=(user.email||user.uid);
-        showLogin('Checking access...');
+        showLogin('Checking access…');
         checkAccessAndProceed(user);
       } else {
         showLogin('Please sign in.');
       }
     },function(err){
-      showLogin('Auth error \u2014 please refresh and try again.');
+      showLogin('Auth error — please refresh and try again.');
     });
   }catch(e){
-    showLogin('Live Sync unavailable \u2014 cannot verify login right now.');
+    showLogin('Live Sync unavailable — cannot verify login right now.');
   }
 
   function checkAccessAndProceed(user){
     var me=(user.email||user.uid||'').toLowerCase();
-    // Read only THIS user's own document \u2014 never the whole collection (prevents cross-tenant data reads)
+    // Read only THIS user's own document — never the whole collection (prevents cross-tenant data reads)
     usersCol.doc(me).get().then(function(myDoc){
       if(!myDoc.exists){
-        // User not in system \u2014 check if first-ever user (bootstrap) or just not authorised
+        // Not in system — check if first-ever user (bootstrap) or not authorised
         usersCol.limit(1).get().then(function(anySnap){
           if(anySnap.empty){
-            // Truly first user ever \u2014 bootstrap as owner
             usersCol.doc(me).set({email:me,role:'management',customerId:'ysse',addedAt:Date.now(),addedBy:'bootstrap'}).then(function(){
               window.CURRENT_USER_ROLE='management';
               window.CURRENT_CUSTOMER_ID='ysse';
               grantAccess(user);
-            }).catch(function(err){
-              showAccessDenied('Could not verify access \u2014 please refresh and try again.');
-            });
+            }).catch(function(err){ showAccessDenied('Could not verify access — please refresh and try again.'); });
           } else {
             showAccessDenied();
           }
-        }).catch(function(err){
-          showAccessDenied('Could not verify your access level. Please check your connection and refresh, or contact Management.');
-        });
+        }).catch(function(err){ showAccessDenied('Could not verify your access level. Please check your connection and refresh, or contact Management.'); });
         return;
       }
       var data=myDoc.data();
@@ -2149,9 +2365,7 @@ function buildPaymentSectionHtml(projectId,records){
       window.CURRENT_CUSTOMER_ID=data.customerId||'ysse';
       if(role==='management'||role==='owner'){ grantAccess(user); }
       else { showAccessDenied(); }
-    }).catch(function(err){
-      showAccessDenied('Could not verify your access level. Please check your connection and refresh, or contact Management.');
-    });
+    }).catch(function(err){ showAccessDenied('Could not verify your access level. Please check your connection and refresh, or contact Management.'); });
   }
 
   function grantAccess(user){
@@ -2172,7 +2386,11 @@ function buildPaymentSectionHtml(projectId,records){
   };
   window.addUserToFirestore=function(email,role,name,position){
     if(!usersCol) return;
-    usersCol.doc(email).set({email:email,role:role,name:name||'',position:position||'',customerId:window.CURRENT_CUSTOMER_ID||'ysse',addedAt:Date.now(),addedBy:window.CURRENT_USER_EMAIL||''}).catch(function(err){ alert('Could not add user: '+(err&&err.message?err.message:'unknown error')); });
+    usersCol.doc(email).set({
+      email:email,role:role,name:name||'',position:position||'',
+      customerId:window.CURRENT_CUSTOMER_ID||'ysse',
+      addedAt:Date.now(),addedBy:window.CURRENT_USER_EMAIL||''
+    }).catch(function(err){ alert('Could not add user: '+(err&&err.message?err.message:'unknown error')); });
   };
   window.updateUserRole=function(email,role){
     if(!usersCol) return;
@@ -2197,195 +2415,464 @@ function buildPaymentSectionHtml(projectId,records){
       var last=snap.exists?snap.data().lastBackupDate:null;
       if(last===today) return;
       backupsCol.doc(today).set({
-        date:today,
-        timestamp:Date.now(),
-        createdBy:window.CURRENT_USER_EMAIL||'',
-        projects:PROJECTS,
-        trash:TRASH,
-        projectCount:PROJECTS.length
-      }).then(function(){
-        return metaRef.set({lastBackupDate:today},{merge:true});
-      }).then(function(){
-        pruneOldBackups();
-      }).catch(function(err){});
+        date:today,timestamp:Date.now(),createdBy:window.CURRENT_USER_EMAIL||'',
+        projects:PROJECTS,trash:TRASH,projectCount:PROJECTS.length
+      }).then(function(){ return metaRef.set({lastBackupDate:today},{merge:true}); })
+        .then(function(){ pruneOldBackups(); })
+        .catch(function(err){});
     }).catch(function(err){});
   }
 
   function pruneOldBackups(){
     backupsCol.orderBy('timestamp','desc').get().then(function(snap){
       var docs=snap.docs.filter(function(d){ return d.id!=='_meta'; });
-      if(docs.length>30){
-        docs.slice(30).forEach(function(d){ d.ref.delete().catch(function(){}); });
-      }
+      if(docs.length>30){ docs.slice(30).forEach(function(d){ d.ref.delete().catch(function(){}); }); }
     }).catch(function(err){});
   }
 
-  // ---- Payment Records (Firebase Storage + Firestore) ----
+  // ---- Payment Records (Firestore + Firebase Storage) ----
   window.loadPaymentSection=function(projectId){
-    var el=document.getElementById('dp-payment-section');
-    if(!el) return;
     if(!paymentsCol){
-      el.innerHTML='<div style="font-size:11px;color:#aaa;padding:10px">Payment records unavailable (not connected)</div>';
+      var el=document.getElementById('pay-section-'+projectId);
+      if(el) el.innerHTML='<p style="color:#999;font-size:12px">Payments not available offline.</p>';
       return;
     }
-    paymentsCol.doc(projectId).get().then(function(snap){
-      var records=snap.exists?(snap.data().records||[]):[];
-      el.innerHTML=buildPaymentSectionHtml(projectId,records);
-    }).catch(function(err){
-      el.innerHTML='<div style="font-size:11px;color:#c00;padding:10px">Could not load payment records.</div>';
-    });
+    paymentsCol.where('projectId','==',projectId)
+      .where('customerId','==',window.CURRENT_CUSTOMER_ID||'ysse')
+      .orderBy('date','desc').get().then(function(snap){
+        var records=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+        var el=document.getElementById('pay-section-'+projectId);
+        if(el) el.innerHTML=buildPaymentSectionHtml(projectId,records);
+      }).catch(function(err){
+        var el=document.getElementById('pay-section-'+projectId);
+        if(el) el.innerHTML='<p style="color:#e55;font-size:12px">Could not load payment records.</p>';
+      });
   };
-
   window.saveNewPaymentRecord=function(projectId){
-    if(!paymentsCol){ alert('Not connected to database.'); return; }
-    var invno=(document.getElementById('pf-invno')||{value:''}).value.trim();
-    var invdate=(document.getElementById('pf-invdate')||{value:''}).value;
-    var invamt=parseFloat((document.getElementById('pf-invamt')||{value:'0'}).value)||0;
-    var received=parseFloat((document.getElementById('pf-received')||{value:'0'}).value)||0;
-    var paydate=(document.getElementById('pf-paydate')||{value:''}).value;
-    var method=(document.getElementById('pf-method')||{value:'Bank Transfer'}).value;
-    var bankref=(document.getElementById('pf-bankref')||{value:''}).value.trim();
-    var status=(document.getElementById('pf-status')||{value:'unpaid'}).value;
-    var record={
-      id:uid(),invoiceNo:invno,invoiceDate:invdate,
-      invoiceAmount:invamt,paymentReceived:received,
-      paymentDate:paydate,method:method,bankRef:bankref,
-      status:status,receiptUrl:'',receiptName:'',
-      createdAt:Date.now(),createdBy:window.CURRENT_USER_EMAIL||''
-    };
-    paymentsCol.doc(projectId).set(
-      {records:firebase.firestore.FieldValue.arrayUnion(record)},
-      {merge:true}
-    ).then(function(){
-      window.loadPaymentSection(projectId);
-    }).catch(function(err){
-      alert('Could not save: '+(err&&err.message?err.message:'unknown error'));
-    });
+    if(!paymentsCol) return;
+    var dateEl=document.getElementById('pay-new-date-'+projectId);
+    var descEl=document.getElementById('pay-new-desc-'+projectId);
+    var amtEl=document.getElementById('pay-new-amt-'+projectId);
+    if(!dateEl||!descEl||!amtEl) return;
+    var date=dateEl.value.trim();
+    var desc=descEl.value.trim();
+    var amount=parseFloat(amtEl.value)||0;
+    if(!date||!desc||!amount){ alert('Please fill in date, description, and amount.'); return; }
+    paymentsCol.add({
+      projectId:projectId,customerId:window.CURRENT_CUSTOMER_ID||'ysse',
+      date:date,description:desc,amount:amount,receiptUrl:'',
+      addedBy:window.CURRENT_USER_EMAIL||'',addedAt:Date.now()
+    }).then(function(){ window.loadPaymentSection(projectId); })
+      .catch(function(err){ alert('Could not save payment record: '+(err&&err.message?err.message:'unknown error')); });
   };
-
   window.deletePaymentRecord=function(projectId,recordId){
     if(!paymentsCol) return;
-    if(!confirm('Delete this payment record? This cannot be undone.')) return;
-    paymentsCol.doc(projectId).get().then(function(snap){
-      if(!snap.exists) return;
-      var recs=(snap.data().records||[]).filter(function(r){return r.id!==recordId;});
-      return paymentsCol.doc(projectId).update({records:recs});
-    }).then(function(){
-      window.loadPaymentSection(projectId);
-    }).catch(function(err){
-      alert('Could not delete: '+(err&&err.message?err.message:'unknown error'));
-    });
+    if(!confirm('Delete this payment record?')) return;
+    paymentsCol.doc(recordId).delete()
+      .then(function(){ window.loadPaymentSection(projectId); })
+      .catch(function(err){ alert('Could not delete record: '+(err&&err.message?err.message:'unknown error')); });
   };
-
   window.handleReceiptUpload=function(projectId,recordId,input){
-    if(!input||!input.files||!input.files[0]) return;
-    if(!storage||!paymentsCol){ alert('Storage not ready. Please refresh.'); return; }
+    if(!storage||!paymentsCol) return;
     var file=input.files[0];
-    if(file.size>10*1024*1024){ alert('File too large. Maximum 10 MB.'); input.value=''; return; }
-    var label=input.previousElementSibling;
-    if(label) label.textContent='Uploading…';
-    var safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-    var path='receipts/'+projectId+'/'+Date.now()+'_'+safeName;
-    var ref=storage.ref().child(path);
-    ref.put(file).then(function(snap){
-      return snap.ref.getDownloadURL();
-    }).then(function(url){
-      return paymentsCol.doc(projectId).get().then(function(snap2){
-        if(!snap2.exists) throw new Error('Payment document not found');
-        var recs=(snap2.data().records||[]).map(function(r){
-          return r.id===recordId?Object.assign({},r,{receiptUrl:url,receiptName:file.name}):r;
-        });
-        return paymentsCol.doc(projectId).update({records:recs});
+    if(!file) return;
+    var path='receipts/'+projectId+'/'+Date.now()+'_'+file.name;
+    var ref=storage.ref(path);
+    var statusEl=document.getElementById('receipt-status-'+recordId);
+    if(statusEl) statusEl.textContent='Uploading…';
+    ref.put(file).then(function(snap){ return snap.ref.getDownloadURL(); })
+      .then(function(url){ return paymentsCol.doc(recordId).update({receiptUrl:url,receiptName:file.name}); })
+      .then(function(){
+        if(statusEl) statusEl.textContent='';
+        window.loadPaymentSection(projectId);
+      }).catch(function(err){
+        if(statusEl) statusEl.textContent='Upload failed.';
+        alert('Receipt upload failed: '+(err&&err.message?err.message:'unknown error'));
       });
-    }).then(function(){
-      window.loadPaymentSection(projectId);
-    }).catch(function(err){
-      alert('Upload failed: '+(err&&err.message?err.message:'unknown error'));
-      if(label) label.textContent='Upload';
-    });
+  };
+  window.exportPaymentsCsv=function(projectId){
+    if(!paymentsCol) return;
+    paymentsCol.where('projectId','==',projectId)
+      .where('customerId','==',window.CURRENT_CUSTOMER_ID||'ysse')
+      .orderBy('date','desc').get().then(function(snap){
+        var rows=[['Date','Description','Amount (RM)','Receipt','Added By']];
+        snap.docs.forEach(function(d){
+          var r=d.data();
+          rows.push([r.date||'',r.description||'',r.amount||0,r.receiptUrl||'',r.addedBy||'']);
+        });
+        var csv=rows.map(function(r){
+          return r.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(',');
+        }).join('\n');
+        var blob=new Blob([csv],{type:'text/csv'});
+        var a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);
+        a.download='payments_'+projectId+'.csv';
+        a.click();
+      }).catch(function(err){ alert('Export failed: '+(err&&err.message?err.message:'unknown error')); });
   };
 
-  window.exportPaymentsCsv=function(projectId){
-    if(!paymentsCol){ alert('Not connected to database.'); return; }
-    paymentsCol.doc(projectId).get().then(function(snap){
-      var records=snap.exists?(snap.data().records||[]):[];
-      if(!records.length){ alert('No payment records to export.'); return; }
-      var proj=PROJECTS.find(function(p){return p.id===projectId;})||{};
-      var header=['Project Name','Project No.','Invoice No.','Invoice Date','Invoice Amount (RM)','Payment Received (RM)','Payment Date','Method','Bank Ref / Cheque No.','Status','Receipt URL'];
-      var rowsArr=records.map(function(r){
-        return [proj.name||'',proj.projectNo||'',r.invoiceNo||'',r.invoiceDate||'',r.invoiceAmount||0,r.paymentReceived||0,r.paymentDate||'',r.method||'',r.bankRef||'',r.status||'',r.receiptUrl||''];
-      });
-      var csv=[header].concat(rowsArr).map(function(row){
-        return row.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(',');
-      }).join('\n');
-      var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-      var url=URL.createObjectURL(blob);
-      var a=document.createElement('a');
-      a.href=url;
-      a.download='YSSE_Payments_'+(proj.projectNo||projectId)+'_'+new Date().toISOString().slice(0,10)+'.csv';
-      document.body.appendChild(a); a.click();
-      setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},500);
-    }).catch(function(err){
-      alert('Export failed: '+(err&&err.message?err.message:'unknown error'));
+  // ===== CLIENTS =====
+  function renderClients(){
+    var tbody=document.getElementById('body-clients');
+    if(!tbody) return;
+    var cid=window.CURRENT_CUSTOMER_ID||'ysse';
+    var list=CLIENTS.filter(function(c){ return !c.customerId||c.customerId===cid; });
+    if(!list.length){
+      tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--sub);font-size:12px;padding:24px">No clients yet. Add your first client.</td></tr>';
+      return;
+    }
+    tbody.innerHTML=list.map(function(c){
+      return '<tr>'
+        +'<td>'+esc(c.name||'')+'</td>'
+        +'<td>'+esc(c.contact||'')+'</td>'
+        +'<td>'+esc(c.phone||'')+'</td>'
+        +'<td>'+esc(c.email||'')+'</td>'
+        +'<td style="text-align:right">'
+          +'<button class="btn btn-ghost btn-sm" onclick="openClientModal(\''+c.id+'\')">Edit</button> '
+          +'<button class="btn btn-danger btn-sm" onclick="deleteClient(\''+c.id+'\')">Delete</button>'
+        +'</td>'
+        +'</tr>';
+    }).join('');
+  }
+
+  window.openClientModal=function(id){
+    clientEditId=id||null;
+    var m=id?CLIENTS.find(function(c){ return c.id===id; }):null;
+    document.getElementById('c-name').value=m?m.name||'':'';
+    document.getElementById('c-contact').value=m?m.contact||'':'';
+    document.getElementById('c-phone').value=m?m.phone||'':'';
+    document.getElementById('c-email').value=m?m.email||'':'';
+    document.getElementById('modal-client-overlay').style.display='flex';
+    document.getElementById('modal-client-title').textContent=id?'Edit Client':'Add Client';
+  };
+  window.closeClientModal=function(){
+    document.getElementById('modal-client-overlay').style.display='none';
+    clientEditId=null;
+  };
+  window.saveClient=function(){
+    if(!clientsCol) return;
+    var name=document.getElementById('c-name').value.trim();
+    if(!name){ alert('Client name is required.'); return; }
+    var data={
+      name:name,
+      contact:document.getElementById('c-contact').value.trim(),
+      phone:document.getElementById('c-phone').value.trim(),
+      email:document.getElementById('c-email').value.trim(),
+      customerId:window.CURRENT_CUSTOMER_ID||'ysse',
+      updatedAt:Date.now()
+    };
+    var p=clientEditId
+      ?clientsCol.doc(clientEditId).update(data)
+      :clientsCol.add(Object.assign({},data,{createdAt:Date.now(),createdBy:window.CURRENT_USER_EMAIL||''}));
+    p.then(function(){ window.closeClientModal(); })
+      .catch(function(err){ alert('Could not save client: '+(err&&err.message?err.message:'unknown error')); });
+  };
+  window.deleteClient=function(id){
+    if(!clientsCol) return;
+    if(!confirm('Delete this client? This cannot be undone.')) return;
+    clientsCol.doc(id).delete().catch(function(err){ alert('Could not delete client: '+(err&&err.message?err.message:'unknown error')); });
+  };
+
+  // ===== INVOICES =====
+  function fmtDate(d){
+    if(!d) return '—';
+    try{ var p=new Date(d+'T00:00:00'); return p.toLocaleDateString('en-MY',{day:'2-digit',month:'short',year:'numeric'}); }
+    catch(e){ return d; }
+  }
+  function invStatusBadge(s){
+    var map={pending:'badge-inv-pending',paid:'badge-inv-paid',overdue:'badge-inv-overdue'};
+    var lbl={pending:'Pending',paid:'Paid',overdue:'Overdue'};
+    return '<span class="badge '+(map[s]||'badge-inv-pending')+'">'+(lbl[s]||'Pending')+'</span>';
+  }
+
+  function renderInvoices(){
+    var tbody=document.getElementById('body-invoices');
+    if(!tbody) return;
+    var cid=window.CURRENT_CUSTOMER_ID||'ysse';
+    var all=INVOICES.filter(function(inv){ return !inv.customerId||inv.customerId===cid; });
+    // KPIs
+    var total=all.reduce(function(s,inv){ return s+(parseFloat(inv.amount)||0); },0);
+    var paid=all.filter(function(inv){ return inv.status==='paid'; }).reduce(function(s,inv){ return s+(parseFloat(inv.amount)||0); },0);
+    var outstanding=all.filter(function(inv){ return inv.status!=='paid'; }).reduce(function(s,inv){ return s+(parseFloat(inv.amount)||0); },0);
+    var overdue=all.filter(function(inv){ return inv.status==='overdue'; }).reduce(function(s,inv){ return s+(parseFloat(inv.amount)||0); },0);
+    var fmt=function(v){ return 'RM '+v.toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+    var setKpi=function(id,val){ var el=document.getElementById(id); if(el) el.textContent=val; };
+    setKpi('inv-kpi-total',fmt(total));
+    setKpi('inv-kpi-paid',fmt(paid));
+    setKpi('inv-kpi-outstanding',fmt(outstanding));
+    setKpi('inv-kpi-overdue',fmt(overdue));
+    // Filter by status
+    var filterEl=document.getElementById('inv-filter-status');
+    var list=all.slice();
+    if(filterEl&&filterEl.value) list=list.filter(function(inv){ return inv.status===filterEl.value; });
+    if(!list.length){
+      tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--sub);font-size:12px;padding:24px">No invoices found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML=list.map(function(inv){
+      return '<tr>'
+        +'<td class="inv-num-col">'+esc(inv.invoiceNo||'')+'</td>'
+        +'<td>'+esc(inv.projectName||inv.project||'')+'</td>'
+        +'<td>'+esc(inv.clientName||inv.client||'')+'</td>'
+        +'<td style="text-align:right">RM '+parseFloat(inv.amount||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'
+        +'<td>'+fmtDate(inv.issueDate)+'</td>'
+        +'<td>'+invStatusBadge(inv.status)+'</td>'
+        +'<td style="text-align:right">'
+          +(inv.status!=='paid'?'<button class="btn btn-ghost btn-sm" onclick="markInvoicePaid(\''+inv.id+'\')">Mark Paid</button> ':'')
+          +'<button class="btn btn-ghost btn-sm" onclick="openInvoiceModal(\''+inv.id+'\')">Edit</button> '
+          +'<button class="btn btn-ghost btn-sm" onclick="printInvoice(\''+inv.id+'\')">Print</button> '
+          +'<button class="btn btn-danger btn-sm" onclick="deleteInvoice(\''+inv.id+'\')">Delete</button>'
+        +'</td>'
+        +'</tr>';
+    }).join('');
+  }
+
+  window.openInvoiceModal=function(id){
+    invoiceEditId=id||null;
+    var inv=id?INVOICES.find(function(i){ return i.id===id; }):null;
+    var cid=window.CURRENT_CUSTOMER_ID||'ysse';
+    // Populate client dropdown
+    var cSelect=document.getElementById('i-client');
+    if(cSelect){
+      var cOpts=CLIENTS.filter(function(c){ return !c.customerId||c.customerId===cid; })
+        .map(function(c){ return '<option value="'+esc(c.name)+'">'+esc(c.name)+'</option>'; }).join('');
+      cSelect.innerHTML='<option value="">Select Client</option>'+cOpts;
+    }
+    // Populate project dropdown
+    var pSelect=document.getElementById('i-project');
+    if(pSelect){
+      var pOpts=PROJECTS.map(function(p){ return '<option value="'+esc(p.id||p.name)+'">'+esc(p.name)+'</option>'; }).join('');
+      pSelect.innerHTML='<option value="">Select Project</option>'+pOpts;
+    }
+    document.getElementById('i-no').value=inv?inv.invoiceNo||'':'';
+    if(pSelect) pSelect.value=inv?inv.project||'':'';
+    if(cSelect) cSelect.value=inv?inv.client||inv.clientName||'':'';
+    document.getElementById('i-amount').value=inv?inv.amount||'':'';
+    document.getElementById('i-status').value=inv?inv.status||'pending':'pending';
+    document.getElementById('i-issue').value=inv?inv.issueDate||'':'';
+    document.getElementById('i-due').value=inv?inv.dueDate||'':'';
+    document.getElementById('i-notes').value=inv?inv.notes||'':'';
+    document.getElementById('modal-invoice-overlay').style.display='flex';
+    document.getElementById('modal-invoice-title').textContent=id?'Edit Invoice':'Add Invoice';
+  };
+  window.closeInvoiceModal=function(){
+    document.getElementById('modal-invoice-overlay').style.display='none';
+    invoiceEditId=null;
+  };
+  window.autoSetInvNo=function(){
+    getDocPrefix(function(prefix,next){
+      document.getElementById('i-no').value=formatInvNo(prefix,next);
+    });
+  };
+  window.saveInvoice=function(){
+    if(!invoicesCol) return;
+    var invNo=document.getElementById('i-no').value.trim();
+    if(!invNo){ alert('Invoice number is required.'); return; }
+    var amount=parseFloat(document.getElementById('i-amount').value)||0;
+    if(!amount){ alert('Amount is required.'); return; }
+    var project=document.getElementById('i-project').value;
+    var client=document.getElementById('i-client').value;
+    var status=document.getElementById('i-status').value||'pending';
+    var issueDate=document.getElementById('i-issue').value;
+    var dueDate=document.getElementById('i-due').value;
+    var notes=document.getElementById('i-notes').value.trim();
+    var clientObj=CLIENTS.find(function(c){ return c.name===client||c.id===client; });
+    var projectObj=PROJECTS.find(function(p){ return p.id===project||p.name===project; });
+    var data={
+      invoiceNo:invNo,project:project,projectName:projectObj?projectObj.name:project,
+      client:client,clientName:clientObj?clientObj.name:client,
+      amount:amount,status:status,issueDate:issueDate,dueDate:dueDate,notes:notes,
+      customerId:window.CURRENT_CUSTOMER_ID||'ysse',updatedAt:Date.now()
+    };
+    var isNew=!invoiceEditId;
+    var p=isNew
+      ?invoicesCol.add(Object.assign({},data,{createdAt:Date.now(),createdBy:window.CURRENT_USER_EMAIL||''}))
+      :invoicesCol.doc(invoiceEditId).update(data);
+    p.then(function(){
+      if(isNew){
+        var cid=window.CURRENT_CUSTOMER_ID||'ysse';
+        settingsCol.doc(cid).set({invCounter:(COMPANY_SETTINGS.invCounter||0)+1},{merge:true}).catch(function(){});
+      }
+      window.closeInvoiceModal();
+    }).catch(function(err){ alert('Could not save invoice: '+(err&&err.message?err.message:'unknown error')); });
+  };
+  window.markInvoicePaid=function(id){
+    if(!invoicesCol) return;
+    if(!confirm('Mark this invoice as Paid?')) return;
+    invoicesCol.doc(id).update({status:'paid',paidAt:Date.now()})
+      .catch(function(err){ alert('Could not update invoice: '+(err&&err.message?err.message:'unknown error')); });
+  };
+  window.deleteInvoice=function(id){
+    if(!invoicesCol) return;
+    if(!confirm('Delete this invoice? This cannot be undone.')) return;
+    invoicesCol.doc(id).delete()
+      .catch(function(err){ alert('Could not delete invoice: '+(err&&err.message?err.message:'unknown error')); });
+  };
+  window.printInvoice=function(id){
+    var inv=INVOICES.find(function(i){ return i.id===id; });
+    if(!inv){ alert('Invoice not found.'); return; }
+    var s=COMPANY_SETTINGS||{};
+    var co=esc(s.companyName||'YSSE FABRICATOR');
+    var html='<div style="font-family:Arial,sans-serif;font-size:13px;color:#1a1a2e">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px">'
+        +'<div><div style="font-size:20px;font-weight:800">'+co+'</div>'
+          +(s.companyReg?'<div style="font-size:11px;color:#666">'+esc(s.companyReg)+'</div>':'')
+          +(s.companyAddress?'<div style="font-size:11px;color:#666">'+esc(s.companyAddress)+'</div>':'')
+          +(s.companyPhone?'<div style="font-size:11px;color:#666">'+esc(s.companyPhone)+'</div>':'')
+          +(s.companyEmail?'<div style="font-size:11px;color:#666">'+esc(s.companyEmail)+'</div>':'')
+        +'</div>'
+        +'<div style="text-align:right">'
+          +'<div style="font-size:24px;font-weight:900;color:#6366f1;letter-spacing:-1px">INVOICE</div>'
+          +'<div style="font-size:14px;font-weight:700;font-family:monospace;margin-top:6px">'+esc(inv.invoiceNo)+'</div>'
+          +'<div style="font-size:11px;color:#666;margin-top:4px">Issue: '+fmtDate(inv.issueDate)+'</div>'
+          +'<div style="font-size:11px;color:#666">Due: '+fmtDate(inv.dueDate)+'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="border-top:2px solid #6366f1;padding-top:16px;margin-bottom:16px">'
+        +'<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Bill To</div>'
+        +'<div style="font-weight:700">'+esc(inv.clientName||inv.client||'')+'</div>'
+        +'<div style="font-size:12px;color:#666">'+esc(inv.projectName||inv.project||'')+'</div>'
+      +'</div>'
+      +'<table style="width:100%;border-collapse:collapse;margin-bottom:20px">'
+        +'<tr style="background:#f1f5f9">'
+          +'<th style="text-align:left;padding:8px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.3px">Description</th>'
+          +'<th style="text-align:right;padding:8px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.3px">Amount</th>'
+        +'</tr>'
+        +'<tr>'
+          +'<td style="padding:10px;border-bottom:1px solid #e2e8f0">'+(inv.notes?esc(inv.notes):esc(inv.invoiceNo))+'</td>'
+          +'<td style="padding:10px;text-align:right;border-bottom:1px solid #e2e8f0;font-weight:700">RM '+parseFloat(inv.amount||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'
+        +'</tr>'
+        +'<tr style="background:#f1f5f9">'
+          +'<td style="padding:10px;font-weight:700;text-align:right">TOTAL</td>'
+          +'<td style="padding:10px;font-weight:800;font-size:15px;text-align:right;color:#6366f1">RM '+parseFloat(inv.amount||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'
+        +'</tr>'
+      +'</table>'
+      +'<div style="font-size:10px;color:#999;border-top:1px solid #e2e8f0;padding-top:12px;text-align:center">Thank you for your business. Please make payment by the due date.</div>'
+      +'</div>';
+    var el=document.getElementById('printable-inv');
+    if(el){ el.innerHTML=html; el.style.display='block'; }
+    setTimeout(function(){ window.print(); setTimeout(function(){ if(el) el.style.display='none'; },500); },100);
+  };
+
+  // ---- Document Numbering Helpers ----
+  function deriveDocPrefix(name){
+    if(!name) return 'YSSE';
+    var words=name.toUpperCase().replace(/[^A-Z0-9\s]/g,'').split(/\s+/).filter(Boolean);
+    if(words.length>=2) return words.map(function(w){ return w[0]; }).join('').slice(0,5);
+    return (words[0]||'YSSE').slice(0,5);
+  }
+  function getDocPrefix(cb){
+    var s=COMPANY_SETTINGS||{};
+    var prefix=s.docPrefix||deriveDocPrefix(s.companyName);
+    var next=(s.invCounter||0)+1;
+    cb(prefix,next);
+  }
+  function formatInvNo(prefix,num){
+    return prefix+'-INV-'+String(num).padStart(4,'0');
+  }
+  function updateDocPreviews(){
+    var prefixEl=document.getElementById('s-prefix');
+    var nextEl=document.getElementById('s-inv-next');
+    var previewEl=document.getElementById('s-inv-preview');
+    if(!prefixEl||!nextEl||!previewEl) return;
+    var prefix=prefixEl.value.trim()||deriveDocPrefix((COMPANY_SETTINGS||{}).companyName);
+    var next=parseInt(nextEl.value)||1;
+    previewEl.textContent=formatInvNo(prefix,next);
+  }
+
+  // ===== SETTINGS =====
+  function renderSettings(){
+    var s=COMPANY_SETTINGS||{};
+    var setVal=function(id,val){ var el=document.getElementById(id); if(el) el.value=val||''; };
+    setVal('s-name',s.companyName);
+    setVal('s-reg',s.companyReg);
+    setVal('s-addr',s.companyAddress);
+    setVal('s-phone',s.companyPhone);
+    setVal('s-email',s.companyEmail);
+    var prefix=s.docPrefix||deriveDocPrefix(s.companyName);
+    setVal('s-prefix',prefix);
+    setVal('s-inv-next',(s.invCounter||0)+1);
+    var egEl=document.getElementById('s-prefix-eg');
+    if(egEl) egEl.textContent=prefix;
+    updateDocPreviews();
+    showBackupListInSettings();
+  }
+  window.saveCompanyDetails=function(){
+    if(!settingsCol) return;
+    var cid=window.CURRENT_CUSTOMER_ID||'ysse';
+    var data={
+      companyName:document.getElementById('s-name').value.trim(),
+      companyReg:document.getElementById('s-reg').value.trim(),
+      companyAddress:document.getElementById('s-addr').value.trim(),
+      companyPhone:document.getElementById('s-phone').value.trim(),
+      companyEmail:document.getElementById('s-email').value.trim(),
+      updatedAt:Date.now()
+    };
+    settingsCol.doc(cid).set(data,{merge:true})
+      .then(function(){ alert('Company details saved.'); })
+      .catch(function(err){ alert('Could not save: '+(err&&err.message?err.message:'unknown error')); });
+  };
+  window.saveDocSettings=function(){
+    if(!settingsCol) return;
+    var cid=window.CURRENT_CUSTOMER_ID||'ysse';
+    var prefix=(document.getElementById('s-prefix').value.trim()||deriveDocPrefix((COMPANY_SETTINGS||{}).companyName)).toUpperCase();
+    var next=parseInt(document.getElementById('s-inv-next').value)||1;
+    settingsCol.doc(cid).set({docPrefix:prefix,invCounter:next-1,updatedAt:Date.now()},{merge:true})
+      .then(function(){ alert('Document numbering saved.'); })
+      .catch(function(err){ alert('Could not save: '+(err&&err.message?err.message:'unknown error')); });
+  };
+  function showBackupListInSettings(){
+    var el=document.getElementById('settings-backup-list');
+    if(!el) return;
+    window.listBackups(function(backups){
+      if(!backups.length){ el.innerHTML='<p style="font-size:12px;color:var(--sub)">No backups found.</p>'; return; }
+      el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px">'
+        +'<thead><tr>'
+          +'<th style="text-align:left;padding:4px 8px;color:var(--sub)">Date</th>'
+          +'<th style="text-align:right;padding:4px 8px;color:var(--sub)">Projects</th>'
+          +'<th style="padding:4px 8px"></th>'
+        +'</tr></thead><tbody>'
+        +backups.slice(0,10).map(function(b){
+          return '<tr>'
+            +'<td style="padding:4px 8px">'+esc(b.date||b.id)+'</td>'
+            +'<td style="text-align:right;padding:4px 8px">'+(b.projectCount||0)+'</td>'
+            +'<td style="text-align:right;padding:4px 8px"><button class="btn btn-ghost btn-sm" onclick="doRestoreFromSettings(\''+esc(b.id)+'\')">Restore</button></td>'
+            +'</tr>';
+        }).join('')+'</tbody></table>';
+    });
+  }
+  window.doRestoreFromSettings=function(id){
+    if(!confirm('Restore data from backup '+id+'? Current project data will be overwritten.')) return;
+    window.restoreBackup(id,function(ok,msg){
+      if(ok) alert('Restored successfully. The page will reload.');
+      else alert('Restore failed: '+(msg||'unknown error'));
     });
   };
 
   window.listBackups=function(callback){
     if(!backupsCol){ callback([]); return; }
     backupsCol.orderBy('timestamp','desc').limit(30).get().then(function(snap){
-      var list=snap.docs.filter(function(d){ return d.id!=='_meta'; }).map(function(d){
-        var v=d.data();
-        return {id:d.id,date:v.date,timestamp:v.timestamp,createdBy:v.createdBy,projectCount:v.projectCount};
-      });
-      callback(list);
+      var docs=snap.docs.filter(function(d){ return d.id!=='_meta'; })
+        .map(function(d){ return Object.assign({id:d.id},d.data()); });
+      callback(docs);
     }).catch(function(err){ callback([]); });
   };
-
   window.restoreBackup=function(id,callback){
-    if(!backupsCol){ callback(false,'not ready'); return; }
+    if(!backupsCol||!docRef){ callback(false,'Not connected'); return; }
     backupsCol.doc(id).get().then(function(snap){
-      if(!snap.exists){ callback(false,'backup not found'); return; }
-      var v=snap.data();
-      PROJECTS=v.projects||[];
-      TRASH=v.trash||[];
-      localStorage.setItem('ysse_projects',JSON.stringify(PROJECTS));
-      localStorage.setItem('ysse_trash',JSON.stringify(TRASH));
-      if(typeof window.pushToCloud==='function') window.pushToCloud();
-      callback(true);
-    }).catch(function(err){ callback(false,err&&err.message?err.message:'unknown error'); });
+      if(!snap.exists){ callback(false,'Backup not found'); return; }
+      var data=snap.data();
+      return docRef.set({
+        projects:data.projects||[],
+        trash:data.trash||[],
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }).then(function(){ callback(true); })
+      .catch(function(err){ callback(false,err&&err.message?err.message:'unknown error'); });
   };
+
 })();
 </script>
-<!-- Inline Budget Calculator -->
-<div class="calc-popup" id="calc-popup" onmousedown="event.preventDefault()">
-  <div class="calc-display">
-    <div class="calc-expr" id="calc-expr"></div>
-    <div class="calc-val" id="calc-val">0</div>
-  </div>
-  <div class="calc-grid">
-    <button class="calc-btn clr" onclick="calcFn('AC')">AC</button>
-    <button class="calc-btn fn" onclick="calcFn('BS')">⌫</button>
-    <button class="calc-btn op" onclick="calcFn('%')">%</button>
-    <button class="calc-btn op" onclick="calcFn('/')">÷</button>
-    <button class="calc-btn num" onclick="calcFn('7')">7</button>
-    <button class="calc-btn num" onclick="calcFn('8')">8</button>
-    <button class="calc-btn num" onclick="calcFn('9')">9</button>
-    <button class="calc-btn op" onclick="calcFn('*')">×</button>
-    <button class="calc-btn num" onclick="calcFn('4')">4</button>
-    <button class="calc-btn num" onclick="calcFn('5')">5</button>
-    <button class="calc-btn num" onclick="calcFn('6')">6</button>
-    <button class="calc-btn op" onclick="calcFn('-')">−</button>
-    <button class="calc-btn num" onclick="calcFn('1')">1</button>
-    <button class="calc-btn num" onclick="calcFn('2')">2</button>
-    <button class="calc-btn num" onclick="calcFn('3')">3</button>
-    <button class="calc-btn op" onclick="calcFn('+')">+</button>
-    <button class="calc-btn num span2" onclick="calcFn('0')">0</button>
-    <button class="calc-btn num" onclick="calcFn('.')">.</button>
-    <button class="calc-btn eq" onclick="calcFn('=')">=</button>
-  </div>
-  <div class="calc-hint">Press = to apply result to field</div>
-</div>
 
-</div>
 </body>
 </html>
